@@ -23,7 +23,9 @@
 # in this list.  That module will then need a __APT list of the functions
 # and/or modules that it exposes.
 
+import socket
 import server
+from mod_python import apache
 
 __API = ['hello',
          'register',
@@ -39,8 +41,11 @@ def hello():
 def getHostName():
     """Digs out the hostname from the headers.  This identifies who we
        say we are."""
-       
-    return req.headers_in['Host']
+    
+    ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
+    addr = socket.gethostbyaddr(ip)
+
+    return addr[0]
 
 
 def getServerKey():
@@ -69,7 +74,7 @@ def checkIn(publicKey, sig):
     """Workstation checking in.  Update status in DB."""
     
     s = server.Server(getHostName())
-    s.checkIn(publicKey, sig)
+    return s.checkIn(publicKey, sig)
 
 
 def getEncKeyFile(publicKey, sig):

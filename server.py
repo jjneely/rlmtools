@@ -174,8 +174,9 @@ class Server(object):
             self.cursor.execute("""update realmlinux
                set lastcheck=%s where hostname=%s""", (date, self.client))
         else:
-            # ignore
-            pass
+            return 1
+
+        return 0
     
 
     def __makeUpdatesConf(self):
@@ -219,7 +220,8 @@ class Server(object):
            /etc/update.conf on the workstation."""
         
         if not self.verifyClient(publicKey, sig):
-            return None
+            # Can't return None
+            return []
 
         filedata = self.__makeUpdatesConf()
         
@@ -227,7 +229,7 @@ class Server(object):
         trustedKey = self.isRegistered()
         if trustedKey == None:
             # WTF?  Not registered?
-            return None
+            return [] 
         client = ezPyCrypto.key()
         client.importKey(trustedKey)
         enc = client.encStringToAscii(filedata)

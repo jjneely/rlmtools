@@ -33,8 +33,12 @@ import ezPyCrypto
 URL = "http://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
 
 # Locally stored keys
-publicKey = "/etc/sysconfig/rkhost.pub"
-privateKey = "/etc/sysconfig/rkhost.priv"
+publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
+privateKey = "/etc/sysconfig/RLKeys/rkhost.priv"
+publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
+
+# Registration file
+registration = "/etc/sysconfig/RLKeys/registered"
 
 def isSupported():
     file = "/etc/sysconfig/support"
@@ -57,8 +61,8 @@ def getRPCObject():
     server = xmlrpclib.ServerProxy(URL)
     try:
         test = server.hello()
-    except Error, e:
-        print "Hmmm...something goofed: " + str(v)
+    except xmlrpclib.Error, e:
+        print "Hmmm...something goofed: " + str(e)
         sys.exit(1)
         
     return server
@@ -79,7 +83,7 @@ def getVersion():
         return "FC%s" % version
     
                         
-def doRegister():
+def doRegister(server):
     # Need a new public/private key pair, dept, and version
     # Generate new key pair
     keypair = ezPyCrypto.key(1024)
@@ -90,58 +94,95 @@ def doRegister():
     fd = open(publicKey, "w")
     fd.write(pubKey)
     fd.close()
-    os.chmod(publicKey, 600)
+    os.chmod(publicKey, 0600)
 
     fd = open(privateKey, "w")
     fd.write(privKey)
     fd.close()
-    os.chmod(privateKey, 600)
+    os.chmod(privateKey, 0600)
 
     # get department
     fd = open("/etc/rc.conf.d/HostDept")
     dept = fd.read().strip()
+    fd.close()
 
-    server = getRPCObject()
     ret = server.register(pubKey, dept, getVersion())
     if ret != 0:
         print "Registration failed with return code %s" % ret
-        return
+        
+    return ret
 
-    # Get the update.conf file
+
+def getUpdateConf(server):
+    "Get the update.conf file"
+    
+    keypair = getLocalKey()
+    pubKey = keypair.exportKey()
     sig = keypair.signString(pubKey)
+    
     update = server.getEncKeyFile(pubKey, sig)
-    if update == None:
+    if update == []:
         print "Error receiving update.conf file"
         return
     
-    dec = keypair.decString(update)
+    # check sig
+    serverKey = getRealmLinuxKey(server)
+    if not serverKey.verifyString(update[0], update[1]):
+        print "ERROR: Encrypted update.conf did not verify."
+        return
+    
+    dec = keypair.decStringFromAscii(update[0])
     fd = open("/etc/update.conf", "w")
     fd.write(dec)
     fd.close()
-    os.chmod("/etc/update.conf", 600)
+    os.chmod("/etc/update.conf", 0600)
 
 
-def doCheckIn():
-    "Check in with the XMLRPC server."
-
-    if not os.access(publicKey, os.R_OK) and os.access(privateKey, os.R_OK):
+def getLocalKey():
+    "Return an ezPyCrypto keypair for this local host."
+    
+    if not os.access(privateKey, os.R_OK):
         print "Error importing keys for checkin"
-        return
+        return None
     
-    # read in public key
-    fd = open(publicKey)
-    pubKeyText = fd.read()
-    fd.close()
-    
-    # read in private key
     fd = open(privateKey)
     privKeyText = fd.read()
     fd.close()
 
-    key = ezPyCrypto.key(privKeyText)
+    key = ezPyCrypto.key()
+    key.importKey(privKeyText)
+
+    return key
+
+
+def getRealmLinuxKey(server):
+    "Return the public key for Realm Linux."
+        
+    key = ezPyCrypto.key()
+
+    if os.access(publicRLKey, os.R_OK):
+        fd = open(publicRLKey)
+        key.importKey(fd.read())
+        fd.close()
+    else:
+        data = server.getServerKey()
+        key.importKey(data)
+
+        # We are at registration.  Save key
+        fd = open(publicRLKey, "w")
+        fd.write(key.exportKey())
+        fd.close()
+
+    return key
+
+
+def doCheckIn(server):
+    "Check in with the XMLRPC server."
+
+    key = getLocalKey()
+    pubKeyText = key.exportKey()
     sig = key.signString(pubKeyText)
 
-    server = getRPCObject()
     ret = server.checkIn(pubKeyText, sig)
     if ret != 0:
         print "Checkin failed with return code %s" % ret
@@ -153,21 +194,31 @@ def main():
     
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."
-        
-    if os.access("/etc/update.conf", os.W_OK):
+    
+    if os.access(registration, os.W_OK):
         register = 0
     else:
         register = 1
 
+    server = getRPCObject()
     if register == 1:
         if not isSupported():
             print "Your machine is not configured for support."
             return 1
+        
         else:
-            doRegister()
+            if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
+                os.mkdir("/etc/sysconfig/RLKeys", 0755)
+        
+            if doRegister(server) == 0:
+                # touch the registration file
+                fd = open(registration, "w")
+                fd.close()
 
-    else:
-        doCheckIn()
+    doCheckIn(server)
+
+    if not os.access("/etc/update.conf", os.R_OK):
+        getUpdateConf(server)
 
 
 if __name__ == "__main__":
