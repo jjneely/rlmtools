@@ -36,7 +36,7 @@ import string
 import os.path
 
 ## API that is exposed
-#import API
+import API
 
 def handler(req):
     "Process XML_RPC"
@@ -86,27 +86,27 @@ def handler(req):
 def call_method(method, params, req):
     "Find an exported method that matches what we've been given and call it."
 
-    import API
     API.req = req
 
     list = string.split(method, '.')
                      
     # Now walk down the tree and check export lists
-    call = "API"
+    func = API
     for module in list:
-        try:
-            exports = eval("%s.__API__" % call)
-        except AttributeError, e:
-            # What the fuck?  Why does __API keep disappearing?
-            s = "AttributeError!  dir(API) = %s\nException = %s\n" % (str(dir(API)), str(e))
-            raise Exception(s)
-        if not module in exports:
+        if module in func.__API__:
+            try:
+                func = func.__getattribute__(module)
+            except AttributeError, e:
+                s = "AttributeError!  dir(func) = %s\n" % str(dir(func))
+                s += "Module = %s\n" % module
+                s += "Exception = %s\n" % str(e)
+                raise AttributeError(s)
+
+        else:
             return xmlrpclib.Fault(1000, "%s not exported or found.\n"
                                    % method)
-        call = "%s.%s" % (call, module)
 
     try:
-        func = eval(call)
         ret = apply(func, params)
     except TypeError, e:
         return xmlrpclib.Fault(1000, "%s exists but parameters were wrong.\n"
