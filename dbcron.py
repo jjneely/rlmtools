@@ -53,7 +53,7 @@ def getConn():
 def cleanDB(cursor):
     # SQL to delete machines no longer checking in
     sql1 = """delete from realmlinux where 
-              TO_DAYS(NOW()) - TO_DAYS(lastcheck) > 30;"""
+              TO_DAYS(NOW()) - TO_DAYS(lastcheck) > 90;"""
     
     # SQL to delete machines that installed but never registered
     sql2 = """delete from realmlinux where
