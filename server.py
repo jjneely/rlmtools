@@ -137,11 +137,16 @@ class Server(object):
             # SQL query returned zero rows...this client isn't logged
             # to be registered
             return 2
+
+        # Check the Time window for 24 hours
+        row = self.cursor.fetchone()
+        if time.time() - row[1].ticks() > 86400:
+            # Install date was more than 24 hours ago
+            return 3
         
         # let's register the client
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
-        # XXX: insert time window check here
 
         try:
             self.cursor.execute("""update realmlinux 
