@@ -91,7 +91,7 @@ def call_method(method, params):
     call = "API"
     for module in list:
         try:
-            exports = eval("%s.__API" % call)
+            exports = eval("%s.__API__" % call)
         except AttributeError, e:
             # What the fuck?  Why does __API keep disappearing?
             s = "AttributeError!  dir(API) = %s\nException = %s\n" % (str(dir(API)), str(e))

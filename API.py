@@ -27,12 +27,12 @@ import socket
 import server
 from mod_python import apache
 
-__API = ['hello',
-         'register',
-         'getServerKey',
-         'checkIn',
-         'getServerKey',
-         'getEncKeyFile']
+__API__ = ['hello',
+           'register',
+           'getServerKey',
+           'checkIn',
+           'getServerKey',
+           'getEncKeyFile']
 
 def hello():
     return "Hello World"
