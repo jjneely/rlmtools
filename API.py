@@ -27,7 +27,6 @@ import server
 
 __API = ['hello',
          'register',
-         'declineSupport',
          'getServerKey',
          'checkIn',
          'getServerKey',
@@ -47,7 +46,8 @@ def getHostName():
 def getServerKey():
     """Return the Server's public key"""
     
-    return server.getFile(server.pubKeyFile)
+    srv = server.Server(getHostName())
+    return server.getFile(srv.publicKey)
     
 
 def register(publicKey, dept, version):

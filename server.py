@@ -65,16 +65,16 @@ class Server(object):
         cnf = ConfigParser.ConfigParser()
         cnf.read(configFile)
 		
-        self.dbhost = cnf.get('database', 'host')
-        self.dbuser = cnf.get('database', 'user')
-        self.dbpasswd = cnf.get('database', 'passwd')
-        self.db = cnf.get('database', 'db')
+        self.dbhost = cnf.get('db', 'host')
+        self.dbuser = cnf.get('db', 'user')
+        self.dbpasswd = cnf.get('db', 'passwd')
+        self.db = cnf.get('db', 'db')
 
         # Other config information
         self.jumpstarts = cnf.get('main', 'jumpstarts')
-        self.defaultKey = cnf.get('keys', 'defaultkey')
-        self.privateKey = cnf.get('keys', 'private')
-        self.publicKey = cnf.get('keys', 'public')
+        self.defaultKey = cnf.get('main', 'defaultkey')
+        self.privateKey = cnf.get('main', 'privatekey')
+        self.publicKey = cnf.get('main', 'publickey')
         
         # Open a MySQL connection and cursor
         self.conn = MySQLdb.connect(host=self.dbhost, user=self.dbuser,
@@ -113,7 +113,7 @@ class Server(object):
            Otherwise None is returned."""
         
         self.cursor.execute("""select publickey from realmlinux where
-            hostname=%s and recvdkey=0""" % (self.client,))
+            hostname=%s and recvdkey=1""" % (self.client,))
         if self.cursor.rowcount > 0:
             return self.cursor.fetchone()[0]
         else:
@@ -192,7 +192,7 @@ class Server(object):
         else:
             # a list of the options passed to the 'users' key
             args = data[0]['options']
-            usersdata = "users " + string.join(users_args)
+            usersdata = "users " + string.join(args)
         
         # root data
         data = ks.getKeys('root')
