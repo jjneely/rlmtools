@@ -107,6 +107,8 @@ def call_method(method, params):
     except TypeError, e:
         return xmlrpclib.Fault(1000, "%s exists but parameters were wrong.\n"
                                % method)
+    except Exception, e:
+        return xmlrpclib.Fault(1000, str(e))
 
     return ret
 

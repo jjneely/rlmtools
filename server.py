@@ -199,6 +199,9 @@ class Server(object):
         os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
         sc = wks.findFile(self.client, self.jumpstarts)
+        if sc == None:
+            raise Exception("No config for %s in %s" % (self.client,
+                                                        self.jumpstarts))
         try:
             ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
         except KeyError, e:
