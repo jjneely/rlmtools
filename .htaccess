@@ -1,4 +1,6 @@
 AddHandler python-program .py
 PythonHandler handler
-PythonDebug On
-#DirectoryIndex handler.py
+
+<Files solaris2ks.conf>
+    deny from all
+</Files>
