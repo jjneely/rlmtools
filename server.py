@@ -140,9 +140,9 @@ class Server(object):
 
         # Check the Time window for 24 hours
         row = self.cursor.fetchone()
-        if time.time() - row[1].ticks() > 86400:
+        #if time.time() - row[1].ticks() > 86400:
             # Install date was more than 24 hours ago
-            return 3
+            #return 3
         
         # let's register the client
         ts = time.localtime()
@@ -199,7 +199,12 @@ class Server(object):
         os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
         sc = wks.findFile(self.client, self.jumpstarts)
-        ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
+        try:
+            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
+        except KeyError, e:
+            # Unsupported version key in config file
+            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
+
         data = ks.getKeys('users')
         if len(data) == 0:
             usersdata = "users default %s" % self.defaultKey
