@@ -90,7 +90,12 @@ def call_method(method, params):
     # Now walk down the tree and check export lists
     call = "API"
     for module in list:
-        exports = eval("%s.__API" % call)
+        try:
+            exports = eval("%s.__API" % call)
+        except AttributeError, e:
+            # What the fuck?  Why does __API keep disappearing?
+            s = "AttributeError!  dir(API) = %s\nException = %s\n" % (str(dir(API)), str(e))
+            raise Exception(s)
         if not module in exports:
             return xmlrpclib.Fault(1000, "%s not exported or found.\n"
                                    % method)
