@@ -52,7 +52,9 @@ def getServerKey():
     """Return the Server's public key"""
     
     srv = server.Server(getHostName())
-    return server.getFile(srv.publicKey)
+    ret = srv.getFile(srv.publicKey)
+    srv.shutDown()
+    return ret
     
 
 def register(publicKey, dept, version):
@@ -60,7 +62,9 @@ def register(publicKey, dept, version):
        appropiate.  A false return code means that registration failed."""
     
     s = server.Server(getHostName())
-    return s.register(publicKey, dept, version)
+    ret = s.register(publicKey, dept, version)
+    s.shutDown()
+    return ret
 
 
 #def declineSupport():
@@ -74,7 +78,9 @@ def checkIn(publicKey, sig):
     """Workstation checking in.  Update status in DB."""
     
     s = server.Server(getHostName())
-    return s.checkIn(publicKey, sig)
+    ret = s.checkIn(publicKey, sig)
+    s.shutDown()
+    return ret
 
 
 def getEncKeyFile(publicKey, sig):
@@ -82,5 +88,7 @@ def getEncKeyFile(publicKey, sig):
        on the workstation."""
        
     s = server.Server(getHostName())
-    return s.getEncKeyFile(publicKey, sig)
+    ret = s.getEncKeyFile(publicKey, sig)
+    s.shutDown()
+    return ret
 

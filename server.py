@@ -81,7 +81,7 @@ class Server(object):
         self.cursor = self.conn.cursor()
         
     
-    def __del__(self):
+    def shutDown(self):
         """Destructor.  Clean up MySQL connection."""
         
         self.cursor.close()
