@@ -35,8 +35,8 @@ import xmlrpclib
 import string
 import os.path
 
-# API that is exposed
-import API
+## API that is exposed
+#import API
 
 def handler(req):
     "Process XML_RPC"
@@ -62,8 +62,8 @@ def handler(req):
     params, method = xmlrpclib.loads(data)
     params = list(params)
 
-    API.req = req
-    method_ret = call_method(method, params)
+    #API.req = req
+    method_ret = call_method(method, params, req)
     ret = ""
     
     if not isinstance(method_ret, xmlrpclib.Fault):
@@ -82,8 +82,11 @@ def handler(req):
     return apache.OK
 
 
-def call_method(method, params):
+def call_method(method, params, req):
     "Find an exported method that matches what we've been given and call it."
+
+    import API
+    API.req = req
 
     list = string.split(method, '.')
                      
