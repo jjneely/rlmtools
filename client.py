@@ -22,6 +22,7 @@
 
 import sys
 import os
+import os.path
 import xmlrpclib
 import re
 import syslog
@@ -80,16 +81,18 @@ def getRPCObject():
 def getVersion():
     "Return the version string for a Realm Linux product."
 
-    if os.access("/etc/redhat-release", os.R_OK):
+    if os.path.exists("/etc/redhat-release") and not os.path.islink("/etc/redhat-release"):
         pipe = os.popen("/bin/rpm -q redhat-release --qf '%{version}'")
         version = pipe.read().strip()
         pipe.close()
         return version
-    elif os.access("/etc/fedora-release", os.R_OK):
+    elif os.path.exists("/etc/fedora-release"):
         pipe = os.popen("/bin/rpm -q fedora-release --qf '%{version}'")
         version = pipe.read().strip()
         pipe.close()
         return "FC%s" % version
+    else:
+        return "Unknown"
     
                         
 def doRegister(server):
