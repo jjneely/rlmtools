@@ -57,3 +57,7 @@ case the value for lastcheck will be NULL:
 The proper delete commands should be obvious from the above select 
 statements.
 
+4) Some extra error checking needs to be added.  We should check for
+socket.error: (104, 'Connection reset by peer') in the getRPCObject
+function.  Probably a few others.
+

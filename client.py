@@ -26,6 +26,7 @@ import os.path
 import xmlrpclib
 import re
 import syslog
+import socket
 
 sys.path.append("/afs/eos/project/realmlinux/py-modules")
 
@@ -73,6 +74,9 @@ def getRPCObject():
         test = server.hello()
     except xmlrpclib.Error, e:
         error("Error creating XMLRPC object: " + str(e))
+        sys.exit(1)
+    except socket.error, e:
+        error("Socket Error: %s" % str(e))
         sys.exit(1)
         
     return server
@@ -195,7 +199,13 @@ def doCheckIn(server):
     pubKeyText = key.exportKey()
     sig = key.signString(pubKeyText)
 
-    ret = server.checkIn(pubKeyText, sig)
+    try:
+        ret = server.checkIn(pubKeyText, sig)
+    except AssertionError, e:
+        # Sigh...this appears to be a bug in httplib when the server
+        # craps out on us.  Here, lets just ignore and checkIn() later
+        error("AssertionError cought from httplib...exiting")
+        
     if ret != 0:
         error("Checkin failed with return code %s" % ret)
 
