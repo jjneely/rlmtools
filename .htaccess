@@ -1,0 +1,4 @@
+AddHandler python-program .py
+PythonHandler handler
+PythonDebug On
+#DirectoryIndex handler.py
