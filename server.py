@@ -4,6 +4,8 @@
 ##     Copyright (C) 2003 NC State University
 ##     Written by Jack Neely <jjneely@pams.ncsu.edu>
 
+##     SDG
+
 ##     This program is free software; you can redistribute it and/or modify
 ##     it under the terms of the GNU General Public License as published by
 ##     the Free Software Foundation; either version 2 of the License, or
@@ -33,15 +35,9 @@ testmode = 1
 
 if testmode:
     configFile = "/home/slack/projects/tmp/keys/testing.conf"
-    pubKeyFile = "/home/slack/projects/tmp/keys/realmlinux.pub"
-    privKeyFile = "/home/slack/projects/tmp/keys/realmlinux.priv"
-    jumpstarts = "/home/slack/projects/solaris2ks/configs"
     sys.path.append("/home/slack/projects/solaris2ks")
 else:
     configFile = "/afs/eos/www/linux/configs/web-kickstart.conf"
-    pubKeyFile = "/afs/eos/www/linux/configs/keys/realmlinux.pub"
-    privKeyFile = "/afs/eos/www/linux/configs/keys/realmlinux.priv"
-    jumpstarts = "/afs/eos/www/linux/web-kickstart/configs"
     sys.path.append("/afs/eos/www/linux/web-kickstart")
 
 from webKickstart import webKickstart
@@ -68,10 +64,17 @@ class Server(object):
         global configFile
         cnf = ConfigParser.ConfigParser()
         cnf.read(configFile)
-        self.dbhost = cnf.get('main', 'host')
-        self.dbuser = cnf.get('main', 'user')
-        self.dbpasswd = cnf.get('main', 'passwd')
-        self.db = cnf.get('main', 'db')
+		
+        self.dbhost = cnf.get('database', 'host')
+        self.dbuser = cnf.get('database', 'user')
+        self.dbpasswd = cnf.get('database', 'passwd')
+        self.db = cnf.get('database', 'db')
+
+        # Other config information
+        self.jumpstarts = cnf.get('main', 'jumpstarts')
+        self.defaultKey = cnf.get('keys', 'defaultkey')
+        self.privateKey = cnf.get('keys', 'private')
+        self.publicKey = cnf.get('keys', 'public')
         
         # Open a MySQL connection and cursor
         self.conn = MySQLdb.connect(host=self.dbhost, user=self.dbuser,
@@ -87,7 +90,7 @@ class Server(object):
         self.conn.close()
         
         
-    def verifyClientKey(publicKey, sig):
+    def verifyClientKey(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
         
         trustedKey = self.isRegistered()
@@ -105,7 +108,7 @@ class Server(object):
             return 0
     
     
-    def isRegistered():
+    def isRegistered(self):
         """Returns a clients public key if this client is registered.  
            Otherwise None is returned."""
         
@@ -117,7 +120,7 @@ class Server(object):
             return None
     
     
-    def register(publicKey, dept, version):
+    def register(self, publicKey, dept, version):
         """Workstation requests registration.  Check DB and register host as
            appropiate.  On success 0 is returned, otherwise a non-zero error
            code is returned."""
@@ -148,7 +151,7 @@ class Server(object):
         return 0
     
     
-    def declineSupport():
+    def declineSupport(self):
         """Workstation has declined support.  Modify DB as appropiate."""
         
         # This workstation has declined support.  It may not have a key
@@ -161,7 +164,7 @@ class Server(object):
             hostname=%s""", (self.client,))
     
     
-    def checkIn(publicKey, sig):
+    def checkIn(self, publicKey, sig):
         """Workstation checking in.  Update status in DB."""
         
         ts = time.localtime()
@@ -174,31 +177,63 @@ class Server(object):
             # ignore
             pass
     
-    
-    def getEncKeyFile(publicKey, sig):
+
+    def __makeUpdatesConf(self):
+        """Generate the updates.conf file and return a string."""
+
+        # Okay...get the file and return it
+        # get a bogus webKickstart instance
+        wks = webKickstart("fakeurl", {})
+        sc = wks.findFile(self.client, self.jumpstarts)
+        ks = baseKickstart("fakeurl", sc)
+        data = ks.getKeys('users')
+        if len(data) == 0:
+            usersdata = "users default %s" % self.defaultKey
+        else:
+            # a list of the options passed to the 'users' key
+            args = data[0]['options']
+            usersdata = "users " + string.join(users_args)
+        
+        # root data
+        data = ks.getKeys('root')
+        if len(data) == 0:
+            rootdata = "root default %s" % self.defaultKey
+        else:
+            args = data[0]['options']
+            rootdata = "root " + string.join(args)
+
+        # clusters
+        data = ks.getKeys('cluster')
+        clusterdata = ""
+        if len(data) > 0:
+            for row in data:
+                clusterdata = "%scluster %s\n" % (clusterdata, 
+                    string.join(row['options']))
+
+        return "%s\n%s\n%s" % (usersdata, rootdata, clusterdata)
+
+    def getEncKeyFile(self, publicKey, sig):
         """Returns an ecrypted string containing what should go in 
            /etc/update.conf on the workstation."""
         
         if not self.verifyClient(publicKey, sig):
             return None
 
-        # Okay...get the file and return it
-        # get a bogus webKickstart instance
-        wks = webKickstart("fakeurl", {})
-        sc = wks.findFile(self.client, jumpstarts)
-        ks = baseKickstart("fakeurl", sc)
-        users = ks.getKeys('users')
-        if len(users) == 0:
-            filedata = "users default Wr1cRGN8EZ6CBcv3SaOSjwZ9tY14jV"
-        else:
-            # a list of the options passed to the 'users' key
-            users_args = users[0]['options']
-            filedata = "users " + string.join(users_args)
-            
+        filedata = self.__makeUpdatesConf()
+        
         # Now we encrypt and sign it
-        k = ezPyCrypto.key(privKeyFile)
-        enc = k.encryptStringiToAscii(filedata)
-        sig = k.signString(enc)
+        trustedKey = self.isRegistered()
+        if trustedKey == None:
+            # WTF?  Not registered?
+            return None
+        client = ezPyCrypto.key(trustedKey)
+        enc = client.encryptStringiToAscii(filedata)
+		
+        # Get the RK key to sign with
+        fd = open(self.privateKey)
+        server = ezPyCrypto.key(fd.read())
+        fd.close()
+        sig = server.signString(enc)
 
         return (enc, sig)
         

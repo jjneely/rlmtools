@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
 ##     Simple mod_python XML-RPC server
-##     Copyright (C) 2003 Jack Neely <slack@quackmaster.net>
+##     Copyright (C) 2003 NC State University
+##     Written by Jack Neely <slack@quackmaster.net>
+
+##     SDG
 
 ##     This program is free software; you can redistribute it and/or modify
 ##     it under the terms of the GNU General Public License as published by
