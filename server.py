@@ -41,7 +41,6 @@ else:
     sys.path.append("/afs/eos/www/linux/web-kickstart")
 
 from webKickstart import webKickstart
-from baseKickstart import baseKickstart
 
 def getFile(filename):
     """Helper function to return a file as a string"""
@@ -192,10 +191,10 @@ class Server(object):
         # Okay...get the file and return it
         # get a bogus webKickstart instance
         # must also make CWD sane for webKickstart
-        os.chdir(sys.path[0])
+        os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
         sc = wks.findFile(self.client, self.jumpstarts)
-        ks = baseKickstart("fakeurl", sc)
+        ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
         data = ks.getKeys('users')
         if len(data) == 0:
             usersdata = "users default %s" % self.defaultKey
