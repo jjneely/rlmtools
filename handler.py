@@ -36,7 +36,7 @@ import string
 import os.path
 
 ## API that is exposed
-import API
+API = apache.import_module("API", log=1)
 
 def handler(req):
     "Process XML_RPC"
@@ -92,6 +92,10 @@ def call_method(method, params, req):
                      
     # Now walk down the tree and check export lists
     func = API
+    if not dir(API).has_key("__API__"):
+        # Mother fuck!  WHY?!?!?!
+        s = "No __API__!! dir(API) == %s" % str(dir(API))
+        raise AttributeError(s)
     for module in list:
         if module in func.__API__:
             try:
