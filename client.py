@@ -24,13 +24,14 @@ import sys
 import os
 import xmlrpclib
 import re
+import syslog
 
 sys.path.append("/afs/eos/project/realmlinux/py-modules")
 
 import ezPyCrypto
 
 # XMLRPC Interface
-URL = "http://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
+URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
@@ -39,6 +40,14 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 
 # Registration file
 registration = "/etc/sysconfig/RLKeys/registered"
+
+
+def error(message):
+    "Log an error message to syslog."
+
+    priority = syslog.LOG_ERR or syslog.LOG_USER
+    syslog.syslog(priority, "Realm Linux Support: %s" % message)
+
 
 def isSupported():
     file = "/etc/sysconfig/support"
@@ -62,7 +71,7 @@ def getRPCObject():
     try:
         test = server.hello()
     except xmlrpclib.Error, e:
-        print "Hmmm...something goofed: " + str(e)
+        error("Error creating XMLRPC object: " + str(e))
         sys.exit(1)
         
     return server
@@ -108,7 +117,7 @@ def doRegister(server):
 
     ret = server.register(pubKey, dept, getVersion())
     if ret != 0:
-        print "Registration failed with return code %s" % ret
+        error("Registration failed with return code %s" % ret)
         
     return ret
 
@@ -122,13 +131,13 @@ def getUpdateConf(server):
     
     update = server.getEncKeyFile(pubKey, sig)
     if update == []:
-        print "Error receiving update.conf file"
+        error("Error receiving update.conf file")
         return
     
     # check sig
     serverKey = getRealmLinuxKey(server)
     if not serverKey.verifyString(update[0], update[1]):
-        print "ERROR: Encrypted update.conf did not verify."
+        error("ERROR: Encrypted update.conf did not verify.")
         return
     
     dec = keypair.decStringFromAscii(update[0])
@@ -142,7 +151,7 @@ def getLocalKey():
     "Return an ezPyCrypto keypair for this local host."
     
     if not os.access(privateKey, os.R_OK):
-        print "Error importing keys for checkin"
+        error("Error importing keys for checkin.")
         return None
     
     fd = open(privateKey)
@@ -185,7 +194,7 @@ def doCheckIn(server):
 
     ret = server.checkIn(pubKeyText, sig)
     if ret != 0:
-        print "Checkin failed with return code %s" % ret
+        error("Checkin failed with return code %s" % ret)
 
 
 def main():
@@ -194,7 +203,8 @@ def main():
     
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."
-    
+        sys.exit(1)
+        
     if os.access(registration, os.W_OK):
         register = 0
     else:
@@ -203,7 +213,7 @@ def main():
     server = getRPCObject()
     if register == 1:
         if not isSupported():
-            print "Your machine is not configured for support."
+            error("Your machine is not configured for support.")
             return 1
         
         else:

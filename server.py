@@ -143,10 +143,17 @@ class Server(object):
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
         # XXX: insert time window check here
-        self.cursor.execute("""update realmlinux 
-            set recvdkey=1, publickey=%s, lastcheck=%s, dept=%s, version=%s
-            where hostname=%s""", (publicKey, date, dept, version, 
-            self.client))
+
+        try:
+            self.cursor.execute("""update realmlinux 
+               set recvdkey=1, publickey=%s, lastcheck=%s, dept=%s, version=%s
+               where hostname=%s""", (publicKey, date, dept, version, 
+               self.client))
+        except MySQLdb.Warning, e:
+            # What's this about?
+            fd = open("/tmp/mysql.warnings", "a")
+            fd.write("MySQL Waring: %s\n" % str(e))
+            fd.close()
 
         return 0
     
