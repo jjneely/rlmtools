@@ -69,14 +69,20 @@ def isSupported():
 def getRPCObject():
     "Return the xmlrpc opject we want."
 
-    server = xmlrpclib.ServerProxy(URL)
     try:
+        server = xmlrpclib.ServerProxy(URL)
         test = server.hello()
     except xmlrpclib.Error, e:
         error("Error creating XMLRPC object: " + str(e))
         sys.exit(1)
     except socket.error, e:
         error("Socket Error: %s" % str(e))
+        sys.exit(1)
+    except socket.sslerror, e:
+        error("Socket Error: %s" % str(e))
+        sys.exit(1)
+    except AssertionError, e:
+        error("Hell, it Broke: %s" % str(e))
         sys.exit(1)
         
     return server
@@ -121,8 +127,13 @@ def doRegister(server):
     fd = open("/etc/rc.conf.d/HostDept")
     dept = fd.read().strip()
     fd.close()
-
-    ret = server.register(pubKey, dept, getVersion())
+    
+    try:
+        ret = server.register(pubKey, dept, getVersion())
+    except xmlrpclib.Fault, e:
+        error("Exception Occured: %s" % str(e))
+        sys.exit(1)
+        
     if ret != 0:
         error("Registration failed with return code %s" % ret)
         
@@ -135,8 +146,13 @@ def getUpdateConf(server):
     keypair = getLocalKey()
     pubKey = keypair.exportKey()
     sig = keypair.signString(pubKey)
-    
-    update = server.getEncKeyFile(pubKey, sig)
+   
+    try:
+        update = server.getEncKeyFile(pubKey, sig)
+    except xmlrpclib.Fault, e:
+        error("Exception Occured: %s" % str(e))
+        sys.exit(1)
+        
     if update == []:
         error("Error receiving update.conf file")
         return
