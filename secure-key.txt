@@ -1,0 +1,39 @@
+A short cut method to trusted vs untrusted Linux Realm Kit machines.  The
+primary goal is to distribute secret keys to trusted clients.
+
+1) Target machine requests a kickstart from web-kickstart.  We have a list of
+admin approved machines in AFS.  If machine checks out we record in a MySQL
+database provided by ITD its IP and a timestamp.  This DB also has room to
+store a public encryption key.  The kickstart request must come from anaconda.
+
+2) During %post we will run an application that requests a public/private key
+pair.  The server will check that the client machine has requested a
+kickstart and been approved by web-kickstart within a certain time frame, say
+2 hours.  (This time frame must account for time to install.)
+
+3) Once server has approved the request it will generate a public/private
+key pair.  The public key is stored in the MySQL database for later use.
+The key pair is sent to and stored by the client machine in a directory with
+permissions 700.
+
+4) Each client has a program that updates the encryption key used to fetch
+root passwords and user lists.  This is not run on a regular basis but can be
+purposely run via a cron job in AFS to update encryption keys.  This program
+will make a request to a server for the key and the server will send back the
+key that is encrypted with the public key from the MySQL database.
+
+Technical Details:
+
+1) Anaconda does not identify itself in the HTTP headers it sends when
+requesting a kickstart file.  req.headers_in has one key the "Host" or the
+machine the request for the kickstart is sent to.  No User-Agent.  I mean, it
+really does send nothing.  How do we identify anaconda?  Let's check for the
+existance of the User-Agent header.  If its not there assume that we are
+dealing with anaconda and I will file a bug to get anaconda to supply this
+information.  This will keep most anything else from fooling web-kickstart
+into thinking that a browser is a client wanting to install.
+
+2) Communication between client machine and servers should use XMLRPC.  (Not
+for the kickstart.)  SSL'd to protect the initial transfer of public/private
+keys.
+
