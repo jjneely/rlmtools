@@ -6,21 +6,24 @@ admin approved machines in AFS.  If machine checks out we record in a MySQL
 database provided by ITD its IP and a timestamp.  This DB also has room to
 store a public encryption key.  The kickstart request must come from anaconda.
 
-2) During %post we will run an application that requests a public/private key
-pair.  The server will check that the client machine has requested a
-kickstart and been approved by web-kickstart within a certain time frame, say
-2 hours.  (This time frame must account for time to install.)
+2) Via a cron.update run the system will run a program from AFS that will
+request registration if the client is configured for support.  The server 
+will check that the client machine has requested a kickstart and been 
+approved by web-kickstart within a certain time frame, say 2 hours.  (This 
+time frame must account for time to install and cron job frequency.)
 
-3) Once server has approved the request it will generate a public/private
-key pair.  The public key is stored in the MySQL database for later use.
-The key pair is sent to and stored by the client machine in a directory with
-permissions 700.
+3) The client will generate a public/private key pair as part of the 
+registration process.  The public key is passed to the server and stored in 
+the MySQL database for later use.  The server does not accept this key
+and the complete registration process if the MySQL database shows that this
+machine has already been registered.
 
-4) Each client has a program that updates the encryption key used to fetch
-root passwords and user lists.  This is not run on a regular basis but can be
-purposely run via a cron job in AFS to update encryption keys.  This program
+4) The same cron job updates the encryption key used to fetch root 
+passwords and user lists if that file is not present.  This program
 will make a request to a server for the key and the server will send back the
-key that is encrypted with the public key from the MySQL database.
+key that is encrypted with the public key from the MySQL database and
+signed by a secret Realm Linux key.  The client will verify the signature
+before accepting the encrypted file.
 
 Technical Details:
 
@@ -33,7 +36,9 @@ dealing with anaconda and I will file a bug to get anaconda to supply this
 information.  This will keep most anything else from fooling web-kickstart
 into thinking that a browser is a client wanting to install.
 
+As of Fedora Core, Anaconda does send back some more useful header 
+information.  Web-kickstart has been updated to accept either situation.
+
 2) Communication between client machine and servers should use XMLRPC.  (Not
-for the kickstart.)  SSL'd to protect the initial transfer of public/private
-keys.
+for the kickstart.)  SSL'd for added security.
 
