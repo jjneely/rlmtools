@@ -90,7 +90,7 @@ class Server(object):
         self.conn.close()
         
         
-    def verifyClientKey(self, publicKey, sig):
+    def verifyClient(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
         
         trustedKey = self.isRegistered()
@@ -113,7 +113,7 @@ class Server(object):
            Otherwise None is returned."""
         
         self.cursor.execute("""select publickey from realmlinux where
-            hostname=%s and recvdkey=1""" % (self.client,))
+            hostname = %s and recvdkey = 1""", (self.client,))
         if self.cursor.rowcount > 0:
             return self.cursor.fetchone()[0]
         else:
@@ -183,6 +183,8 @@ class Server(object):
 
         # Okay...get the file and return it
         # get a bogus webKickstart instance
+        # must also make CWD sane for webKickstart
+        os.chdir(sys.path[0])
         wks = webKickstart("fakeurl", {})
         sc = wks.findFile(self.client, self.jumpstarts)
         ks = baseKickstart("fakeurl", sc)
@@ -226,8 +228,9 @@ class Server(object):
         if trustedKey == None:
             # WTF?  Not registered?
             return None
-        client = ezPyCrypto.key(trustedKey)
-        enc = client.encryptStringiToAscii(filedata)
+        client = ezPyCrypto.key()
+        client.importKey(trustedKey)
+        enc = client.encStringToAscii(filedata)
 		
         # Get the RK key to sign with
         fd = open(self.privateKey)
@@ -235,5 +238,7 @@ class Server(object):
         fd.close()
         sig = server.signString(enc)
 
-        return (enc, sig)
+        ret = [enc, sig]
+
+        return ret
         

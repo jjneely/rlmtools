@@ -105,12 +105,47 @@ def doRegister():
     ret = server.register(pubKey, dept, getVersion())
     if ret != 0:
         print "Registration failed with return code %s" % ret
+        return
+
+    # Get the update.conf file
+    sig = keypair.signString(pubKey)
+    update = server.getEncKeyFile(pubKey, sig)
+    if update == None:
+        print "Error receiving update.conf file"
+        return
+    
+    dec = keypair.decString(update)
+    fd = open("/etc/update.conf", "w")
+    fd.write(dec)
+    fd.close()
+    os.chmod("/etc/update.conf", 600)
 
 
 def doCheckIn():
-    # Need our public key and then a sig on it
-    pass
+    "Check in with the XMLRPC server."
+
+    if not os.access(publicKey, os.R_OK) and os.access(privateKey, os.R_OK):
+        print "Error importing keys for checkin"
+        return
     
+    # read in public key
+    fd = open(publicKey)
+    pubKeyText = fd.read()
+    fd.close()
+    
+    # read in private key
+    fd = open(privateKey)
+    privKeyText = fd.read()
+    fd.close()
+
+    key = ezPyCrypto.key(privKeyText)
+    sig = key.signString(pubKeyText)
+
+    server = getRPCObject()
+    ret = server.checkIn(pubKeyText, sig)
+    if ret != 0:
+        print "Checkin failed with return code %s" % ret
+
 
 def main():
     """Run via a cron job.  Figure out if we need to register or just
