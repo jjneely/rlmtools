@@ -42,3 +42,18 @@ information.  Web-kickstart has been updated to accept either situation.
 2) Communication between client machine and servers should use XMLRPC.  (Not
 for the kickstart.)  SSL'd for added security.
 
+3) Old entries must be deleted regularly from the MySQL DB.  To select
+entries inactive for more than 30 days we do a:
+
+    select hostname from realmlinux where 
+    TO_DAYS(NOW()) - TO_DAYS(lastcheck) > 30;
+
+Also we must clear up machines that installed but never registered.  In this
+case the value for lastcheck will be NULL:
+
+    select hostname from realmlinux where 
+    TO_DAYS(NOW()) - TO_DAYS(installdate) > 30 and lastcheck is NULL;
+
+The proper delete commands should be obvious from the above select 
+statements.
+
