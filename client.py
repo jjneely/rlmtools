@@ -32,6 +32,10 @@ import ezPyCrypto
 # XMLRPC Interface
 URL = "http://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
 
+# Locally stored keys
+publicKey = "/etc/sysconfig/rkhost.pub"
+privateKey = "/etc/sysconfig/rkhost.priv"
+
 def isSupported():
     file = "/etc/sysconfig/support"
     regex = re.compile("^SUPPORT=yes")
@@ -47,11 +51,64 @@ def isSupported():
     return 0
 
 
+def getRPCObject():
+    "Return the xmlrpc opject we want."
+
+    server = xmlrpclib.ServerProxy(URL)
+    try:
+        test = server.hello()
+    except Error, e:
+        print "Hmmm...something goofed: " + str(v)
+        sys.exit(1)
+        
+    return server
+
+
+def getVersion():
+    "Return the version string for a Realm Linux product."
+
+    if os.access("/etc/redhat-release", os.R_OK):
+        pipe = os.popen("/bin/rpm -q redhat-release --qf '%{version}'")
+        version = pipe.read().strip()
+        pipe.close()
+        return version
+    elif os.access("/etc/fedora-release", os.R_OK):
+        pipe = os.popen("/bin/rpm -q fedora-release --qf '%{version}'")
+        version = pipe.read().strip()
+        pipe.close()
+        return "FC%s" % version
+    
+                        
 def doRegister():
-    pass
+    # Need a new public/private key pair, dept, and version
+    # Generate new key pair
+    keypair = ezPyCrypto.key(1024)
+    pubKey = keypair.exportKey()
+    privKey = keypair.exportKeyPrivate()
+
+    # Store keys
+    fd = open(publicKey, "w")
+    fd.write(pubKey)
+    fd.close()
+    os.chmod(publicKey, 600)
+
+    fd = open(privateKey, "w")
+    fd.write(privKey)
+    fd.close()
+    os.chmod(privateKey, 600)
+
+    # get department
+    fd = open("/etc/rc.conf.d/HostDept")
+    dept = fd.read().strip()
+
+    server = getRPCObject()
+    ret = server.register(pubKey, dept, getVersion())
+    if ret != 0:
+        print "Registration failed with return code %s" % ret
 
 
 def doCheckIn():
+    # Need our public key and then a sig on it
     pass
     
 
