@@ -52,7 +52,7 @@ def getServerKey():
     """Return the Server's public key"""
     
     srv = server.Server(getHostName())
-    ret = srv.getFile(srv.publicKey)
+    ret = server.getFile(srv.publicKey)
     srv.shutDown()
     return ret
     

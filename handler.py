@@ -72,6 +72,7 @@ def handler(req):
         
         ret = xmlrpclib.dumps(method_ret, methodresponse=1)
     else:
+        apache.log_error(str(method_ret))
         return apache.HTTP_METHOD_NOT_ALLOWED
 
     req.content_type = 'text/xml'
