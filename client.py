@@ -205,6 +205,7 @@ def doCheckIn(server):
         # Sigh...this appears to be a bug in httplib when the server
         # craps out on us.  Here, lets just ignore and checkIn() later
         error("AssertionError cought from httplib...exiting")
+        ret = -1
         
     if ret != 0:
         error("Checkin failed with return code %s" % ret)
