@@ -25,6 +25,7 @@
 
 import socket
 import server
+
 from mod_python import apache
 
 __API__ = ['hello',
@@ -32,7 +33,8 @@ __API__ = ['hello',
            'getServerKey',
            'checkIn',
            'getServerKey',
-           'getEncKeyFile']
+           'getEncKeyFile',
+           'getActivationKey']
 
 def hello():
     return "Hello World"
@@ -79,6 +81,15 @@ def checkIn(publicKey, sig):
     
     s = server.Server(getHostName())
     ret = s.checkIn(publicKey, sig)
+    s.shutDown()
+    return ret
+
+
+def getActivationKey(publicKey, sig):
+    "Return the RHN activation key for this host."
+
+    s = server.Server(getHostName())
+    ret = s.getActivationKey(publicKey, sig)
     s.shutDown()
     return ret
 

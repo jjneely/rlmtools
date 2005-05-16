@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #     RealmLinux Manager -- Main server object
-#     Copyright (C) 2003 NC State University
+#     Copyright (C) 2003, 2005 NC State University
 #     Written by Jack Neely <jjneely@pams.ncsu.edu>
 #
 #     SDG
@@ -74,7 +74,8 @@ class Server(object):
         self.defaultKey = cnf.get('main', 'defaultkey')
         self.privateKey = cnf.get('main', 'privatekey')
         self.publicKey = cnf.get('main', 'publickey')
-        
+        self.rhnkey = cnf.get('main', 'rhnkey')
+       
         # Open a MySQL connection and cursor
         self.conn = MySQLdb.connect(host=self.dbhost, user=self.dbuser,
                                     passwd=self.dbpasswd, db=self.db)
@@ -190,6 +191,34 @@ class Server(object):
         return 0
     
 
+    def getActivationKey(self, publicKey, sig):
+        """Returns the current RHN activation key for this host."""
+
+        if not self.verifyClient(publicKey, sig):
+            # verification error
+            return 1
+
+        wks = webKickstart("fakeurl", {})
+        sc = wks.findFile(self.client, self.jumpstarts)
+        if sc == None:
+            raise Exception("No config for %s in %s" % (self.client,
+                                                        self.jumpstarts))
+        try:
+            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
+        except KeyError, e:
+            # Unsupported version key in config file
+            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
+
+        data = ks.getKeys('enable', 'activationkey')
+        if len(data) == 0:
+            # *sigh* no key
+            key = self.rhnkey
+        else:
+            key = data[0]['options'][0]
+
+        return key
+
+        
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
