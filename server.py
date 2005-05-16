@@ -198,6 +198,7 @@ class Server(object):
             # verification error
             return 1
 
+        os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
         sc = wks.findFile(self.client, self.jumpstarts)
         if sc == None:
