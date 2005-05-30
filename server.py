@@ -28,6 +28,7 @@ import MySQLdb
 import ezPyCrypto
 import ConfigParser
 import os
+import os.path
 import time
 import string
 
@@ -75,7 +76,8 @@ class Server(object):
         self.privateKey = cnf.get('main', 'privatekey')
         self.publicKey = cnf.get('main', 'publickey')
         self.rhnkey = cnf.get('main', 'rhnkey')
-       
+        self.keypath = cnf.get('main', 'key_directory')
+
         # Open a MySQL connection and cursor
         self.conn = MySQLdb.connect(host=self.dbhost, user=self.dbuser,
                                     passwd=self.dbpasswd, db=self.db)
@@ -141,11 +143,57 @@ class Server(object):
 
         # Check the Time window for 24 hours
         row = self.cursor.fetchone()
-        #if time.time() - row[1].ticks() > 86400:
-            # Install date was more than 24 hours ago
-            #return 3
+        if time.time() - row[1].ticks() > 86400:
+            #Install date was more than 24 hours ago
+            return 3
+
+        return self.__register(publicKey, dept, version)
         
+
+    def bless(self, dept, version):
+        # Take a System Administrator's Blessing as registration
+        # This works by finding the public key on disk.  Supposedly
+        # only a sysadmin can put it there, copied from the client to 
+        # bless
+
+        file = os.path.join(self.keypath, self.client+".pub")
+        # From the above, this must also be called from the client
+        # to register
+
+        if not os.access(file, os.R_OK):
+            # key not found.  Cannot register
+            return 1
+
+        fd = open(file)
+        publicKey = fd.read()
+        fd.close()
+
+        # check to see if client has been logged in DB
+        self.cursor.execute("""select * from realmlinux where 
+            hostname=%s""", (self.client,))
+        
+        if not self.cursor.rowcount > 0:
+            # Then we put it there
+            ts = time.localtime()
+            date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
+            q = """insert into realmlinux (hostname, installdate, recvdkey) 
+                   values (%s, %s, %s)"""
+            t = (self.client, date, 0)
+            self.cursor.execute(q, t)
+            
+        # Update db roa
+        ret = self.__register(publicKey, dep, version)
+        try:
+            os.unlink(file)
+        except IOError, e:
+            pass
+
+        return ret
+            
+        
+    def __register(self, publicKey, dept, version):
         # let's register the client
+        # Require that a row for the hostname exists in the DB
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
 
