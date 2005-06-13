@@ -27,6 +27,7 @@ import xmlrpclib
 import re
 import syslog
 import socket
+import stat
 
 sys.path.append("/afs/eos/project/realmlinux/py-modules")
 
@@ -108,20 +109,21 @@ def getVersion():
 def doRegister(server):
     # Need a new public/private key pair, dept, and version
     # Generate new key pair
-    keypair = ezPyCrypto.key(1024)
+    keypair = getLocalKey()
     pubKey = keypair.exportKey()
     privKey = keypair.exportKeyPrivate()
 
-    # Store keys
-    fd = open(publicKey, "w")
-    fd.write(pubKey)
-    fd.close()
-    os.chmod(publicKey, 0600)
+    if not os.path.exists(publicKey):
+    # Store keys, not created previously
+        fd = open(publicKey, "w")
+        fd.write(pubKey)
+        fd.close()
+        os.chmod(publicKey, 0644)
 
-    fd = open(privateKey, "w")
-    fd.write(privKey)
-    fd.close()
-    os.chmod(privateKey, 0600)
+        fd = open(privateKey, "w")
+        fd.write(privKey)
+        fd.close()
+        os.chmod(privateKey, 0600)
 
     # get department
     fd = open("/etc/rc.conf.d/HostDept")
@@ -174,15 +176,20 @@ def getLocalKey():
     "Return an ezPyCrypto keypair for this local host."
     
     if not os.access(privateKey, os.R_OK):
-        error("Error importing keys for checkin.")
-        return None
-    
-    fd = open(privateKey)
-    privKeyText = fd.read()
-    fd.close()
+        error("Creating public/private keypair.")
+        key = ezPyCrypto.key(1024)
+    else: 
+        # Check bits
+        mode = os.stat(publicKey).st_mode
+        if not stat.S_IMODE(mode) == 0644:
+            os.chmod(publicKey, 0644)
 
-    key = ezPyCrypto.key()
-    key.importKey(privKeyText)
+        fd = open(privateKey)
+        privKeyText = fd.read()
+        fd.close()
+
+        key = ezPyCrypto.key()
+        key.importKey(privKeyText)
 
     return key
 
