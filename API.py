@@ -34,7 +34,9 @@ __API__ = ['hello',
            'checkIn',
            'getServerKey',
            'getEncKeyFile',
-           'getActivationKey']
+           'getActivationKey',
+           'bless',
+          ]
 
 def hello():
     return "Hello World"
@@ -69,11 +71,13 @@ def register(publicKey, dept, version):
     return ret
 
 
-#def declineSupport():
-#    """Workstation has declined support.  Modify DB as appropiate."""
-#    
-#    s = server.Server(getHostName())
-#    s.declineSupport()
+def bless(dept, version):
+    """Administratively bless a workstation."""
+
+    s = server.Server(getHostName())
+    ret = s.bless(dept, version)
+    s.shutDown()
+    return ret
 
 
 def checkIn(publicKey, sig):

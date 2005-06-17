@@ -28,9 +28,6 @@ import re
 import syslog
 import socket
 import stat
-
-sys.path.append("/afs/eos/project/realmlinux/py-modules")
-
 import ezPyCrypto
 
 # XMLRPC Interface
@@ -44,10 +41,15 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 # Registration file
 registration = "/etc/sysconfig/RLKeys/registered"
 
+# Where blessings go
+blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
 
-def error(message):
+def error(message, verbose=False):
     "Log an error message to syslog."
 
+    if verbose:
+        print message
+        
     priority = syslog.LOG_ERR or syslog.LOG_USER
     syslog.syslog(priority, "Realm Linux Support: %s" % message)
 
@@ -89,6 +91,17 @@ def getRPCObject():
     return server
 
 
+def getDepartment():
+    try:
+        fd = open("/etc/rc.conf.d/HostDept")
+        dept = fd.read().strip()
+        fd.close()
+    except OSError, e:
+        dept = "ncsu"
+   
+    return dept
+
+
 def getVersion():
     "Return the version string for a Realm Linux product."
 
@@ -105,16 +118,13 @@ def getVersion():
     else:
         return "Unknown"
     
-                        
-def doRegister(server):
-    # Need a new public/private key pair, dept, and version
-    # Generate new key pair
-    keypair = getLocalKey()
-    pubKey = keypair.exportKey()
-    privKey = keypair.exportKeyPrivate()
+def saveKey(key):
+    # make sure the key is written to disk
 
     if not os.path.exists(publicKey):
-    # Store keys, not created previously
+        pubKey = key.exportKey()
+        privKey = key.exportKeyPrivate()
+        
         fd = open(publicKey, "w")
         fd.write(pubKey)
         fd.close()
@@ -125,13 +135,16 @@ def doRegister(server):
         fd.close()
         os.chmod(privateKey, 0600)
 
-    # get department
-    fd = open("/etc/rc.conf.d/HostDept")
-    dept = fd.read().strip()
-    fd.close()
+
+def doRegister(server):
+    # Need a new public/private key pair, dept, and version
+    # Generate new key pair
+    keypair = getLocalKey()
+
+    saveKey(keypair)
     
     try:
-        ret = server.register(pubKey, dept, getVersion())
+        ret = server.register(pubKey, getDepartment(), getVersion())
     except xmlrpclib.Fault, e:
         error("Exception Occured: %s" % str(e))
         sys.exit(1)
@@ -234,9 +247,59 @@ def doCheckIn(server):
         error("Checkin failed with return code %s" % ret)
 
 
+def doBlessing(server):
+    """Administratively bless a client."""
+
+    fqdn = socket.getfqdn()
+    key = getLocalKey()
+    pubKeyText = key.exportKey()
+    
+    print "Hostname: %s" % fqdn
+    print "The above hostname must match the A record for your IP address."
+    print
+
+    file = os.path.join(blessings_dir, fqdn+".pub")
+    try:
+        fd = open(file, "w")
+        fd.write(pubKeyText)
+        fd.close()
+    except Exception, e:
+        error("Blessing failed writing key file with error: %s" % str(e))
+        print "An error occured: %s" % str(e)
+        print "You must have permission to create Web-Kickstart configs to"
+        print "administratively bless machines."
+        sys.exit(10)
+
+    print "Sending XMLRPC request..."
+    try:
+        ret = server.bless(getDepartment(), getVersion())
+    except AssertionError, e:
+        error("Blessing failed with AssertionError: %s" % str(e))
+        print "A communications error occured.  Please try again."
+        sys.exit(11)
+
+    if ret != 0:
+        error("Blessing failed with return code %s" % ret, True)
+    else:
+        # touch registration flag
+        fd = open(registration, "w")
+        fd.close()
+        
+        error("Blessing successful")
+        print "Blessing successful.  This machine is now a trusted machine"
+        print "on NCSU's network."
+
+    
 def main():
-    """Run via a cron job.  Figure out if we need to register or just
-       check in.  Then do the proper action."""
+    """This either runs via a cron job to register and checkin
+       with the trusted Realm Linux security stuffs or it can be
+       called directly via 'ncsubless' to administratively register
+       a machine."""
+
+    if sys.argv[0] == "ncsubless":
+        # called via ncsubless script
+        doBlessing(getRPCObject())
+        return
     
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."

@@ -181,7 +181,7 @@ class Server(object):
             t = (self.client, date, 0)
             self.cursor.execute(q, t)
             
-        # Update db roa
+        # Update db 
         ret = self.__register(publicKey, dep, version)
         try:
             os.unlink(file)
