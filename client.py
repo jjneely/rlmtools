@@ -31,7 +31,8 @@ import stat
 import ezPyCrypto
 
 # XMLRPC Interface
-URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+URL = "https://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
@@ -42,7 +43,8 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 registration = "/etc/sysconfig/RLKeys/registered"
 
 # Where blessings go
-blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
+#blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
+blessings_dir = "/home/slack/projects/tmp/keys"
 
 def error(message, verbose=False):
     "Log an error message to syslog."

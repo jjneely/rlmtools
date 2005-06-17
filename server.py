@@ -32,7 +32,7 @@ import os.path
 import time
 import string
 
-testmode = 0
+testmode = 1
 
 if testmode:
     configFile = "/home/slack/projects/tmp/keys/testing.conf"
@@ -164,9 +164,12 @@ class Server(object):
             # key not found.  Cannot register
             return 1
 
-        fd = open(file)
-        publicKey = fd.read()
-        fd.close()
+        try:
+            fd = open(file)
+            publicKey = fd.read()
+            fd.close()
+        except OSError, e:
+            return 99
 
         # check to see if client has been logged in DB
         self.cursor.execute("""select * from realmlinux where 
@@ -182,10 +185,10 @@ class Server(object):
             self.cursor.execute(q, t)
             
         # Update db 
-        ret = self.__register(publicKey, dep, version)
+        ret = self.__register(publicKey, dept, version)
         try:
             os.unlink(file)
-        except IOError, e:
+        except OSError, e:
             pass
 
         return ret
