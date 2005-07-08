@@ -139,6 +139,7 @@ def doRegister(server):
     # Need a new public/private key pair, dept, and version
     # Generate new key pair
     keypair = getLocalKey()
+    pubKey = keypair.exportKey()
 
     saveKey(keypair)
     
@@ -301,7 +302,7 @@ def main():
         sys.exit(1)
         
     server = getRPCObject()
-    if server.isRegistered():
+    if not server.isRegistered():
         if not isSupported():
             error("Your machine is not configured for support.")
             return 1
