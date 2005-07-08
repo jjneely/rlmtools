@@ -310,7 +310,7 @@ def main():
             if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
                 os.mkdir("/etc/sysconfig/RLKeys", 0755)
         
-            if doRegister(server) =! 0:
+            if doRegister(server) != 0:
                 sys.exit()
 
     doCheckIn(server)
