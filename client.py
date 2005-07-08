@@ -41,7 +41,7 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 
 # Where blessings go
 #blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
-blessings_dir = "/home/slack/projects/tmp/keys"
+blessings_dir = "/ncsu/jjneely/slack2/keys"
 
 def error(message, verbose=False):
     "Log an error message to syslog."
@@ -251,11 +251,23 @@ def doBlessing(server):
     """Administratively bless a client."""
 
     fqdn = socket.getfqdn()
-    key = getLocalKey()
-    pubKeyText = key.exportKey()
     
     print "Hostname: %s" % fqdn
     print "The above hostname must match the A record for your IP address."
+    print
+
+    try:
+        key = ezPyCrypto.key()
+        fd = open(publicKey)
+        key.importKey(fd.read())
+    except Exception, e:
+        error("Blessing failed reading public key.  Error: %s" % str(e))
+        print "Error reading public key file.  Cannot bless."
+        print "Error was: %s" % str(e)
+        sys.exit(12)
+
+    pubKeyText = key.exportKey()
+    print "Successfully imported client's public key."
     print
 
     file = os.path.join(blessings_dir, fqdn+".pub")
