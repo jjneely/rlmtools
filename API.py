@@ -1,5 +1,5 @@
 ##     RealmLinux Manager XMLRPC Exposed API
-##     Copyright (C) 2003 NC State University
+##     Copyright (C) 2003 - 2005 NC State University
 ##     Written by Jack Neely <jjneely@pams.ncsu.edu>
 
 ##     SDG
@@ -36,6 +36,7 @@ __API__ = ['hello',
            'getEncKeyFile',
            'getActivationKey',
            'bless',
+           'isRegistered',
           ]
 
 def hello():
@@ -78,6 +79,22 @@ def bless(dept, version):
     ret = s.bless(dept, version)
     s.shutDown()
     return ret
+
+
+def isRegistered():
+    """Returns True if client by this name is registered."""
+
+    s = server.Server(getHostName())
+    ret = s.isRegistered()
+    s.shutDown()
+
+    if ret == None:
+        return False
+    elif ret == '':
+        # Web-Kickstarted but not completely registered
+        return False
+    else:
+        return True
 
 
 def checkIn(publicKey, sig):

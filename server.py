@@ -91,7 +91,7 @@ class Server(object):
         self.conn.commit()
         self.conn.close()
         
-        
+    
     def verifyClient(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
         
@@ -212,19 +212,6 @@ class Server(object):
             fd.close()
 
         return 0
-    
-    
-    def declineSupport(self):
-        """Workstation has declined support.  Modify DB as appropiate."""
-        
-        # This workstation has declined support.  It may not have a key
-        # that we know of so there's not much security here.
-        
-        # This function is insecure...too inseucre
-        assert 0 == 1
-
-        self.cursor.execute("""delete from realmlinux where 
-            hostname=%s""", (self.client,))
     
     
     def checkIn(self, publicKey, sig):

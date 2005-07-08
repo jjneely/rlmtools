@@ -39,9 +39,6 @@ publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
 privateKey = "/etc/sysconfig/RLKeys/rkhost.priv"
 publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 
-# Registration file
-registration = "/etc/sysconfig/RLKeys/registered"
-
 # Where blessings go
 #blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
 blessings_dir = "/home/slack/projects/tmp/keys"
@@ -283,10 +280,6 @@ def doBlessing(server):
     if ret != 0:
         error("Blessing failed with return code %s" % ret, True)
     else:
-        # touch registration flag
-        fd = open(registration, "w")
-        fd.close()
-        
         error("Blessing successful")
         print "Blessing successful.  This machine is now a trusted machine"
         print "on NCSU's network."
@@ -307,13 +300,8 @@ def main():
         print "You are not root.  Insert error message here."
         sys.exit(1)
         
-    if os.access(registration, os.W_OK):
-        register = 0
-    else:
-        register = 1
-
     server = getRPCObject()
-    if register == 1:
+    if server.isRegistered():
         if not isSupported():
             error("Your machine is not configured for support.")
             return 1
@@ -322,10 +310,8 @@ def main():
             if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
                 os.mkdir("/etc/sysconfig/RLKeys", 0755)
         
-            if doRegister(server) == 0:
-                # touch the registration file
-                fd = open(registration, "w")
-                fd.close()
+            if doRegister(server) =! 0:
+                sys.exit()
 
     doCheckIn(server)
 
