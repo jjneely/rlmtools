@@ -249,18 +249,7 @@ class Server(object):
             # verification error
             return 1
 
-        os.chdir(sys.path[-1])
-        wks = webKickstart("fakeurl", {})
-        sc = wks.findFile(self.client, self.jumpstarts)
-        if sc == None:
-            raise Exception("No config for %s in %s" % (self.client,
-                                                        self.jumpstarts))
-        try:
-            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
-        except KeyError, e:
-            # Unsupported version key in config file
-            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
-
+        ks = self.__getWebKs()
         data = ks.getKeys('enable', 'activationkey')
         if len(data) == 0:
             # *sigh* no key
@@ -274,21 +263,7 @@ class Server(object):
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
-        # Okay...get the file and return it
-        # get a bogus webKickstart instance
-        # must also make CWD sane for webKickstart
-        os.chdir(sys.path[-1])
-        wks = webKickstart("fakeurl", {})
-        sc = wks.findFile(self.client, self.jumpstarts)
-        if sc == None:
-            raise Exception("No config for %s in %s" % (self.client,
-                                                        self.jumpstarts))
-        try:
-            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
-        except KeyError, e:
-            # Unsupported version key in config file
-            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
-
+        ks = self.__getWebKs()
         data = ks.getKeys('users')
         if len(data) == 0:
             usersdata = "users default %s" % self.defaultKey
@@ -343,4 +318,26 @@ class Server(object):
         ret = [enc, sig]
 
         return ret
+       
+
+    def __getWebKs(self):
+        """Find and return the web-kickstart config object"""
         
+        os.chdir(sys.path[-1])
+        wks = webKickstart("fakeurl", {})
+        sciList = wks.findFile(self.client, self.jumpstarts)
+        if len(scList) == 0:
+            raise Exception("No config for %s in %s" % (self.client,
+                                                        self.jumpstarts))
+        # Do we care about collisions?
+        # If not, this is the same thing that Web-Kickstart does
+        sc = scList[0]
+        
+        try:
+            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
+        except KeyError, e:
+            # Unsupported version key in config file
+            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
+
+        return ks
+    
