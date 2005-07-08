@@ -312,7 +312,7 @@ class Server(object):
         
         os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
-        sciList = wks.findFile(self.client, self.jumpstarts)
+        scList = wks.findFile(self.client, self.jumpstarts)
         if len(scList) == 0:
             raise Exception("No config for %s in %s" % (self.client,
                                                         self.jumpstarts))
