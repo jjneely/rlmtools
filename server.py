@@ -32,7 +32,7 @@ import os.path
 import time
 import string
 
-testmode = 1
+testmode = 0
 
 if testmode:
     configFile = "/home/slack/projects/tmp/keys/testing.conf"

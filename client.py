@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #     RealmLinux Manager -- client code
-#     Copyright (C) 2004 NC State University
+#     Copyright (C) 2004, 2005 NC State University
 #     Written by Jack Neely <jjneely@pams.ncsu.edu>
 #
 #     SDG
@@ -31,8 +31,8 @@ import stat
 import ezPyCrypto
 
 # XMLRPC Interface
-#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
-URL = "https://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
+URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+#URL = "https://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
@@ -40,8 +40,8 @@ privateKey = "/etc/sysconfig/RLKeys/rkhost.priv"
 publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 
 # Where blessings go
-#blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
-blessings_dir = "/ncsu/jjneely/slack2/keys"
+blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
+#blessings_dir = "/ncsu/jjneely/slack2/keys"
 
 def error(message, verbose=False):
     "Log an error message to syslog."
