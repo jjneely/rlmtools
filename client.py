@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #     RealmLinux Manager -- client code
-#     Copyright (C) 2004, 2005 NC State University
+#     Copyright (C) 2004, 2005, 2006 NC State University
 #     Written by Jack Neely <jjneely@pams.ncsu.edu>
 #
 #     SDG
@@ -28,7 +28,13 @@ import re
 import syslog
 import socket
 import stat
-import ezPyCrypto
+
+try:
+    import ezPyCrypto
+except ImportError:
+    # This little machine isn't getting updates
+    sys.path.append("/afs/eos/project/realmlinux/py-modules")
+    import ezPyCrypto
 
 # XMLRPC Interface
 URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
@@ -304,7 +310,7 @@ def main():
        called directly via 'ncsubless' to administratively register
        a machine."""
 
-    if sys.argv[0] == "ncsubless":
+    if os.path.basename(sys.argv[0]) == "ncsubless":
         # called via ncsubless script
         doBlessing(getRPCObject())
         return
