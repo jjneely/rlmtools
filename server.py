@@ -21,9 +21,6 @@
 #     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import sys
-
-sys.path.append("/afs/eos/project/realmlinux/py-modules")
-
 import MySQLdb
 import ezPyCrypto
 import ConfigParser
