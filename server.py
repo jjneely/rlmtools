@@ -35,8 +35,8 @@ if testmode:
     configFile = "/home/slack/projects/tmp/keys/testing.conf"
     sys.path.append("/home/slack/projects/solaris2ks")
 else:
-    configFile = "/afs/eos/www/linux/configs/web-kickstart.conf"
-    sys.path.append("/afs/eos/www/linux/web-kickstart")
+    configFile = "/afs/unity/web/l/linux/configs/web-kickstart.conf"
+    sys.path.append("/afs/unity/web/l/linux/web-kickstart")
 
 from webKickstart import webKickstart
 
@@ -319,7 +319,8 @@ class Server(object):
         
         try:
             ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
-        except KeyError, e:
+        except Exception, e:
+            # KeyError or ConfgError from webkickstart
             # Unsupported version key in config file
             ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
 
