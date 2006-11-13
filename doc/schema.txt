@@ -1,0 +1,12 @@
+
+CREATE TABLE realmlinux (
+    hostname    VARCHAR(255),
+    installdate DATETIME,
+    recvdkey    TINYINT,
+    publickey   TEXT,
+    lastcheck   DATETIME,
+    dept        VARCHAR(32),
+    version     VARCHAR(32)
+);
+
+
