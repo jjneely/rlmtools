@@ -28,17 +28,14 @@ import re
 import syslog
 import socket
 import stat
-
-try:
-    import ezPyCrypto
-except ImportError:
-    # This little machine isn't getting updates
-    sys.path.append("/afs/eos/project/realmlinux/py-modules")
-    import ezPyCrypto
+import ezPyCrypto
+import time
+import urllib2
+import httplib
 
 # XMLRPC Interface
-URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
-#URL = "https://anduril.pams.ncsu.edu/~slack/realmkeys/handler.py"
+#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
@@ -74,26 +71,36 @@ def isSupported():
     return 0
 
 
-def getRPCObject():
+def doRPC(method, *params):
     "Return the xmlrpc opject we want."
 
-    try:
-        server = xmlrpclib.ServerProxy(URL)
-        test = server.hello()
-    except xmlrpclib.Error, e:
-        error("Error creating XMLRPC object: " + str(e))
-        sys.exit(1)
-    except socket.error, e:
-        error("Socket Error: %s" % str(e))
-        sys.exit(1)
-    except socket.sslerror, e:
-        error("Socket Error: %s" % str(e))
-        sys.exit(1)
-    except AssertionError, e:
-        error("Hell, it Broke: %s" % str(e))
-        sys.exit(1)
+    for i in range(5):
+        try:
+            return apply(method, params)
+        except xmlrpclib.Error, e:
+            error("XMLRPC Error: " + str(e))
+            raise
+        except socket.error, e:
+            error("Socket Error: %s" % str(e))
+        except socket.sslerror, e:
+            error("Socket Error: %s" % str(e))
+        except AssertionError, e:
+            error("Assertion Error (this is weird): %s" % str(e))
+        except httplib.IncompleteRead, e:
+            error("HTTP library reported an Incomplete Read error: %s" % str(e))
+        except urllib2.HTTPError, e:
+            msg = "\nAn HTTP error occurred:\n"
+            msg = msg + "URL: %s\n" % e.filename
+            msg = msg + "Status Code: %s\n" % e.code
+            msg = msg + "Error Message: %s\n" % e.msg
+            error(msg)
+
+        if i < 5:
+            time.sleep(i*3)
         
-    return server
+    error("Giving up trying XMLRPC")
+    print "Error: Could not talk to server at %s" % URL
+    sys.exit(1)
 
 
 def getDepartment():
@@ -149,11 +156,7 @@ def doRegister(server):
 
     saveKey(keypair)
     
-    try:
-        ret = server.register(pubKey, getDepartment(), getVersion())
-    except xmlrpclib.Fault, e:
-        error("Exception Occured: %s" % str(e))
-        sys.exit(1)
+    ret = doRPC(server.register, pubKey, getDepartment(), getVersion())
         
     if ret != 0:
         error("Registration failed with return code %s" % ret)
@@ -168,11 +171,7 @@ def getUpdateConf(server):
     pubKey = keypair.exportKey()
     sig = keypair.signString(pubKey)
    
-    try:
-        update = server.getEncKeyFile(pubKey, sig)
-    except xmlrpclib.Fault, e:
-        error("Exception Occured: %s" % str(e))
-        sys.exit(1)
+    update = doRPC(server.getEncKeyFile, pubKey, sig)
         
     if update == []:
         error("Error receiving update.conf file")
@@ -223,7 +222,7 @@ def getRealmLinuxKey(server):
         key.importKey(fd.read())
         fd.close()
     else:
-        data = server.getServerKey()
+        data = doRPC(server.getServerKey)
         key.importKey(data)
 
         # We are at registration.  Save key
@@ -241,13 +240,7 @@ def doCheckIn(server):
     pubKeyText = key.exportKey()
     sig = key.signString(pubKeyText)
 
-    try:
-        ret = server.checkIn(pubKeyText, sig)
-    except AssertionError, e:
-        # Sigh...this appears to be a bug in httplib when the server
-        # craps out on us.  Here, lets just ignore and checkIn() later
-        error("AssertionError cought from httplib...exiting")
-        ret = -1
+    ret = doRPC(server.checkIn, pubKeyText, sig)
         
     if ret != 0:
         error("Checkin failed with return code %s" % ret)
@@ -289,12 +282,7 @@ def doBlessing(server):
         sys.exit(10)
 
     print "Sending XMLRPC request..."
-    try:
-        ret = server.bless(getDepartment(), getVersion())
-    except AssertionError, e:
-        error("Blessing failed with AssertionError: %s" % str(e))
-        print "A communications error occured.  Please try again."
-        sys.exit(11)
+    ret = doRPC(server.bless, getDepartment(), getVersion())
 
     if ret != 0:
         error("Blessing failed with return code %s" % ret, True)
@@ -319,8 +307,8 @@ def main():
         print "You are not root.  Insert error message here."
         sys.exit(1)
         
-    server = getRPCObject()
-    if not server.isRegistered():
+    server = xmlrpclib.ServerProxy(URL)
+    if not doRPC(server.isRegistered):
         if not isSupported():
             error("Your machine is not configured for support.")
             return 1

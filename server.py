@@ -29,17 +29,17 @@ import os.path
 import time
 
 import mysql
-from webKickstart import webKickstart
 
 try:
     import debug
 except ImportError:
-    configFile = "/home/slack/projects/tmp/keys/testing.conf"
-    sys.path.append("/home/slack/projects/solaris2ks")
-else:
     configFile = "/afs/unity/web/l/linux/configs/web-kickstart.conf"
     sys.path.append("/afs/unity/web/l/linux/web-kickstart")
+else:
+    configFile = "/home/slack/projects/tmp/keys/testing.conf"
+    sys.path.append("/home/slack/projects/solaris2ks")
 
+from webKickstart import webKickstart
 
 def getFile(filename):
     """Helper function to return a file as a string"""

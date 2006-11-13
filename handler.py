@@ -50,19 +50,15 @@ def handler(req):
             return mod.handler(req)
         except Exception, e:
             apache.log_error("Failed to import %s" % fn)
-            return apache.HTTP_BAD_REQUEST
+            return apache.HTTP_NOT_FOUND
 
     if not req.method == "POST":
-        #req.content_type = "text/plain"
-        #req.send_http_header()
-        #req.write("Get off me with your web browser, boy!\n")
         return apache.HTTP_BAD_REQUEST
     
     data = req.read(int(req.headers_in['content-length']))
     params, method = xmlrpclib.loads(data)
     params = list(params)
 
-    #API.req = req
     method_ret = call_method(method, params, req)
     ret = ""
     
@@ -73,7 +69,7 @@ def handler(req):
         ret = xmlrpclib.dumps(method_ret, methodresponse=1)
     else:
         apache.log_error(str(method_ret))
-        return apache.HTTP_METHOD_NOT_ALLOWED
+        return apache.HTTP_INTERNAL_SERVER_ERROR
 
     req.content_type = 'text/xml'
     req.headers_out.add('Content-length', str(len(ret)))
@@ -112,9 +108,6 @@ def call_method(method, params, req):
 
     try:
         ret = apply(func, params)
-    except TypeError, e:
-        return xmlrpclib.Fault(1000, "%s exists but parameters were wrong.\n"
-                               % method)
     except Exception, e:
         return xmlrpclib.Fault(1000, str(e))
 
