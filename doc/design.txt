@@ -1,0 +1,20 @@
+
+November 13, 2006
+
+Problems:
+  * Maintain an authoritative list of all Realm Linux clients including
+    (and so denoted) supported clients.
+  * Monitor output of specific scripts like up2date and client.py rather
+    than email output to me
+  * Allow campus community to view reports
+
+Existing Code:
+   * Existing code supplies support for identifing trusted clients and
+     distributing a specific file.
+   * Web-Kickstart initializes a row for each client to log that this
+     client will be supported once it generates and uploads a key.  This
+     needs to be altered slightly so that non-trusted clients can be in
+     the database as well.
+   * ncsubless functionality - trust the machine because a trusted admin
+     told us to
+

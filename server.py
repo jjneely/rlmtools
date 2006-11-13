@@ -20,25 +20,26 @@
 #     along with this program; if not, write to the Free Software
 #     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-import sys
 import MySQLdb
+import sys
 import ezPyCrypto
 import ConfigParser
 import os
 import os.path
 import time
-import string
 
-testmode = 0
+import mysql
+from webKickstart import webKickstart
 
-if testmode:
+try:
+    import debug
+except ImportError:
     configFile = "/home/slack/projects/tmp/keys/testing.conf"
     sys.path.append("/home/slack/projects/solaris2ks")
 else:
     configFile = "/afs/unity/web/l/linux/configs/web-kickstart.conf"
     sys.path.append("/afs/unity/web/l/linux/web-kickstart")
 
-from webKickstart import webKickstart
 
 def getFile(filename):
     """Helper function to return a file as a string"""
@@ -51,60 +52,66 @@ def getFile(filename):
 
 class Server(object):
 
+    # Use class variables so we don't have to connect each time
+    conn = None
+    cursor = None
+    db = None
+
+    # Other static data that can be class variables
+    jumpstarts = None
+    defaultKey = None
+    privateKey = None
+    publicKey = None
+    rhnkey = None
+    keypath = None
+
     def __init__(self, client):
         """Set up server and define who we are talking to...well at least
            what we are told we are talking to."""
            
         self.client = client
+        self.hostid = None
         
-        # get MySQL information
-        global configFile
-        cnf = ConfigParser.ConfigParser()
-        cnf.read(configFile)
-		
-        self.dbhost = cnf.get('db', 'host')
-        self.dbuser = cnf.get('db', 'user')
-        self.dbpasswd = cnf.get('db', 'passwd')
-        self.db = cnf.get('db', 'db')
+        if conn == None or cursor == None:
+            # get MySQL information
+            global configFile
+            cnf = ConfigParser.ConfigParser()
+            cnf.read(configFile)
+	
+            db = {}
+            db['db_host'] = cnf.get('db', 'host')
+            db['db_user'] = cnf.get('db', 'user')
+            db['db_pass'] = cnf.get('db', 'passwd')
+            db['db_name'] = cnf.get('db', 'db')
 
-        # Other config information
-        self.jumpstarts = cnf.get('main', 'jumpstarts')
-        self.defaultKey = cnf.get('main', 'defaultkey')
-        self.privateKey = cnf.get('main', 'privatekey')
-        self.publicKey = cnf.get('main', 'publickey')
-        self.rhnkey = cnf.get('main', 'rhnkey')
-        self.keypath = cnf.get('main', 'key_directory')
+            self.db = mysql.MysqlDB(db)
+            self.conn = self.db.getConnection()
+            self.cursor = self.db.getCursor()
 
-        # Open a MySQL connection and cursor
-        self.conn = MySQLdb.connect(host=self.dbhost, user=self.dbuser,
-                                    passwd=self.dbpasswd, db=self.db)
-        self.cursor = self.conn.cursor()
-        
-    
-    def shutDown(self):
-        """Destructor.  Clean up MySQL connection."""
-        
-        self.cursor.close()
-        self.conn.commit()
-        self.conn.close()
-        
-    
+            # Other config information
+            self.jumpstarts = cnf.get('main', 'jumpstarts')
+            self.defaultKey = cnf.get('main', 'defaultkey')
+            self.privateKey = cnf.get('main', 'privatekey')
+            self.publicKey = cnf.get('main', 'publickey')
+            self.rhnkey = cnf.get('main', 'rhnkey')
+            self.keypath = cnf.get('main', 'key_directory')
+
     def verifyClient(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
         
         trustedKey = self.isRegistered()
         if trustedKey == None:
             # We are not registered bail!
-            return 0
+            return False
         
         k = ezPyCrypto.key(trustedKey)
         if k.verifyString(publicKey, sig):
             # the signature is good using our, trusted public key for
             # this client.  I don't really about the publicKey the client
             # sent
-            return 1
+            return True
         else:
-            return 0
+            return False
     
     
     def isRegistered(self):
@@ -131,16 +138,16 @@ class Server(object):
             # not registering
             return 1
         # check to see if client has been logged in DB
-        self.cursor.execute("""select * from realmlinux where 
-            hostname=%s""", (self.client,))
+        self.cursor.execute("""select installdate from realmlinux where 
+            hostname=%s and support=1""", (self.client,))
         if not self.cursor.rowcount > 0:
             # SQL query returned zero rows...this client isn't logged
             # to be registered
             return 2
 
         # Check the Time window for 24 hours
-        row = self.cursor.fetchone()
-        if time.time() - row[1].ticks() > 86400:
+        installDate = self.cursor.fetchone()[0]
+        if time.time() - installDate.ticks() > 86400:
             #Install date was more than 24 hours ago
             return 3
 
@@ -176,9 +183,10 @@ class Server(object):
             # Then we put it there
             ts = time.localtime()
             date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
-            q = """insert into realmlinux (hostname, installdate, recvdkey) 
-                   values (%s, %s, %s)"""
-            t = (self.client, date, 0)
+            q = """insert into realmlinux 
+                   (hostname, installdate, recvdkey, support) 
+                   values (%s, %s, %s, %s)"""
+            t = (self.client, date, 0, 1)
             self.cursor.execute(q, t)
             
         # Update db 
@@ -191,6 +199,9 @@ class Server(object):
         return ret
             
         
+    def createNoSupport(self, publicKey, dept, version):
+        pass
+
     def __register(self, publicKey, dept, version):
         # let's register the client
         # Require that a row for the hostname exists in the DB
@@ -198,15 +209,18 @@ class Server(object):
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
 
         try:
+            id = self.getHostID()
             self.cursor.execute("""update realmlinux 
-               set recvdkey=1, publickey=%s, lastcheck=%s, dept=%s, version=%s
-               where hostname=%s""", (publicKey, date, dept, version, 
-               self.client))
+               set recvdkey=1, publickey=%s, dept=%s, version=%s
+               where host_id=%s""", (publicKey, dept, version, id))
+            self.cursor.execute("""delete from lastheard where host_id = %s""",
+                                (id,))
+            self.cursor.execute("""insert into lastheard (host_id, `timestamp`)
+                                   values (%s, %s)""", (id, date))
+            self.conn.commit()
         except MySQLdb.Warning, e:
             # What's this about?
-            fd = open("/tmp/mysql.warnings", "a")
-            fd.write("MySQL Waring: %s\n" % str(e))
-            fd.close()
+            log.critical("MySQL Waring: %s\n" % str(e))
 
         return 0
     
@@ -217,14 +231,34 @@ class Server(object):
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
 
-        if self.verifyClient(publicKey, sig):
-            self.cursor.execute("""update realmlinux
-               set lastcheck=%s where hostname=%s""", (date, self.client))
-        else:
-            return 1
+        if not self.verifyClient(publicKey, sig):
+            return False
 
-        return 0
+        id = self.getHostID()
+        if id == None:
+            # Cannot check in non-registered client
+            return False
+
+        self.cursor.execute("""update lastheard
+           set `timestamp` = %s where host_id = %s""", (date, id))
+        self.cursor.commit()
+
+        return True
     
+
+    def getHostID(self):
+        if self.hostid != None:
+            return self.hostid
+
+        self.cursor.execute("""select host_id from realmlinux where
+                               hostname = %s""", (self.client,))
+        if self.cursor.rowcount == 0:
+            log.warning("Tried to pull host_id for %s who doesn't exist" \
+                        % self.client)
+            return None
+
+        self.hostid = self.cursor.fetchone()[0]
+        return self.hostid
 
     def getActivationKey(self, publicKey, sig):
         """Returns the current RHN activation key for this host."""
@@ -254,7 +288,7 @@ class Server(object):
         else:
             # a list of the options passed to the 'users' key
             args = data[0]['options']
-            usersdata = "users " + string.join(args)
+            usersdata = "users " + " ".join(args)
         
         # root data
         data = ks.getKeys('root')
@@ -262,7 +296,7 @@ class Server(object):
             rootdata = "root default %s" % self.defaultKey
         else:
             args = data[0]['options']
-            rootdata = "root " + string.join(args)
+            rootdata = "root " + " ".join(args)
 
         # clusters
         data = ks.getKeys('cluster')
@@ -270,7 +304,7 @@ class Server(object):
         if len(data) > 0:
             for row in data:
                 clusterdata = "%scluster %s\n" % (clusterdata, 
-                    string.join(row['options']))
+                              " ".join(row['options']))
 
         return "%s\n%s\n%s" % (usersdata, rootdata, clusterdata)
 

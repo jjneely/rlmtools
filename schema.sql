@@ -1,12 +1,12 @@
 
-CREATE TABLE realmlinux (
+create table realmlinux (
     host_id     INTEGER PRIMARY KEY auto_increment,
-    hostname    VARCHAR(255),
-    installdate DATETIME,
-    recvdkey    TINYINT,
+    hostname    VARCHAR(255) not null unique,
+    installdate DATETIME not null,
+    recvdkey    TINYINT not null,
     publickey   TEXT,
-    dept        VARCHAR(32),
-    version     VARCHAR(32),
+    dept        VARCHAR(32) not null,
+    version     VARCHAR(32) not null,
     support     TINYINT not null
 );
 
