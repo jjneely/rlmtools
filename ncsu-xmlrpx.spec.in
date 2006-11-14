@@ -1,0 +1,41 @@
+Summary: XMLRPC monitoring tools for Realm Linux
+Name: ncsu-xmlrpc
+Version: VERSIONSUBST
+Release: 1
+Source0: xmlrpc-%{version}.tar.bz2
+License: GPL
+Group: System Environment/Base
+BuildRoot: %{_tmppath}/%{name}-root
+Requires: ncsu-usrlocal
+PreReq: coreutils
+BuildArch: noarch
+
+%description
+This package contains all the scripts and utilities that are used with
+the printing system at NCSU.  This package replaces the need for an
+NCSU customized LPRng package.
+
+%prep
+%setup -q -n xmlrpc-%{version}
+
+%build
+# Nothing much to do here
+
+%install
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+%{_sysconfdir}/cron.update/*
+%{_libdir}/ncsuxmlrpc
+%doc doc/*
+
+%changelog
+* Tue Nov 14 2006 Jack Neely <jjneely@ncsu.edu>
+- Initial build
+
+

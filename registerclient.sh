@@ -1,7 +1,7 @@
 #/bin/bash
 #
 #    registerclient.sh - Wrapper script to register Realm Linux clients
-#    Copyright 2004 NC State University
+#    Copyright 2004, 2006 NC State University
 #    Written by Jack Neely <jjneely@pams.ncsu.edu>
 #
 #    SDG
@@ -20,8 +20,10 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+/usr/bin/Wait
+
 FILE=`mktemp /tmp/regXXXXXX`
-/afs/bp/system/i386_linux3/athena/adm/client.py > $FILE 2>&1 
+/usr/lib/ncsuxmlrpc/client.py > $FILE 2>&1 
 
 OUTPUT=`cat $FILE`
 
@@ -32,7 +34,7 @@ if [ "$OUTPUT" != "" ] ; then
     if [ -x /usr/bin/mutt ] ; then
         # check for the send command -- should be installed
         HOST=`/bin/hostname`
-        /bin/cat $FILE | /usr/bin/mutt -s "${HOST}: client.py output" jjneely@ncsu.edu
+        /bin/cat $FILE | /usr/bin/mutt -s "${HOST}: NCSU XMLRPC" jjneely@ncsu.edu
     else
         # no mutt...let root know
         cat $FILE

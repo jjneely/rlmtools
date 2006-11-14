@@ -271,18 +271,18 @@ class Server(object):
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
 
         if not self.verifyClient(publicKey, sig):
-            return False
+            return 1
 
         id = self.getHostID()
         if id == None:
             # Cannot check in non-registered client
-            return False
+            return 1
 
         self.cursor.execute("""update lastheard
            set `timestamp` = %s where host_id = %s""", (date, id))
         self.conn.commit()
 
-        return True
+        return 0
     
 
     def getHostID(self):
