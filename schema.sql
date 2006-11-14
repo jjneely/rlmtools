@@ -7,7 +7,10 @@ create table realmlinux (
     publickey   TEXT,
     dept        VARCHAR(32) not null,
     version     VARCHAR(32) not null,
-    support     TINYINT not null
+    support     TINYINT not null,
+
+    index(hostname),
+    index(publickey)
 );
 
 create table lastheard (

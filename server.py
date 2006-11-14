@@ -30,7 +30,8 @@ import time
 import logging
 import traceback
 
-import config
+from datetime import datetime, timedelta
+
 import mysql
 
 try:
@@ -40,6 +41,7 @@ except ImportError:
 else:
     sys.path.append("/home/slack/projects/solaris2ks")
 
+import config
 from webKickstart import webKickstart
 
 log = logging.getLogger("xmlrpc")
@@ -56,6 +58,14 @@ def logException():
     for line in traceback.format_exception(type, value, tb):
         log.critical(line.strip())
 
+def getDBDict():
+    db = {}
+    db['db_host'] = config.config.get('db', 'host')
+    db['db_user'] = config.config.get('db', 'user')
+    db['db_pass'] = config.config.get('db', 'passwd')
+    db['db_name'] = config.config.get('db', 'db')
+    
+    return db
 
 def getFile(filename):
     """Helper function to return a file as a string"""
@@ -92,8 +102,7 @@ class Server(object):
         
         if self.conn == None or self.cursor == None:
             # get MySQL information
-            db = config.config.getDBDict()
-	
+            db = getDBDict()
             self.db = mysql.MysqlDB(db)
             self.conn = self.db.getConnection()
             self.cursor = self.db.getCursor()
@@ -130,7 +139,7 @@ class Server(object):
         q = """select host_id from realmlinux where host_id = %s and
                support = 1"""
 
-        id = self.getID()
+        id = self.getHostID()
         if id == None:
             return False
 
@@ -170,9 +179,16 @@ class Server(object):
 
         # Check the Time window for 24 hours
         installDate = self.cursor.fetchone()[0]
-        if time.time() - installDate.ticks() > 86400:
-            #Install date was more than 24 hours ago
-            return 3
+        log.debug(str(dir(installDate)))
+        try:
+            # MySQL-python 1.0
+            if time.time() - installDate.ticks() > 86400:
+                #Install date was more than 24 hours ago
+                return 3
+        except AttributeError:
+            # Mysql-python 1.2
+            if datetime.today() - timedelta(days=1) > installDate:
+                return 3
 
         return self.__register(publicKey, dept, version)
         
@@ -264,7 +280,7 @@ class Server(object):
 
         self.cursor.execute("""update lastheard
            set `timestamp` = %s where host_id = %s""", (date, id))
-        self.cursor.commit()
+        self.conn.commit()
 
         return True
     

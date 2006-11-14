@@ -40,7 +40,6 @@ import API
 
 import server
 import logging
-import config
 
 def handler(req):
     "Process XML_RPC"
