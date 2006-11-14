@@ -79,7 +79,6 @@ def doRPC(method, *params):
             return apply(method, params)
         except xmlrpclib.Error, e:
             error("XMLRPC Error: " + str(e))
-            raise
         except socket.error, e:
             error("Socket Error: %s" % str(e))
         except socket.sslerror, e:
@@ -108,7 +107,7 @@ def getDepartment():
         fd = open("/etc/rc.conf.d/HostDept")
         dept = fd.read().strip()
         fd.close()
-    except OSError, e:
+    except IOError, e:
         dept = "ncsu"
    
     return dept
@@ -158,7 +157,15 @@ def doRegister(server):
     
     ret = doRPC(server.register, pubKey, getDepartment(), getVersion())
         
-    if ret != 0:
+    if ret == 0:
+        return ret
+    elif ret == 1:
+        error("Registration failed: Client already registered in database")
+    elif ret == 2:
+        error("Registration failed: Client not in support database")
+    elif ret == 3:
+        error("Registration failed: Client did not register within 24 hours")
+    else:
         error("Registration failed with return code %s" % ret)
         
     return ret

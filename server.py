@@ -27,19 +27,35 @@ import ConfigParser
 import os
 import os.path
 import time
+import logging
+import traceback
 
+import config
 import mysql
 
 try:
     import debug
 except ImportError:
-    configFile = "/afs/unity/web/l/linux/configs/web-kickstart.conf"
     sys.path.append("/afs/unity/web/l/linux/web-kickstart")
 else:
-    configFile = "/home/slack/projects/tmp/keys/testing.conf"
     sys.path.append("/home/slack/projects/solaris2ks")
 
 from webKickstart import webKickstart
+
+log = logging.getLogger("xmlrpc")
+
+def logException():
+    # even though tracing is not normally done at lower logging levels,
+    # we add trace data for exceptions
+    file, line, func, txt = traceback.extract_stack(None, 2)[0]
+    trace = 'EXCEPTION (File: %s, Method: %s(), Line: %s): [%s]\n' % \
+            (file, func, line, txt)
+    log.critical(trace)
+
+    (type, value, tb) = sys.exc_info()
+    for line in traceback.format_exception(type, value, tb):
+        log.critical(line.strip())
+
 
 def getFile(filename):
     """Helper function to return a file as a string"""
@@ -71,24 +87,19 @@ class Server(object):
            
         self.client = client
         self.hostid = None
-        
-        if conn == None or cursor == None:
-            # get MySQL information
-            global configFile
-            cnf = ConfigParser.ConfigParser()
-            cnf.read(configFile)
-	
-            db = {}
-            db['db_host'] = cnf.get('db', 'host')
-            db['db_user'] = cnf.get('db', 'user')
-            db['db_pass'] = cnf.get('db', 'passwd')
-            db['db_name'] = cnf.get('db', 'db')
 
+        log.info("Running Server object for %s" % self.client)
+        
+        if self.conn == None or self.cursor == None:
+            # get MySQL information
+            db = config.config.getDBDict()
+	
             self.db = mysql.MysqlDB(db)
             self.conn = self.db.getConnection()
             self.cursor = self.db.getCursor()
 
             # Other config information
+            cnf = config.config
             self.jumpstarts = cnf.get('main', 'jumpstarts')
             self.defaultKey = cnf.get('main', 'defaultkey')
             self.privateKey = cnf.get('main', 'privatekey')
@@ -113,7 +124,19 @@ class Server(object):
         else:
             return False
     
-    
+    def isSupported(self):
+        """Return true/false if the support flag is set for this client."""
+        
+        q = """select host_id from realmlinux where host_id = %s and
+               support = 1"""
+
+        id = self.getID()
+        if id == None:
+            return False
+
+        self.cursor.execute(q, (id,))
+        return self.cursor.rowcount > 0
+
     def isRegistered(self):
         """Returns a clients public key if this client is registered.  
            Otherwise None is returned."""
@@ -172,7 +195,7 @@ class Server(object):
             fd = open(file)
             publicKey = fd.read()
             fd.close()
-        except OSError, e:
+        except IOError, e:
             return 99
 
         # check to see if client has been logged in DB
@@ -314,6 +337,9 @@ class Server(object):
         
         if not self.verifyClient(publicKey, sig):
             # Can't return None
+            return []
+
+        if not self.isSupported():
             return []
 
         filedata = self.__makeUpdatesConf()

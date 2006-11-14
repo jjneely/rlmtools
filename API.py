@@ -58,7 +58,6 @@ def getServerKey():
     
     srv = server.Server(getHostName())
     ret = server.getFile(srv.publicKey)
-    srv.shutDown()
     return ret
     
 
@@ -68,7 +67,6 @@ def register(publicKey, dept, version):
     
     s = server.Server(getHostName())
     ret = s.register(publicKey, dept, version)
-    s.shutDown()
     return ret
 
 
@@ -77,7 +75,6 @@ def bless(dept, version):
 
     s = server.Server(getHostName())
     ret = s.bless(dept, version)
-    s.shutDown()
     return ret
 
 
@@ -86,7 +83,6 @@ def isRegistered():
 
     s = server.Server(getHostName())
     ret = s.isRegistered()
-    s.shutDown()
 
     if ret == None:
         return False
@@ -102,7 +98,6 @@ def checkIn(publicKey, sig):
     
     s = server.Server(getHostName())
     ret = s.checkIn(publicKey, sig)
-    s.shutDown()
     return ret
 
 
@@ -111,7 +106,6 @@ def getActivationKey(publicKey, sig):
 
     s = server.Server(getHostName())
     ret = s.getActivationKey(publicKey, sig)
-    s.shutDown()
     return ret
 
 
@@ -121,6 +115,5 @@ def getEncKeyFile(publicKey, sig):
        
     s = server.Server(getHostName())
     ret = s.getEncKeyFile(publicKey, sig)
-    s.shutDown()
     return ret
 

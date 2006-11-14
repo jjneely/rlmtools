@@ -38,9 +38,15 @@ import os.path
 ## API that is exposed
 import API
 
+import server
+import logging
+import config
+
 def handler(req):
     "Process XML_RPC"
-    
+
+    log = logging.getLogger("xmlrpc")
+
     fn = os.path.basename(req.filename)
     if fn != "handler.py":
         # We know because of the PythonHandler that the user requested
@@ -49,6 +55,7 @@ def handler(req):
             mod = __import__(fn[:-3])
             return mod.handler(req)
         except Exception, e:
+            log.warning("Failed to import %s" % fn)
             apache.log_error("Failed to import %s" % fn)
             return apache.HTTP_NOT_FOUND
 
@@ -82,6 +89,7 @@ def handler(req):
 def call_method(method, params, req):
     "Find an exported method that matches what we've been given and call it."
 
+    log = logging.getLogger("xmlrpc")
     API.req = req
 
     list = string.split(method, '.')
@@ -97,18 +105,18 @@ def call_method(method, params, req):
             try:
                 func = func.__getattribute__(module)
             except AttributeError, e:
-                s = "AttributeError!  dir(func) = %s\n" % str(dir(func))
-                s += "Module = %s\n" % module
-                s += "Exception = %s\n" % str(e)
-                raise AttributeError(s)
+                server.logException()
+                raise 
 
         else:
+            log.warning("Requested method %s not exported or found." % method)
             return xmlrpclib.Fault(1000, "%s not exported or found.\n"
                                    % method)
 
     try:
         ret = apply(func, params)
     except Exception, e:
+        server.logException()
         return xmlrpclib.Fault(1000, str(e))
 
     return ret
