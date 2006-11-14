@@ -5,12 +5,12 @@ create table realmlinux (
     installdate DATETIME not null,
     recvdkey    TINYINT not null,
     publickey   TEXT,
-    dept        VARCHAR(32) not null,
+    dept_id     INTEGER not null,
     version     VARCHAR(32) not null,
     support     TINYINT not null,
 
     index(hostname),
-    index(publickey)
+    foreign key (dept_id) references dept(dept_id)
 );
 
 create table lastheard (
@@ -31,4 +31,12 @@ create table status (
 
     foreign key (host_id) references realmlinux(host_id)
 );
+
+create table dept (
+    dept_id     INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(256) not null unique,
+
+    index(name)
+);
+insert into dept values ('unknown');
 

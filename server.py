@@ -179,7 +179,6 @@ class Server(object):
 
         # Check the Time window for 24 hours
         installDate = self.cursor.fetchone()[0]
-        log.debug(str(dir(installDate)))
         try:
             # MySQL-python 1.0
             if time.time() - installDate.ticks() > 86400:
@@ -239,7 +238,32 @@ class Server(object):
             
         
     def createNoSupport(self, publicKey, dept, version):
-        pass
+        "Create a db entry for a non supported client."
+
+        ts = time.localtime()
+        date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
+        id = self.getHostID()
+        deptid = self.getDeptID(dept)
+
+        if id == None:
+            q = """insert into realmlinux 
+                   (hostname, installdate, recvdkey, support) 
+                   values (%s, %s, %s, %s)"""
+            t = (self.client, date, 0, 0)
+        else:
+            q = """update realmlinux set 
+                   installdate = %s, 
+                   recvdkey = 0,
+                   publickey = NULL,
+                   dept_id = %s,
+                   version = '',
+                   support = 0
+                   where host_id = %s"""
+            t = (date, deptid, id)
+
+        self.cursor.execute(q, t)
+
+        return self.__register(publicKey, dept, version)
 
     def __register(self, publicKey, dept, version):
         # let's register the client
@@ -249,9 +273,13 @@ class Server(object):
 
         try:
             id = self.getHostID()
-            self.cursor.execute("""update realmlinux 
-               set recvdkey=1, publickey=%s, dept=%s, version=%s
-               where host_id=%s""", (publicKey, dept, version, id))
+            deptid = self.getDeptID(dept)
+
+            q = """update realmlinux 
+                   set recvdkey=1, publickey=%s, dept_id=%s, version=%s
+                   where host_id=%s"""
+
+            self.cursor.execute(q, (publicKey, deptid, version, id))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (id,))
             self.cursor.execute("""insert into lastheard (host_id, `timestamp`)
@@ -284,6 +312,19 @@ class Server(object):
 
         return 0
     
+    def getDeptID(self, dept):
+        "Return the DB ID of this department.  Create it if needed."
+
+        q1 = "select dept_id from dept where name = %s"
+        q2 = "insert into dept (name) values (%s)"
+
+        self.cursor.execute(q1, (dept,))
+        if self.cursor.rowcount > 0:
+            return self.cursor.fetchone()[0]
+
+        self.cursor.execute(q2, (dept,))
+        self.cursor.execute(q1, (dept,))
+        return self.cursor.fetchone()[0]
 
     def getHostID(self):
         if self.hostid != None:

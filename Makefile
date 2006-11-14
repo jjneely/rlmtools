@@ -20,7 +20,7 @@ release: archive
 	svn cp $(REPO)/trunk/$(NAME) $(REPO)/tags/$(NAME)/$(TAG) -m "Tag $(TAG)"
 
 archive:
-	@rm -rf /tmp/$(NAME)-$(VERSION)
+	@rm -rf /tmp/$(NAME)
 	@cd /tmp; svn export $(REPO)/trunk/$(NAME) $(NAME) || :
 	@cd /tmp/$(NAME); sed "s/VERSIONSUBST/$(VERSION)/" < ncsu-$(NAME).spec.in > $(NAME).spec
 	@mv /tmp/$(NAME) /tmp/$(NAME)-$(VERSION)
