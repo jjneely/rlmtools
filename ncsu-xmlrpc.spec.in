@@ -6,8 +6,8 @@ Source0: xmlrpc-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-root
-Requires: ncsu-usrlocal
-PreReq: coreutils
+Requires: realm-hooks
+Requires: python-ezpycrypto
 BuildArch: noarch
 
 %description

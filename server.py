@@ -1,24 +1,24 @@
 #!/usr/bin/python
 #
-#     RealmLinux Manager -- Main server object
-#     Copyright (C) 2003, 2005 NC State University
-#     Written by Jack Neely <jjneely@pams.ncsu.edu>
+# RealmLinux Manager -- Main server object
+# Copyright (C) 2003, 2005, 2006 NC State University
+# Written by Jack Neely <jjneely@ncsu.edu>
 #
-#     SDG
+# SDG
 #
-#     This program is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 2 of the License, or
-#     (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#     This program is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#     You should have received a copy of the GNU General Public License
-#     along with this program; if not, write to the Free Software
-#     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import MySQLdb
 import sys
@@ -137,7 +137,7 @@ class Server(object):
         """Return true/false if the support flag is set for this client."""
         
         q = """select host_id from realmlinux where host_id = %s and
-               support = 1"""
+               support = 1 and recvdkey = 1"""
 
         id = self.getHostID()
         if id == None:
@@ -168,14 +168,16 @@ class Server(object):
             # What? Client is already registered?
             # The web-kickstart log should have unregistered this client
             # not registering
+            log.info("Registered client %s attempted to re-register" \
+                     % self.client)
             return 1
         # check to see if client has been logged in DB
         self.cursor.execute("""select installdate from realmlinux where 
             hostname=%s and support=1""", (self.client,))
         if not self.cursor.rowcount > 0:
             # SQL query returned zero rows...this client isn't logged
-            # to be registered
-            return 2
+            # to be registered with support (old return code 2)
+            return self.createNoSupport(publicKey, dept, version)
 
         # Check the Time window for 24 hours
         installDate = self.cursor.fetchone()[0]
@@ -183,10 +185,14 @@ class Server(object):
             # MySQL-python 1.0
             if time.time() - installDate.ticks() > 86400:
                 #Install date was more than 24 hours ago
+                log.info("Client %s attempted to register outside security " \
+                         "window" % self.client)
                 return 3
         except AttributeError:
             # Mysql-python 1.2
             if datetime.today() - timedelta(days=1) > installDate:
+                log.info("Client %s attempted to register outside security " \
+                         "window" % self.client)
                 return 3
 
         return self.__register(publicKey, dept, version)
@@ -204,6 +210,8 @@ class Server(object):
 
         if not os.access(file, os.R_OK):
             # key not found.  Cannot register
+            log.warning("Could not bless %s.  Key file not found." \
+                        % self.client)
             return 1
 
         try:
@@ -211,6 +219,7 @@ class Server(object):
             publicKey = fd.read()
             fd.close()
         except IOError, e:
+            log.critical("Cound not bless %s.  IOError." % self.client)
             return 99
 
         # check to see if client has been logged in DB
@@ -236,9 +245,10 @@ class Server(object):
 
         return ret
             
-        
     def createNoSupport(self, publicKey, dept, version):
         "Create a db entry for a non supported client."
+
+        log.info("Registering no-support for %s" % self.client)
 
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
@@ -266,7 +276,7 @@ class Server(object):
         return self.__register(publicKey, dept, version)
 
     def __register(self, publicKey, dept, version):
-        # let's register the client
+        log.info("Registering %s" % self.client)
         # Require that a row for the hostname exists in the DB
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
@@ -311,7 +321,55 @@ class Server(object):
         self.conn.commit()
 
         return 0
-    
+
+    def setServiceStatus(self, service, succeed, data=None):
+        """Record a service status message into the database."""
+        
+        sid = self.getServiceID(service)
+        if sid == None:
+            # We don't store data about services we don't know
+            return 1
+
+        q = """insert into status (host_id, service_id, `timestamp`,
+                                   success, data)
+               values (%s, %s, %s, %s, %s)"""
+        ts = time.localtime()
+        date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
+        id = self.getHostID()
+
+        if succeed:
+            succeed = 1
+        else:
+            succeed = 0
+
+        self.cursor.execute(q, (id, sid, date, succeed, data))
+        self.conn.commit()
+        return 0
+
+    def setServiceID(self, serv):
+        "Create a Service ID"
+
+        q = "insert into service (name) values (%s)"
+
+        sid = self.getServiceID(serv)
+        if sid == None:
+            self.cursor.execute(q, (serv,))
+            self.conn.commit()
+            return self.getServiceID(serv)
+        else:
+            return sid
+
+    def getServiceID(self, serv):
+        "Return the ID for this service.  None if the service doesn't exist."
+
+        q = "select service_id from service where name = %s"
+        self.cursor.execute(q, (serv,))
+
+        if self.cursor.rowcount > 0:
+            return self.cursor.fetchone()[0]
+        else:
+            return None
+
     def getDeptID(self, dept):
         "Return the DB ID of this department.  Create it if needed."
 
@@ -323,6 +381,8 @@ class Server(object):
             return self.cursor.fetchone()[0]
 
         self.cursor.execute(q2, (dept,))
+        self.conn.commit()
+
         self.cursor.execute(q1, (dept,))
         return self.cursor.fetchone()[0]
 
@@ -347,6 +407,8 @@ class Server(object):
             # verification error
             return 1
 
+        log.info("Client %s requests activation key" % self.client)
+
         ks = self.__getWebKs()
         data = ks.getKeys('enable', 'activationkey')
         if len(data) == 0:
@@ -357,7 +419,68 @@ class Server(object):
 
         return key
 
+    def getServiceStatus(self, service):
+        """Return historical information regarding this clients status."""
         
+        q = """select `timestamp`, success, data from status where
+               host_id = %s and service_id = %s order by `timestamp`"""
+
+        sid = self.getServiceID(status)
+        if sid == None:
+            return []
+
+        id = self.getHostID()
+        self.cursor.execute(q, (id, sid))
+
+        ret = []
+        result = self.cursor.fetchone()
+        while result != None:
+            row = {}
+            row['timestamp'] = result[0]
+            row['success'] = result[1]
+            row['data'] = result[2]
+
+            ret.append(row)
+            result = self.cursor.fetchone()
+
+        return ret
+
+    def getDepartments(self):
+        q = """select dept_id, name from dept"""
+        self.cursor.execute(q)
+        ret = []
+
+        for i in range(self.cursor.rowcount):
+            result = self.cursor.fetchone()
+            row = {}
+            row['dept_id'] = result[0]
+            row['name'] = result[1]
+            ret.append(row)
+
+        return ret
+
+    def getClientList(self, dept_id, services):
+        # services is a list of service IDs
+        q = """select r.hostname, r.host_id, r.support, `l.timestamp` 
+               from realmlinux as r, lastheard as l
+               where r.dept_id = %s and r.recvdkey = 1
+               order by r.hostname"""
+
+        self.cursor.execute(q, (dept_id,))
+        
+        ret = []
+        for i in range(self.cursor.rowcount):
+            result = self.cursor.fetchone()
+            row = {}
+            row['hostname'] = result[0]
+            row['host_id'] = result[1]
+            row['support'] = result[2] == 1
+            row['lastcheck'] = result[3]
+            ret.append(row)
+
+        # XXX: add status fields for requested services
+        return ret
+
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
@@ -398,6 +521,8 @@ class Server(object):
 
         if not self.isSupported():
             return []
+
+        log.info("Client %s retrieving update.conf" % self.client)
 
         filedata = self.__makeUpdatesConf()
         

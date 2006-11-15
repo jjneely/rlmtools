@@ -30,13 +30,15 @@ from mod_python import apache
 
 __API__ = ['hello',
            'register',
-           'getServerKey',
            'checkIn',
+           'bless',
+
            'getServerKey',
            'getEncKeyFile',
            'getActivationKey',
-           'bless',
+
            'isRegistered',
+           'isSupported',
           ]
 
 def hello():
@@ -91,6 +93,13 @@ def isRegistered():
         return False
     else:
         return True
+
+
+def isSupported():
+    "Returns True if the client meets requirments for support."
+
+    s = server.Server(getHostName())
+    return s.isSupported()
 
 
 def checkIn(publicKey, sig):

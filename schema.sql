@@ -24,12 +24,13 @@ create table lastheard (
 create table status (
     st_id       INTEGER PRIMARY KEY auto_increment,
     host_id     INTEGER not null,
-    service     VARCHAR(255) not null,
+    service_id  INTEGER not null,
     `timestamp` DATETIME not null,
     success     TINYINT not null,
     data        TEXT,
 
-    foreign key (host_id) references realmlinux(host_id)
+    foreign key (host_id) references realmlinux(host_id),
+    foreign key (service_id) references service(service_id)
 );
 
 create table dept (
@@ -38,5 +39,12 @@ create table dept (
 
     index(name)
 );
-insert into dept values ('unknown');
+insert into dept (name) values ('unknown');
+
+create table service (
+    service_id  INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(256) not null unique,
+
+    index(name)
+);
 
