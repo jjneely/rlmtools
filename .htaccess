@@ -1,5 +1,5 @@
 AddHandler python-program .py
-PythonHandler handler
+PythonHandler rlmtools.handler
 PythonDebug On
 PythonInterpPerDirectory On
 

@@ -7,10 +7,10 @@ all:
 	@echo "Nothing to build"
 
 install:
-	install -d -m 755 $(DESTDIR)/usr/lib/ncsuxmlrpc
+	install -d -m 755 $(DESTDIR)/usr/lib/rlmtools
 	install -d -m 755 $(DESTDIR)/etc/cron.update
 	
-	install -m 755 client.py $(DESTDIR)/usr/lib/ncsuxmlrpc
+	install -m 755 client.py $(DESTDIR)/usr/lib/rlmtools
 	install -m 755 registerclient.sh $(DESTDIR)/etc/cron.update
 
 clean:
