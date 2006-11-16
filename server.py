@@ -32,6 +32,7 @@ import traceback
 
 from datetime import datetime, timedelta
 
+from resultSet import resultSet
 import mysql
 
 try:
@@ -419,31 +420,19 @@ class Server(object):
 
         return key
 
-    def getServiceStatus(self, service):
+    def getStatusDetail(self, service_id):
         """Return historical information regarding this clients status."""
         
-        q = """select `timestamp`, success, data from status where
-               host_id = %s and service_id = %s order by `timestamp`"""
-
-        sid = self.getServiceID(status)
-        if sid == None:
-            return []
+        q = """select serv.name, s.timestamp, s.success, s.data 
+               from status as s, service as serv 
+               where host_id = %s and service_id = %s 
+               order by serv.name, s.timestamp"""
 
         id = self.getHostID()
         self.cursor.execute(q, (id, sid))
+        result = resultSet(self.cursor).dump()
 
-        ret = []
-        result = self.cursor.fetchone()
-        while result != None:
-            row = {}
-            row['timestamp'] = result[0]
-            row['success'] = result[1]
-            row['data'] = result[2]
-
-            ret.append(row)
-            result = self.cursor.fetchone()
-
-        return ret
+        return result
 
     def getDepartments(self):
         q = """select dept_id, name from dept"""
@@ -459,27 +448,64 @@ class Server(object):
 
         return ret
 
-    def getClientList(self, dept_id, services):
-        # services is a list of service IDs
-        q = """select r.hostname, r.host_id, r.support, `l.timestamp` 
-               from realmlinux as r, lastheard as l
-               where r.dept_id = %s and r.recvdkey = 1
-               order by r.hostname"""
+    def getClientList(self, dept_id):
+        q1 = """select r.hostname, r.host_id, r.support, 
+                l.timestamp as lastcheck
+                from realmlinux as r, lastheard as l
+                where r.dept_id = %s and r.recvdkey = 1 and
+                r.host_id = l.host_id
+                order by r.hostname"""
 
-        self.cursor.execute(q, (dept_id,))
-        
-        ret = []
-        for i in range(self.cursor.rowcount):
-            result = self.cursor.fetchone()
-            row = {}
-            row['hostname'] = result[0]
-            row['host_id'] = result[1]
-            row['support'] = result[2] == 1
-            row['lastcheck'] = result[3]
-            ret.append(row)
+        q2 = """select service.name, status.success, status.timestamp
+                from service, status,
+                ( select host_id, 
+                         service_id as sid, 
+                         max(`timestamp`) as maxdate 
+                  from status where host_id = %s
+                  group by service_id
+                ) as current
+                where current.sid = status.service_id and
+                service.service_id = status.service_id and
+                status.timestamp = current.maxdate and
+                status.host_id = current.host_id"""
 
-        # XXX: add status fields for requested services
+        self.cursor.execute(q1, (dept_id,))
+        result = resultSet(self.cursor).dump()        
+
+        for row in result:
+            self.cursor.execute(q2, (row['host_id'],))
+            for i in range(self.cusor.rowcount):
+                result = self.cursor.fetchone()
+                row[result[0]] = result[1] == 1
+                row[result[0] + "_time"] = result[2]
+
         return ret
+
+    def getClientDetail(self, host_id, history_days=30):
+        # returns, hostname, installdate, recvdkey, support, dept, version,
+        #    lastcheck, status
+        # status is a list of dicts: service, timestamp, success, data
+        q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
+                       d.name as dept, r.version, l.timestamp as lastcheck
+                from realmlinux as r, dept as d, lastheard as l
+                where d.dept_id = r.dept_id and l.host_id = r.host_id and
+                      r.host_id = %s"""
+        q2 = """select service.name as service, status.timestamp, 
+                       status.success, status.data
+                from service, status
+                where service.service_id = status.service_id and
+                      status.host_id = %s and 
+                      TO_DAYS(status.timestamp) > TO_DAYS(NOW()) - %s
+                order by service.name, status.timestamp"""
+
+        self.cursor.execute(q1, (host_id,))
+        result1 = resultSet(self.cursor).dump()[0]  # This is one row
+
+        self.cursor.execute(q2, (host_id, history_days))
+        result2 = resultSet(self.cursor).dump()
+
+        result1['status'] = result2
+        return result1
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
