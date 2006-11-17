@@ -1,3 +1,37 @@
+Schema
+======
+
+The current schema is kept in the directory above in a file named
+'schema.sql'.  This application is desinged specifically to work with MySQL
+4.1 or better.  The InnoDB store engine is preferred but this code does
+not require it.
+
+Upgrading to the New Schema
+---------------------------
+
+Import the SQL dump of the below schema if you are changing databases.
+
+SQL Commands:
+
+ * rename table realmlinux to oldrl;
+
+Import the schema from schema.sql to the database.
+
+SQL Commands:
+
+ * update oldrl set dept = 'unknown' where isnull(dept);
+ * insert into dept (name) select distinct dept from oldrl 
+   where dept != 'unknown';
+ * insert into realmlinux (hostname, installdate, recvdkey, publickey,
+   dept_id, version, support) select o.hostname, o.installdate,
+   o.recvdkey, o.publickey, d.dept_id, o.version, 1
+   from oldrl as o, dept as d where d.name = o.dept;
+ * insert into lastheard (host_id, timestamp) select r.host_id, o.lastcheck
+   from realmlinux as r, oldrl as o where r.hostname = o.hostname;
+
+
+Original Schema
+===============
 
 CREATE TABLE realmlinux (
     hostname    VARCHAR(255),
@@ -9,4 +43,5 @@ CREATE TABLE realmlinux (
     version     VARCHAR(32)
 );
 
-
+Jack Neely <jjneely@ncsu.edu>
+November 16, 2006

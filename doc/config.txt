@@ -1,0 +1,36 @@
+Configuration of Apache and RLMTools
+====================================
+
+Right now the XMLRPC client calls URL/handler.py and the URL maps to the
+directory that this tarball/project is in.  The handler.py file is actually
+not in this directory but the rlmtools/ directory.  That's what we want
+for now.  I've included an .htaccess file that looks like this:
+
+AddHandler python-program .py
+PythonHandler rlmtools.handler
+PythonDebug On
+PythonInterpPerDirectory On
+
+<Files solaris2ks.conf>
+    deny from all
+</Files>
+
+That will start the handler.py script via mod_python when and URL is used that
+looks like URL/*.py.  
+
+This code base imports the Web-Kickstart code and uses that and
+Web-Kickstart's configuration to find its database and pull client
+configuration from the Web-Kickstart config files.  Therefore, Web-Kickstart
+needs to know where its config file solaris2ks.conf lives.  This can either be
+in the current directory (the top level in this project) or in 
+/etc/solaris2ks.conf.
+
+CherryPy Setup
+==============
+
+Well need some Location configs for this.  Which probably means we should
+setup the XMLRPC interface with some location config files to.
+
+Jack Neely
+November 16, 2006
+
