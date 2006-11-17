@@ -371,6 +371,16 @@ class Server(object):
         else:
             return None
 
+    def getDeptName(self, dept_id):
+        q = """select name from dept where dept_id = %s"""
+
+        self.cursor.execute(q, (dept_id,))
+        result = self.cursor.fetchone()
+        if result == None:
+            return None
+        else:
+            return result[0]
+
     def getDeptID(self, dept):
         "Return the DB ID of this department.  Create it if needed."
 
@@ -470,16 +480,16 @@ class Server(object):
                 status.host_id = current.host_id"""
 
         self.cursor.execute(q1, (dept_id,))
-        result = resultSet(self.cursor).dump()        
+        result = resultSet(self.cursor).dump()
 
         for row in result:
             self.cursor.execute(q2, (row['host_id'],))
-            for i in range(self.cusor.rowcount):
-                result = self.cursor.fetchone()
-                row[result[0]] = result[1] == 1
-                row[result[0] + "_time"] = result[2]
+            for i in range(self.cursor.rowcount):
+                result2 = self.cursor.fetchone()
+                row[result2[0]] = result2[1] == 1
+                row[result2[0] + "_time"] = result2[2]
 
-        return ret
+        return result
 
     def getClientDetail(self, host_id, history_days=30):
         # returns, hostname, installdate, recvdkey, support, dept, version,

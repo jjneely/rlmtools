@@ -20,6 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import datetime
 import kid
 kid.enable_import()
 
@@ -44,10 +45,46 @@ class Application(object):
         self.__server = server.Server("pamsadmin.pams.ncsu.edu")
 
     def index(self):
-        print self.__server.getDepartments()
+        departments = self.__server.getDepartments()
+        for dept in departments:
+            dept['url'] = "%s/dept?dept_id=%s" % (cherrypy.request.base,
+                                                  dept['dept_id'])
         return serialize('templates.index', 
-                         dict(departments=self.__server.getDepartments()))
+                         dict(departments=departments))
     index.exposed = True
+
+    def dept(self, dept_id):
+        services = ['updates', 'client'] # Services that affect client status
+        clients = self.__server.getClientList(int(dept_id))
+        days30 = datetime.timedelta(30) # 30 days
+        days7 = datetime.timedelta(7)
+        today = datetime.datetime.today()
+        support = []
+        nosupport = []
+
+        for client in clients:
+            client['status'] = True
+            client['url'] = "%s/client?host_id=%s" % (cherrypy.request.base,
+                                                      client['host_id'])
+ 
+            if client['lastcheck'] < today - days30:
+                client['status'] = False
+        
+            for service in services:
+                key = "%s_time" % service
+                if not client.has_key(service) or client[key] < today - days7:
+                    client['status'] = False
+                    break
+
+            if client['support']:
+                support.append(client)
+            else:
+                nosupport.append(client)
+
+        return serialize('templates.dept', dict(support=support, 
+                         nosupport=nosupport, 
+                         department=self.__server.getDeptName(int(dept_id))))
+    dept.exposed = True
 
 
 if __name__ == "__main__":
