@@ -21,7 +21,9 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import MySQLdb
-from logging import *
+import logging
+
+log = logging.getLogger("xmlrpc")
 
 # Grrr...  MySQL-Python doesn't support reconnecting
 class Connection(object):
@@ -55,15 +57,15 @@ class Cursor(object):
         try:
             func = getattr(self.sdb.cursor, self.__method)
         except TypeError:
-            log(CRITICAL, "BUG: MySQL cursor wrapper blew up.")
+            log.critical("BUG: MySQL cursor wrapper blew up.")
             raise
 
         try:
             return func(*args, **kwargs)
         except MySQLdb.OperationalError, e:
-            log(DEBUG, "OperationalError: e.args = %s" % str(e.args))
+            log.debug("OperationalError: e.args = %s" % str(e.args))
             if e.args[0] in (2006, 2013):
-                log(WARNING, "Forcing reconnect to MySQL database")
+                log.warning("Forcing reconnect to MySQL database")
                 self.sdb.conn = None
                 self.sdb.cursor = None
                 self.sdb.getCursor()
@@ -93,14 +95,14 @@ class MysqlDB(object):
             return self.wrappedConn
         
         try:
-            log(INFO, "Obtaining connection")
+            log.info("Obtaining connection")
             self.conn = MySQLdb.connect(user=self.config['db_user'], 
                                      passwd=self.config['db_pass'], 
                                      host=self.config['db_host'], 
                                      db=self.config['db_name'])
-            log(INFO, "Connected via user/password")
+            log.info("Connected via user/password")
         except Exception, e:
-            log(CRITICAL, "Could not get DB connection! (%s)" % str(e))
+            log.critical("Could not get DB connection! (%s)" % str(e))
             # Do something useful here?
             raise
         
