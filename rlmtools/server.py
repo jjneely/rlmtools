@@ -47,6 +47,9 @@ from webKickstart import webKickstart
 
 log = logging.getLogger("xmlrpc")
 
+# Holds the database class
+DataBase = None
+
 def logException():
     # even though tracing is not normally done at lower logging levels,
     # we add trace data for exceptions
@@ -82,7 +85,6 @@ class Server(object):
     # Use class variables so we don't have to connect each time
     conn = None
     cursor = None
-    db = None
 
     # Other static data that can be class variables
     jumpstarts = None
@@ -100,13 +102,16 @@ class Server(object):
         self.hostid = None
 
         log.info("Running Server object for %s" % self.client)
-        
+
+        global DataBase
+        if DataBase == None:
+            # Init MySQL Connections
+            DataBase = mysql.MysqlDB(getDBDict())
+
         if self.conn == None or self.cursor == None:
             # get MySQL information
-            db = getDBDict()
-            self.db = mysql.MysqlDB(db)
-            self.conn = self.db.getConnection()
-            self.cursor = self.db.getCursor()
+            self.conn = DataBase.getConnection()
+            self.cursor = DataBase.getCursor()
 
             # Other config information
             cnf = config.config
