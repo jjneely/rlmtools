@@ -54,13 +54,12 @@
        background-color: #99ff99;
     }
     div.good:hover {
-       background-color: #77ff77
+       background-color: #66ff66;
     }
     div.good A {
        text-decoration: none;
        color: black;
     }
-       
     div.bad {
        margin: 1.0px;
        border: 1.0px solid #000000;
@@ -78,6 +77,51 @@
     div.bad A {
        text-decoration: none;
        color: #fbfbfb;
+    }
+    table {
+       margin-left: auto;
+       margin-right: auto;   
+       border-style: solid;
+       border-color: gray;
+       border-width: 1px;
+    }
+    td {
+       padding: 4px;
+       border-style: none;
+    }
+    th {
+       padding: 4px;
+       border-style: none;
+       border-bottom-style: solid;
+       border-bottom-width: 1px;
+       border-bottom-color: gray;
+    }
+    th.right {
+       text-align: right;
+       border-bottom-style: none;
+       border-right-width: 1px;
+       border-right-color: gray;
+       border-right-style: solid;
+    }
+    tr.good {
+       background-color: #99ff99;
+    }
+    tr.good:hover {
+       background-color: #66ff66;
+    }
+    tr.neutral {
+       background-color: #ececec;
+    }
+    tr.neutral:hover {
+       background-color: #cccccc;
+    }
+    tr.bad {
+       background-color: #ff0000;
+       color: #ffffff;
+    }
+    tr.bad:hover {
+       background-color: #aa0000;
+       color: #ffffff;
     }
   </style>
 

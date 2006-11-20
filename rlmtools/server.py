@@ -435,19 +435,19 @@ class Server(object):
 
         return key
 
-    def getStatusDetail(self, service_id):
-        """Return historical information regarding this clients status."""
-        
-        q = """select serv.name, s.timestamp, s.success, s.data 
-               from status as s, service as serv 
-               where host_id = %s and service_id = %s 
-               order by serv.name, s.timestamp"""
-
-        id = self.getHostID()
-        self.cursor.execute(q, (id, sid))
-        result = resultSet(self.cursor).dump()
-
-        return result
+    #def getStatusDetail(self, service_id):
+    #    """Return historical information regarding this clients status."""
+    #    
+    #    q = """select serv.name, s.timestamp, s.success, s.data 
+    #           from status as s, service as serv 
+    #           where host_id = %s and service_id = %s 
+    #           order by serv.name, s.timestamp"""
+    #
+    #    id = self.getHostID()
+    #    self.cursor.execute(q, (id, sid))
+    #    result = resultSet(self.cursor).dump()
+    #
+    #    return result
 
     def getDepartments(self):
         q = """select dept_id, name from dept"""
@@ -501,12 +501,13 @@ class Server(object):
         #    lastcheck, status
         # status is a list of dicts: service, timestamp, success, data
         q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
-                       d.name as dept, r.version, l.timestamp as lastcheck
+                       d.name as dept, r.dept_id, r.version, 
+                       l.timestamp as lastcheck
                 from realmlinux as r, dept as d, lastheard as l
                 where d.dept_id = r.dept_id and l.host_id = r.host_id and
                       r.host_id = %s"""
         q2 = """select service.name as service, status.timestamp, 
-                       status.success, status.data
+                       status.success, status.data, status.st_id
                 from service, status
                 where service.service_id = status.service_id and
                       status.host_id = %s and 

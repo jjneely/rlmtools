@@ -61,6 +61,7 @@ class Application(object):
         today = datetime.datetime.today()
         support = []
         nosupport = []
+        backurl = "%s" % cherrypy.request.base
 
         for client in clients:
             client['status'] = True
@@ -83,9 +84,43 @@ class Application(object):
 
         return serialize('templates.dept', dict(support=support, 
                          nosupport=nosupport, 
-                         department=self.__server.getDeptName(int(dept_id))))
+                         department=self.__server.getDeptName(int(dept_id)),
+                         backurl=backurl ))
     dept.exposed = True
 
+    def client(self, host_id):
+        days30 = datetime.timedelta(30) # 30 days
+        today = datetime.datetime.today()
+        detail = self.__server.getClientDetail(int(host_id))
+        detail['lastcheck_good'] = detail['lastcheck'] > today - days30
+        goodStatus = {}
+        backurl = "%s/dept?dept_id=%s" % (cherrypy.request.base,
+                                          detail['dept_id'])
+
+        for row in detail['status']:
+            row['url'] = "%s/status?status_id=%s" % (cherrypy.request.base,
+                                                     row['st_id'])
+            if row['data'] == None:
+                summary = "No data available."
+            else:
+                summary = row['data'].strip().replace('\n', ' ')
+                if len(summary) > 20:
+                    summary = summary[0:21]
+            row['summary'] = summary
+
+            if goodStatus.has_key(row['service']):
+                row['class'] = "neutral"
+            elif row['success']:
+                goodStatus[row['service']] = True
+                row['class'] = "good"
+            else:
+                row['class'] = "bad"
+
+
+        return serialize('templates.client',
+                         dict(client=detail, status=detail['status'],
+                              backurl=backurl))
+    client.exposed = True
 
 if __name__ == "__main__":
     cherrypy.root = Application()

@@ -7,6 +7,12 @@
 </head>
 <body>
 
+  <p>Return to:
+    <ul>
+      <li><a href="" py:attrs="'href':backurl">Department Listing</a></li>
+    </ul>
+  </p>
+
   <h1>Client List: <span py:replace="department" /></h1>
 
   <p>Clients are categorized into Supported and Non-Supported.  A Supported
@@ -16,7 +22,7 @@
     client to make it lose its supported status such as removing the
     client's config file from AFS, hostname changes, etc.</p>
 
-  <h2>Supported</h2>
+  <h2>Supported: <span py:replace="len(support)"/> Clients</h2>
 
   <div class="category">
     <div py:for="client in support"
@@ -31,7 +37,7 @@
   </p>
 
   <p></p>
-  <h2>Non-Supported</h2>
+  <h2>Non-Supported: <span py:replace="len(nosupport)"/> Clients</h2>
 
   <div class="category">
     <div py:for="client in nosupport"
