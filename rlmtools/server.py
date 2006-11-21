@@ -328,8 +328,9 @@ class Server(object):
 
         return 0
 
-    def setServiceStatus(self, service, succeed, data=None):
-        """Record a service status message into the database."""
+    def setServiceStatus(self, service, succeed, timestamp, data=None):
+        """Record a service status message into the database.
+           timestamp should be a POSIX time...so time.time()"""
         
         sid = self.getServiceID(service)
         if sid == None:
@@ -337,8 +338,9 @@ class Server(object):
             return 1
 
         q = """insert into status (host_id, service_id, `timestamp`,
-                                   success, data)
-               values (%s, %s, %s, %s, %s)"""
+                                   received, success, data)
+               values (%s, %s, %s, %s, %s, %s)"""
+        clientstamp = datetime.fromtimestamp(timestamp)
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
         id = self.getHostID()
@@ -348,7 +350,7 @@ class Server(object):
         else:
             succeed = 0
 
-        self.cursor.execute(q, (id, sid, date, succeed, data))
+        self.cursor.execute(q, (id, sid, date, clientstamp, succeed, data))
         self.conn.commit()
         return 0
 
@@ -435,19 +437,20 @@ class Server(object):
 
         return key
 
-    #def getStatusDetail(self, service_id):
-    #    """Return historical information regarding this clients status."""
-    #    
-    #    q = """select serv.name, s.timestamp, s.success, s.data 
-    #           from status as s, service as serv 
-    #           where host_id = %s and service_id = %s 
-    #           order by serv.name, s.timestamp"""
-    #
-    #    id = self.getHostID()
-    #    self.cursor.execute(q, (id, sid))
-    #    result = resultSet(self.cursor).dump()
-    #
-    #    return result
+    def getStatusDetail(self, status_id):
+        """Return historical information regarding this clients status."""
+        
+        q = """select serv.name, s.timestamp, s.success, s.data,
+                      s.received, r.hostname, r.host_id
+               from status as s, service as serv, realmlinux as r 
+               where r.host_id = s.host_id and
+                     serv.service_id = s.service_id and
+                     s.st_id = %s"""
+    
+        self.cursor.execute(q, (status_id,))
+        result = resultSet(self.cursor).dump()
+    
+        return result[0]
 
     def getDepartments(self):
         q = """select dept_id, name from dept"""
@@ -507,12 +510,13 @@ class Server(object):
                 where d.dept_id = r.dept_id and l.host_id = r.host_id and
                       r.host_id = %s"""
         q2 = """select service.name as service, status.timestamp, 
-                       status.success, status.data, status.st_id
+                       status.success, status.data, status.st_id,
+                       status.received
                 from service, status
                 where service.service_id = status.service_id and
                       status.host_id = %s and 
                       TO_DAYS(status.timestamp) > TO_DAYS(NOW()) - %s
-                order by service.name, status.timestamp"""
+                order by service.name asc, status.timestamp desc"""
 
         self.cursor.execute(q1, (host_id,))
         result1 = resultSet(self.cursor).dump()[0]  # This is one row

@@ -58,13 +58,15 @@
     <tr class="neutral">
       <th>Service</th>
       <th>Success</th>
-      <th>Time Stamp</th>
+      <th>Client Time Stamp</th>
+      <th>Message Received Stamp</th>
       <th>Message</th>
     </tr>
     <tr py:for="stat in status" py:attrs="'class':stat['class']">
       <td py:content="stat['service']">Bob</td>
       <td py:content="stat['success'] and 'Good' or 'Bad'">Schwank</td>
       <td py:content="stat['timestamp']">Time Stamp</td>
+      <td py:content="stat['received']">Reviced Stamp</td>
       <td>
         <a href="" py:attrs="'href':stat['url']" py:content="stat['summary']">
         </a>

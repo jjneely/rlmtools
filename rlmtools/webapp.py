@@ -122,6 +122,24 @@ class Application(object):
                               backurl=backurl))
     client.exposed = True
 
+    def status(self, status_id):
+        status = self.__server.getStatusDetail(int(status_id))
+        backurl = "%s/client?host_id=%s" % (cherrypy.request.base,
+                                            status['host_id'])
+            
+        if status['data'] == None or status['data'] == "":
+            status['data'] = "No data available."
+            status['data_class'] = "neutral"
+        elif status['success']:
+            status['data_class'] = "good"
+        else:
+            status['data_class'] = "bad"
+
+        return serialize('templates.status', 
+                         dict(status=status, backurl=backurl))
+    status.exposed = True
+        
+
 if __name__ == "__main__":
     cherrypy.root = Application()
     cherrypy.server.start()

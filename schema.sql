@@ -26,6 +26,7 @@ create table status (
     host_id     INTEGER not null,
     service_id  INTEGER not null,
     `timestamp` DATETIME not null,
+    received    DATETIME not null,
     success     TINYINT not null,
     data        TEXT,
 
