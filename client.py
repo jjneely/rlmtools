@@ -35,6 +35,7 @@ import httplib
 import sha
 import pickle
 import optparse
+import base64
 
 # XMLRPC Interface
 #URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
@@ -81,8 +82,8 @@ class Message(object):
         fd.close()
 
     def send(self, server, text, sig):
-        doRPC(server.message, text, sig, self.data)
-        return True
+        ret = doRPC(server.message, text, sig, self.data)
+        return ret
 
     def remove(self):
         if self.sum != None:
@@ -118,7 +119,8 @@ class Message(object):
 
     def setMessage(self, data):
         self.sum = None
-        self.data['data'] = data
+        blob = base64.encodestring(data)
+        self.data['data'] = blob
 
     def getTimeStamp(self):
         if self.data.has_key('timestamp'):
@@ -411,8 +413,12 @@ def runQueue(server):
             queue.append(m)
 
     for m in queue:
-        if m.send(server, pubKeyText, sig):
+        code = m.send(server, pubKeyText, sig)
+        if code == 0:
             m.remove()
+        else:
+            # This could log...a lot...if client is not verified.
+            error("Failed to send message, return code %s" % code)
 
 
 def doReport():

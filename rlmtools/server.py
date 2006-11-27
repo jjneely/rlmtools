@@ -29,6 +29,7 @@ import os.path
 import time
 import logging
 import traceback
+import base64
 
 from datetime import datetime, timedelta
 
@@ -330,27 +331,30 @@ class Server(object):
 
     def setServiceStatus(self, service, succeed, timestamp, data=None):
         """Record a service status message into the database.
-           timestamp should be a POSIX time...so time.time()"""
+           timestamp should be a POSIX time...so time.time()
+           
+           data should be a Base64 encoded blob."""
         
         sid = self.getServiceID(service)
         if sid == None:
             # We don't store data about services we don't know
-            return 1
+            return 2
 
         q = """insert into status (host_id, service_id, `timestamp`,
                                    received, success, data)
                values (%s, %s, %s, %s, %s, %s)"""
         clientstamp = datetime.fromtimestamp(timestamp)
-        ts = time.localtime()
-        date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
+        date = datetime.today()
         id = self.getHostID()
+        if data != None:
+            data = base64.decodestring(data)
 
         if succeed:
             succeed = 1
         else:
             succeed = 0
 
-        self.cursor.execute(q, (id, sid, date, clientstamp, succeed, data))
+        self.cursor.execute(q, (id, sid, clientstamp, date, succeed, data))
         self.conn.commit()
         return 0
 

@@ -82,7 +82,16 @@ def bless(dept, version):
 
 
 def message(publicKey, sig, dict):
-    return True
+    """Log a message from a client."""
+    s = server.Server(getHostName())
+    if not s.verifyClient(publicKey, sig):
+        return 1
+
+    ret = s.setServiceStatus(dict['type'],
+                             dict['success'], 
+                             dict['timestamp'],
+                             dict['data'])
+    return ret
 
 
 def isRegistered():
