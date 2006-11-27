@@ -32,6 +32,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %defattr(-,root,root)
 %{_sysconfdir}/cron.update/*
 %{_libdir}/ncsuxmlrpc
+/var/spool/rlmqueue
 %doc doc/*
 
 %changelog

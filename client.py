@@ -30,7 +30,6 @@ import socket
 import stat
 import ezPyCrypto
 import time
-import datetime
 import urllib2
 import httplib
 import sha
@@ -60,7 +59,12 @@ class Message(object):
         self.sum = None
 
     def _setCheckSum(self):
-        s = str(self.data)
+        # dicts are unordered so we need to impose some order to checksum
+        keys = self.data.keys()
+        keys.sort()
+        s = ""
+        for key in keys:
+            s = "%s%s:%s\n" % (s, key, self.data[key])
         self.sum = sha.new(s).hexdigest()
 
     def save(self):
@@ -85,7 +89,7 @@ class Message(object):
             filename = os.path.join(mqueue, self.sum)
             try:
                 os.unlink(filename)
-            except IOError:
+            except (IOError, OSError):
                 pass
 
     def load(self, filename):
@@ -116,9 +120,9 @@ class Message(object):
         self.sum = None
         self.data['data'] = data
 
-    def getDateTime(self):
+    def getTimeStamp(self):
         if self.data.has_key('timestamp'):
-            return datetime.datetime.fromtimestamp(self.data['timestamp'])
+            return self.data['timestamp']
         else:
             return None
 
@@ -378,8 +382,8 @@ def doBlessing(server):
 
 def runQueue(server):
     """Process the message queue."""
-    tdelta = datetime.timedelta(30)  # 30 days
-    today = datetime.datetime.today()
+    expire = time.time() - 3600 * 24 * 30 # 30 days ago (time.time() 
+                                          # for python 2.2)
 
     key = getLocalKey()
     pubKeyText = key.exportKey()
@@ -387,11 +391,20 @@ def runQueue(server):
 
     queue = []
 
+    if not os.access(mqueue, os.W_OK):
+        # we are root, we should have write access, if not create it
+        try:
+            os.mkdir(mqueue)
+            os.chmod(mqueue, 01777)
+        except IOError, e:
+            print "Error creating RLM queue directory: %s" % str(e)
+            return
+
     for file in os.listdir(mqueue):
         m = Message()
         m.load(os.path.join(mqueue, file))
 
-        if m.getTimeStamp() < today - tdelta:
+        if m.getTimeStamp() < expire:
             # If the message is 30 days told we aren't interested
             m.remove()
         else:
@@ -403,7 +416,9 @@ def runQueue(server):
 
 
 def doReport():
-    usage = "ncsureport --service <--ok|--fail> --message <file>"
+    usage = """Realm Linux Management report tool.  Licensed under the 
+GNU General Public License.
+ncsureport --service <--ok|--fail> --message <file>"""
     parser = optparse.OptionParser(usage)
     parser.add_option("-s", "--service", action="store", default=None,
                      dest="service", help="Message/service type to send.")
@@ -437,7 +452,11 @@ def doReport():
     m.setType(opts.service)
     m.setSuccess(success)
     m.setMessage(fd.read())
-    m.save()
+    try:
+        m.save()
+    except IOError, e:
+        print "There was an error queuing your message: %s" % str(e)
+        print "Message will not be sent."
 
     
 def main():

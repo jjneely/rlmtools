@@ -9,6 +9,7 @@ all:
 install:
 	install -d -m 755 $(DESTDIR)/usr/lib/rlmtools
 	install -d -m 755 $(DESTDIR)/etc/cron.update
+	install -d -m 1777 $(DESTDIR)/var/spool/rlmqueue
 	
 	install -m 755 client.py $(DESTDIR)/usr/lib/rlmtools
 	install -m 755 registerclient.sh $(DESTDIR)/etc/cron.update

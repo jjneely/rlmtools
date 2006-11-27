@@ -82,7 +82,7 @@ def bless(dept, version):
 
 
 def message(publicKey, sig, dict):
-    pass
+    return True
 
 
 def isRegistered():
