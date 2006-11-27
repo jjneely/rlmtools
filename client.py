@@ -1,24 +1,24 @@
 #!/usr/bin/python
 #
-#     RealmLinux Manager -- client code
-#     Copyright (C) 2004, 2005, 2006 NC State University
-#     Written by Jack Neely <jjneely@pams.ncsu.edu>
+# RealmLinux Manager -- client code
+# Copyright (C) 2004 - 2006 NC State University
+# Written by Jack Neely <jjneely@pams.ncsu.edu>
 #
-#     SDG
+# SDG
 #
-#     This program is free software; you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation; either version 2 of the License, or
-#     (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#     This program is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#     You should have received a copy of the GNU General Public License
-#     along with this program; if not, write to the Free Software
-#     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import sys
 import os
@@ -30,8 +30,12 @@ import socket
 import stat
 import ezPyCrypto
 import time
+import datetime
 import urllib2
 import httplib
+import sha
+import pickle
+import optparse
 
 # XMLRPC Interface
 #URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
@@ -46,6 +50,79 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
 #blessings_dir = "/ncsu/jjneely/slack2/keys"
 
+# Message Queue Directory
+mqueue = "/var/spool/rlmqueue"
+
+class Message(object):
+
+    def __init__(self):
+        self.data = {}
+        self.sum = None
+
+    def _setCheckSum(self):
+        s = str(self.data)
+        self.sum = sha.new(s).hexdigest()
+
+    def save(self):
+        # Possibly raises IOError
+        if not self.data.has_key('timestamp'):
+            self.setTimeStamp()
+        if self.sum == None:
+            self._setCheckSum()
+
+        filename = os.path.join(mqueue, self.sum)
+        blob = pickle.dumps(self.data)
+        fd = open(filename, 'w')
+        fd.write(blob)
+        fd.close()
+
+    def send(self, server, text, sig):
+        doRPC(server.message, text, sig, self.data)
+        return True
+
+    def remove(self):
+        if self.sum != None:
+            filename = os.path.join(mqueue, self.sum)
+            try:
+                os.unlink(filename)
+            except IOError:
+                pass
+
+    def load(self, filename):
+        # Possibly raises IOError
+        fd = open(filename)
+        blob = fd.read()
+        fd.close()
+        self.data = pickle.loads(blob)
+        self._setCheckSum()
+        if self.sum != os.path.basename(filename):
+            print "ERROR: Checksum does not equal filename."
+            print "Checksum: %s" % self.sum
+            print "Filename: %s" % filename
+
+    def setType(self, t):
+        self.sum = None
+        self.data['type'] = t
+
+    def setSuccess(self, bool):
+        self.sum = None
+        self.data['success'] = bool
+
+    def setTimeStamp(self):
+        self.sum = None
+        self.data['timestamp'] = time.time()
+
+    def setMessage(self, data):
+        self.sum = None
+        self.data['data'] = data
+
+    def getDateTime(self):
+        if self.data.has_key('timestamp'):
+            return datetime.datetime.fromtimestamp(self.data['timestamp'])
+        else:
+            return None
+
+
 def error(message, verbose=False):
     "Log an error message to syslog."
 
@@ -56,7 +133,7 @@ def error(message, verbose=False):
     syslog.syslog(priority, "Realm Linux Support: %s" % message)
 
 
-def isSupported():
+def isSupportOn():
     file = "/etc/sysconfig/support"
     regex = re.compile("^SUPPORT=yes")
     
@@ -82,7 +159,7 @@ def doRPC(method, *params):
         except socket.error, e:
             error("Socket Error: %s" % str(e))
         except socket.sslerror, e:
-            error("Socket Error: %s" % str(e))
+            error("Socket SSL Error: %s" % str(e))
         except AssertionError, e:
             error("Assertion Error (this is weird): %s" % str(e))
         except httplib.IncompleteRead, e:
@@ -156,7 +233,7 @@ def doRegister(server):
     saveKey(keypair)
     
     ret = doRPC(server.register, pubKey, getDepartment(), getVersion())
-        
+    
     if ret == 0:
         return ret
     elif ret == 1:
@@ -298,6 +375,70 @@ def doBlessing(server):
         print "Blessing successful.  This machine is now a trusted machine"
         print "on NCSU's network."
 
+
+def runQueue(server):
+    """Process the message queue."""
+    tdelta = datetime.timedelta(30)  # 30 days
+    today = datetime.datetime.today()
+
+    key = getLocalKey()
+    pubKeyText = key.exportKey()
+    sig = key.signString(pubKeyText)
+
+    queue = []
+
+    for file in os.listdir(mqueue):
+        m = Message()
+        m.load(os.path.join(mqueue, file))
+
+        if m.getTimeStamp() < today - tdelta:
+            # If the message is 30 days told we aren't interested
+            m.remove()
+        else:
+            queue.append(m)
+
+    for m in queue:
+        if m.send(server, pubKeyText, sig):
+            m.remove()
+
+
+def doReport():
+    usage = "ncsureport --service <--ok|--fail> --message <file>"
+    parser = optparse.OptionParser(usage)
+    parser.add_option("-s", "--service", action="store", default=None,
+                     dest="service", help="Message/service type to send.")
+    parser.add_option("-o", "--ok", action="store_true", default=None,
+                     dest="ok", help="Service is a success.")
+    parser.add_option("-f", "--fail", action="store_true", default=None,
+                     dest="fail", help="Service is a failure.")
+    parser.add_option("-m", "--message", action="store", default=None,
+                     dest="message", help="Filename or '-' of message to send.")
+
+    opts, args = parser.parse_args(sys.argv[1:])
+    if opts.ok == None and opts.fail == None:
+        parser.print_help()
+        return
+
+    if opts.service == None or opts.message == None:
+        parser.print_help()
+        return
+
+    success = opts.ok == True
+    if opts.message == "-":
+        fd = sys.stdin
+    else:
+        try:
+            fd = open(opts.message)
+        except IOError, e:
+            print "Count not open file: %s" % opts.message
+            return
+
+    m = Message()
+    m.setType(opts.service)
+    m.setSuccess(success)
+    m.setMessage(fd.read())
+    m.save()
+
     
 def main():
     """This either runs via a cron job to register and checkin
@@ -305,32 +446,34 @@ def main():
        called directly via 'ncsubless' to administratively register
        a machine."""
 
+    server = xmlrpclib.ServerProxy(URL)
+
     if os.path.basename(sys.argv[0]) == "ncsubless":
         # called via ncsubless script
-        doBlessing(getRPCObject())
+        doBlessing(server)
+        return
+
+    if os.path.basename(sys.argv[0]) == "ncsureport":
+        doReport()
         return
     
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."
         sys.exit(1)
         
-    server = xmlrpclib.ServerProxy(URL)
     if not doRPC(server.isRegistered):
-        if not isSupported():
-            error("Your machine is not configured for support.")
-            return 1
+        if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
+            os.mkdir("/etc/sysconfig/RLKeys", 0755)
         
-        else:
-            if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
-                os.mkdir("/etc/sysconfig/RLKeys", 0755)
-        
-            if doRegister(server) != 0:
-                sys.exit()
+        if doRegister(server) != 0:
+            sys.exit()
 
     doCheckIn(server)
 
-    if not os.access("/etc/update.conf", os.R_OK):
+    if isSupportOn() and not os.access("/etc/update.conf", os.R_OK):
         getUpdateConf(server)
+
+    runQueue(server)
 
 
 if __name__ == "__main__":

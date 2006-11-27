@@ -32,6 +32,7 @@ __API__ = ['hello',
            'register',
            'checkIn',
            'bless',
+           'message',
 
            'getServerKey',
            'getEncKeyFile',
@@ -78,6 +79,10 @@ def bless(dept, version):
     s = server.Server(getHostName())
     ret = s.bless(dept, version)
     return ret
+
+
+def message(publicKey, sig, dict):
+    pass
 
 
 def isRegistered():
