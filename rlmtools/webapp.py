@@ -45,12 +45,17 @@ class Application(object):
         self.__server = server.Server("pamsadmin.pams.ncsu.edu")
 
     def index(self):
+        t = self.__server.getTotalClients()
         departments = self.__server.getDepartments()
+
         for dept in departments:
             dept['url'] = "%s/dept?dept_id=%s" % (cherrypy.request.base,
                                                   dept['dept_id'])
         return serialize('templates.index', 
-                         dict(departments=departments))
+                         dict(departments=departments,
+                              supported=t[0],
+                              notsupported=t[1],
+                              notregistered=t[2]))
     index.exposed = True
 
     def dept(self, dept_id):
@@ -94,10 +99,14 @@ class Application(object):
         days30 = datetime.timedelta(30) # 30 days
         today = datetime.datetime.today()
         detail = self.__server.getClientDetail(int(host_id))
-        detail['lastcheck_good'] = detail['lastcheck'] > today - days30
+        detail['lastcheck_good'] = detail['lastcheck'] != None and \
+                                   detail['lastcheck'] > today - days30
         goodStatus = {}
-        backurl = "%s/dept?dept_id=%s" % (cherrypy.request.base,
-                                          detail['dept_id'])
+        if detail['recvdkey'] == 1:
+            backurl = "%s/dept?dept_id=%s" % (cherrypy.request.base,
+                                              detail['dept_id'])
+        else:
+            backurl = "%s/notregistered" % cherrypy.request.base
 
         for row in detail['status']:
             row['url'] = "%s/status?status_id=%s" % (cherrypy.request.base,
@@ -140,7 +149,29 @@ class Application(object):
         return serialize('templates.status', 
                          dict(status=status, backurl=backurl))
     status.exposed = True
-        
+
+    def notregistered(self):
+        backurl = "%s" % cherrypy.request.base
+        clients = self.__server.getNotRegistered()
+        support = []
+        nosupport = []
+
+        for client in clients:
+            client['status'] = False # Because we aren't registered
+            client['url'] = "%s/client?host_id=%s" % (cherrypy.request.base,
+                                                      client['host_id'])
+            if client['support'] == 1:
+                support.append(client)
+            else:
+                nosupport.append(client)
+
+        return serialize('templates.notregistered',
+                         dict(support=support,
+                              nosupport=nosupport,
+                              department="Not Registered",
+                              backurl=backurl)
+                        )
+    notregistered.exposed = True
 
 if __name__ == "__main__":
     cherrypy.root = Application()

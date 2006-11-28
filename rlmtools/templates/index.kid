@@ -11,6 +11,16 @@
 </head>
 <body>
 
+  <h2>Client Statistics</h2>
+  <ul>
+    <li>Supported Clients: <span py:replace="supported">-3</span></li>
+    <li>Non-Supported Clients: <span py:replace="notsupported">-4</span></li>
+    <li>Clients Not Registered: <a href="notregistered" 
+                                  py:content="notregistered">-5</a></li>
+  </ul>
+
+  <h2>Departments</h2>
+
   <div class="category">
     <div class="field"
       py:for="dept in departments">

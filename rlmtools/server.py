@@ -535,6 +535,35 @@ class Server(object):
         result1['status'] = result2
         return result1
 
+    def getTotalClients(self):
+        """Returns a tuple with the number of supported, non-supported, 
+           and clients that have not registered."""
+
+        q1 = "select count(*) from realmlinux where support = 1 and recvdkey=1"
+        q2 = "select count(*) from realmlinux where support = 0 and recvdkey=1"
+        q3 = "select count(*) from realmlinux where recvdkey = 0"
+
+        ret = []
+        self.cursor.execute(q1)
+        ret.append(self.cursor.fetchone()[0])
+        
+        self.cursor.execute(q2)
+        ret.append(self.cursor.fetchone()[0])
+
+        self.cursor.execute(q3)
+        ret.append(self.cursor.fetchone()[0])
+
+        return tuple(ret)
+
+    def getNotRegistered(self):
+        """Returns information about clients that have not registered."""
+
+        q = """select host_id, hostname, support from realmlinux where
+                  recvdkey = 0 order by hostname asc"""
+
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 

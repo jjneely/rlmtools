@@ -424,7 +424,7 @@ def runQueue(server):
 def doReport():
     usage = """Realm Linux Management report tool.  Licensed under the 
 GNU General Public License.
-ncsureport --service <--ok|--fail> --message <file>"""
+ncsureport --service < --ok | --fail > --message <file>"""
     parser = optparse.OptionParser(usage)
     parser.add_option("-s", "--service", action="store", default=None,
                      dest="service", help="Message/service type to send.")
@@ -464,7 +464,7 @@ ncsureport --service <--ok|--fail> --message <file>"""
     m.setMessage(blob)
     try:
         m.save()
-    except IOError, e:
+    except (OSError, IOError), e:
         print "There was an error queuing your message: %s" % str(e)
         print "Message will not be sent."
 
