@@ -13,6 +13,7 @@
 
   <h2>Client Statistics</h2>
   <ul>
+    <li>Clients Currently Checking In: <span py:replace="active">-3</span></li>
     <li>Supported Clients: <span py:replace="supported">-3</span></li>
     <li>Non-Supported Clients: <span py:replace="notsupported">-4</span></li>
     <li>Clients Not Registered: <a href="notregistered" 
@@ -29,6 +30,12 @@
         py:content="dept['name']">Your Department Here</a>
     </div>
   </div>
+
+  <br />
+
+  <h2 class="space">Tools</h2>
+
+  <p>Other tools may appear here in the future.</p>
 
 </body>
 

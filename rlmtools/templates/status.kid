@@ -45,7 +45,7 @@
       <td py:content="status['success'] and 'Good' or 'Bad'">foobared</td>
     </tr>
 
-    <tr py:attrs="'class':status['data_class']">
+    <tr class="neutral">
       <th class="right">Message:</th>
       <td>
         <pre py:content="status['data']">The Epoch</pre>

@@ -46,6 +46,7 @@ class Application(object):
 
     def index(self):
         t = self.__server.getTotalClients()
+        active = self.__server.getActiveClients()
         departments = self.__server.getDepartments()
 
         for dept in departments:
@@ -53,6 +54,7 @@ class Application(object):
                                                   dept['dept_id'])
         return serialize('templates.index', 
                          dict(departments=departments,
+                              active=active,
                               supported=t[0],
                               notsupported=t[1],
                               notregistered=t[2]))
@@ -112,11 +114,11 @@ class Application(object):
             row['url'] = "%s/status?status_id=%s" % (cherrypy.request.base,
                                                      row['st_id'])
             if row['data'] == None:
-                summary = "No data available."
+                summary = "No data available..."
             else:
                 summary = row['data'].strip().replace('\n', ' ')
                 if len(summary) > 20:
-                    summary = summary[0:21]
+                    summary = summary[0:21] + "..."
             row['summary'] = summary
 
             if goodStatus.has_key(row['service']):

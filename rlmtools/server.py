@@ -564,6 +564,16 @@ class Server(object):
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
+    def getActiveClients(self, hours=6):
+        """Returns the number of clients heard from in the last hours hours."""
+
+        q = """select count(host_id) from lastheard where
+               `timestamp` > %s"""
+        date = datetime.today() - timedelta(hours=hours)
+
+        self.cursor.execute(q, (date,))
+        return self.cursor.fetchone()[0]
+
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 

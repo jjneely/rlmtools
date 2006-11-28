@@ -9,19 +9,26 @@
 
   <style type="text/css">
     h1 {
-       clear: left;
+       clear: both;
     }
     h2 {
-       clear: left;
+       clear: both;
+    }
+    h2.space {
+       clear: both;
+       padding-top: 20px;
     }  
+    A {
+       text-decoration: none;
+       color: blue;
+    }
     div.content {
        font-family: Arial,Helvetica,Sans-Serif;
        padding: 1em;
     }
     div.category {
-       clear: both;
+       clear: left;
        text-align: center;
-       padding-bottom: 1.5em;
     }
     div.field {
        margin: 1.0px;
@@ -34,14 +41,14 @@
        height: 1.5em;
        background-color: #ececec;
     }
-    div.field:hover {
+    div.field:hover
+    {
        background-color: #cccccc
     }
     div.field A {
        text-decoration: none;
        color: blue;
     }
-
     div.good {
        margin: 1.0px;
        border: 1.0px solid #000000;
@@ -122,6 +129,18 @@
     tr.bad:hover {
        background-color: #aa0000;
        color: #ffffff;
+    }
+    tr.good A {
+       text-decoration: underline;
+       color: black;
+    }
+    tr.neutral A {
+       text-decoration: underline;
+       color: black;
+    }
+    tr.bad A {
+       text-decoration: underline;
+       color: white;
     }
   </style>
 
