@@ -76,6 +76,8 @@ class Application(object):
                 if not client.has_key(service) or client[key] < today - days7:
                     client['status'] = False
                     break
+                if not client[service]:
+                    client['status'] = False
 
             if client['support']:
                 support.append(client)

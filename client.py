@@ -432,7 +432,7 @@ ncsureport --service <--ok|--fail> --message <file>"""
                      dest="ok", help="Service is a success.")
     parser.add_option("-f", "--fail", action="store_true", default=None,
                      dest="fail", help="Service is a failure.")
-    parser.add_option("-m", "--message", action="store", default=None,
+    parser.add_option("-m", "--message", action="store", default=False,
                      dest="message", help="Filename or '-' of message to send.")
 
     opts, args = parser.parse_args(sys.argv[1:])
@@ -440,16 +440,20 @@ ncsureport --service <--ok|--fail> --message <file>"""
         parser.print_help()
         return
 
-    if opts.service == None or opts.message == None:
+    if opts.service == None:
         parser.print_help()
         return
 
     success = opts.ok == True
     if opts.message == "-":
         fd = sys.stdin
+        blob = fd.read()
+    elif opts.message == False:
+        blob = ""
     else:
         try:
             fd = open(opts.message)
+            blob = fd.read()
         except IOError, e:
             print "Count not open file: %s" % opts.message
             return
@@ -457,7 +461,7 @@ ncsureport --service <--ok|--fail> --message <file>"""
     m = Message()
     m.setType(opts.service)
     m.setSuccess(success)
-    m.setMessage(fd.read())
+    m.setMessage(blob)
     try:
         m.save()
     except IOError, e:

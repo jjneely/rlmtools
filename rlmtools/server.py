@@ -349,6 +349,10 @@ class Server(object):
         if data != None:
             data = base64.decodestring(data)
 
+        if data == "":
+            # Enpty message -- we can't marshal None
+            data = None
+
         if succeed:
             succeed = 1
         else:
