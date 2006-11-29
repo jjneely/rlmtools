@@ -18,9 +18,9 @@ install:
 	install -m 755 registerclient.sh $(DESTDIR)/etc/cron.update
 	install -m 755 sysinfo.sh $(DESTDIR)/etc/cron.weekly
 	
-	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsuclient
-	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsubless
-	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsureport
+	ln -s /usr/share/rlmtools/client.py $(DESTDIR)/usr/sbin/ncsuclient
+	ln -s /usr/share/rlmtools/client.py $(DESTDIR)/usr/sbin/ncsubless
+	ln -s /usr/share/rlmtools/client.py $(DESTDIR)/usr/sbin/ncsureport
 
 clean:
 	echo "Nothing to do."
