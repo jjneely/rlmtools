@@ -33,7 +33,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
 %{_datadir}/rlmtools
-%{_sbindir}/*
+%{_bindir}/*
 /var/spool/rlmqueue
 %doc doc/*
 

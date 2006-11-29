@@ -1,5 +1,5 @@
-NAME=xmlrpc
-VERSION=0.91
+NAME=ncsu-rlmtools
+VERSION=0.92
 TAG = $(VERSION)
 REPO=https://svn.linux.ncsu.edu/svn/cls
 
@@ -32,7 +32,7 @@ release: archive
 archive:
 	@rm -rf /tmp/$(NAME)
 	@cd /tmp; svn export $(REPO)/trunk/$(NAME) $(NAME) || :
-	@cd /tmp/$(NAME); sed "s/VERSIONSUBST/$(VERSION)/" < ncsu-$(NAME).spec.in > $(NAME).spec
+	@cd /tmp/$(NAME); sed "s/VERSIONSUBST/$(VERSION)/" < $(NAME).spec.in > $(NAME).spec
 	@mv /tmp/$(NAME) /tmp/$(NAME)-$(VERSION)
 	@dir=$$PWD; cd /tmp; tar -cv --bzip2 -f $$dir/$(NAME)-$(VERSION).tar.bz2 $(NAME)-$(VERSION)
 	@rm -rf /tmp/$(NAME)-$(VERSION)
