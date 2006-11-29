@@ -12,13 +12,24 @@
 <body>
 
   <h2>Client Statistics</h2>
-  <ul>
-    <li>Clients Currently Checking In: <span py:replace="active">-3</span></li>
-    <li>Supported Clients: <span py:replace="supported">-3</span></li>
-    <li>Non-Supported Clients: <span py:replace="notsupported">-4</span></li>
-    <li>Clients Not Registered: <a href="notregistered" 
-                                  py:content="notregistered">-5</a></li>
-  </ul>
+  <table>
+    <tr class="neutral">
+      <th class="right">Clients Currently Checking In:</th>
+      <td py:content="active">-1</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Supported Clients:</th>
+      <td py:content="supported">-1</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Non-Supported Clients:</th>
+      <td py:content="notsupported">-1</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Clients Not Registered:</th>
+      <td><a href="notregistered" py:content="notregistered">-1</a></td>
+    </tr>
+  </table>
 
   <h2>Departments</h2>
 

@@ -36,8 +36,7 @@
     No supported clients in database.
   </p>
 
-  <p></p>
-  <h2>Non-Supported: <span py:replace="len(nosupport)"/> Clients</h2>
+  <h2 class="space">Non-Supported: <span py:replace="len(nosupport)"/> Clients</h2>
 
   <div class="category">
     <div py:for="client in nosupport"

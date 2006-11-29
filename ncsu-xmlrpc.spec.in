@@ -1,7 +1,7 @@
 Summary: XMLRPC monitoring tools for Realm Linux
-Name: ncsu-xmlrpc
+Name: ncsu-rlmtools
 Version: VERSIONSUBST
-Release: 1
+Release: 1%{?dist:%(echo .%{dist})}
 Source0: xmlrpc-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
@@ -31,7 +31,9 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %files
 %defattr(-,root,root)
 %{_sysconfdir}/cron.update/*
-%{_libdir}/ncsuxmlrpc
+%{_sysconfdir}/cron.weekly/*
+%{_datadir}/rlmtools
+%{_sbindir}/*
 /var/spool/rlmqueue
 %doc doc/*
 

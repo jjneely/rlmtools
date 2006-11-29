@@ -23,7 +23,7 @@
 /usr/bin/Wait
 
 FILE=`mktemp /tmp/regXXXXXX`
-/usr/lib/rlmtools/client.py > $FILE 2>&1 
+/usr/share/rlmtools/client.py > $FILE 2>&1 
 
 OUTPUT=`cat $FILE`
 

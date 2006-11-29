@@ -1,5 +1,5 @@
 NAME=xmlrpc
-VERSION=0.90
+VERSION=0.91
 TAG = $(VERSION)
 REPO=https://svn.linux.ncsu.edu/svn/cls
 
@@ -7,12 +7,20 @@ all:
 	@echo "Nothing to build"
 
 install:
-	install -d -m 755 $(DESTDIR)/usr/lib/rlmtools
+	install -d -m 755 $(DESTDIR)/usr/share/rlmtools
 	install -d -m 755 $(DESTDIR)/etc/cron.update
+	install -d -m 755 $(DESTDIR)/etc/cron.weekly
 	install -d -m 1777 $(DESTDIR)/var/spool/rlmqueue
 	
-	install -m 755 client.py $(DESTDIR)/usr/lib/rlmtools
+	install -m 755 client.py $(DESTDIR)/usr/share/rlmtools
+	install -m 755 sysinfo.py $(DESTDIR)/usr/share/rlmtools
+	
 	install -m 755 registerclient.sh $(DESTDIR)/etc/cron.update
+	install -m 755 sysinfo.sh $(DESTDIR)/etc/cron.weekly
+	
+	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsuclient
+	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsubless
+	ln -s /usr/share/rlmtools/client.py /usr/sbin/ncsureport
 
 clean:
 	echo "Nothing to do."
