@@ -46,6 +46,9 @@ def report():
     print "Uname:"
     print os.popen("uname -a").read()
 
+    print "Firewall:"
+    print os.popen("/sbin/chkconfig --list iptables").read()
+
     print "SELinux:"
     if os.access("/etc/sysconfig/selinux", os.R_OK):
         for line in open("/etc/sysconfig/selinux").readlines():
@@ -57,6 +60,16 @@ def report():
     print
     print "Network:"
     print os.popen("/sbin/ifconfig").read()
+
+    print "HD Status:"
+    print os.popen("df -h").read()
+
+    print "/proc/meminfo:"
+    print open("/proc/meminfo").read()
+
+    print "/proc/cpuinfo:"
+    print open("/proc/cpuinfo").read()
+
 
 def main():
     vendor()
