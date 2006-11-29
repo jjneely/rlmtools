@@ -29,16 +29,16 @@ OUTPUT=`cat $FILE`
 
 if [ "$OUTPUT" != "" ] ; then
 
-    # Email the output to some one useful instead of root
+    # Send failure message
+    cat $FILE | /usr/bin/ncsureport --service client --fail --message -
 
-    if [ -x /usr/bin/mutt ] ; then
-        # check for the send command -- should be installed
-        HOST=`/bin/hostname`
-        /bin/cat $FILE | /usr/bin/mutt -s "${HOST}: NCSU XMLRPC" jjneely@ncsu.edu
-    else
-        # no mutt...let root know
-        cat $FILE
-    fi
+    # Let root know
+    cat $FILE
+
+else
+
+    # Send a Success message
+    /usr/bin/ncsureport --service client --ok
 
 fi
 
