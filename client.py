@@ -248,6 +248,8 @@ def doRegister(server):
         error("Registration failed: Client not in support database")
     elif ret == 3:
         error("Registration failed: Client did not register within 24 hours")
+    elif ret == 4:
+        error("Registration failed: Client sent a malformed public key")
     else:
         error("Registration failed with return code %s" % ret)
         
@@ -489,11 +491,15 @@ def main():
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."
         sys.exit(1)
-        
-    if not doRPC(server.isRegistered):
-        if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
-            os.mkdir("/etc/sysconfig/RLKeys", 0755)
-        
+
+    if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
+        os.mkdir("/etc/sysconfig/RLKeys", 0755)
+    
+    key = getLocalKey()
+    pubKey = key.exportKey()
+    sig = key.signString(pubKey)
+
+    if not doRPC(server.isRegistered, pubKey, sig):
         if doRegister(server) != 0:
             sys.exit()
 

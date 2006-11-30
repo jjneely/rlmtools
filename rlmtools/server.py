@@ -153,17 +153,52 @@ class Server(object):
         self.cursor.execute(q, (id,))
         return self.cursor.rowcount > 0
 
-    def isRegistered(self):
-        """Returns a clients public key if this client is registered.  
-           Otherwise None is returned."""
+    def isRegistered(self, pubKey=None, sig=None):
+        """Returns a clients public key from the database if this client 
+           is registered.  Otherwise None is returned.  If the signature
+           on the pubKey parameter is valid attempt to find the host and
+           update its hostname."""
+
+        q1 = """select publickey from realmlinux
+                where hostname = %s and recvdkey = 1"""
+        q2 = """select host_id, hostname, publickey from realmlinux
+                where recvdkey = 1 and publickey = %s"""
+        q3 = """update realmlinux set hostname = %s where host_id = %s"""
         
-        self.cursor.execute("""select publickey from realmlinux where
-            hostname = %s and recvdkey = 1""", (self.client,))
+        # Look up the host by its hostname
+        self.cursor.execute(q1, (self.client,))
         if self.cursor.rowcount > 0:
             return self.cursor.fetchone()[0]
-        else:
+        if pubKey == None or sig == None:
             return None
-    
+
+        # Okay, lets search to see if we know about this RSA key.
+        # Verify the signature of the key text.  A valid sig requires
+        # the private key which a normal user shouldn't be able to read
+        # from the client.
+        try:
+            key = ezPyCrypto.key(pubKey)
+        except ezPyCrypto.CryptoKeyError:
+            # Client sent us something else than a key
+            return None
+
+        try:
+            if not key.verifyString(pubKey, sig):
+                return None
+        except Exception:
+            # Client sent us something other than a signature
+            return None
+
+        self.cursor.execute(q2, (key.exportKey(),))
+        if self.cursor.rowcount < 1:
+            return None
+
+        hostinfo = resultSet(self.cursor).dump()
+        log.warning("Client %s has the host keys for %s. Updating hostname." \
+                    % (self.client, hostinfo['hostname']))
+        self.cursor.execute(q3, (self.client, hostinfo['host_id']))
+        self.conn.commit()
+        return hostinfo['publickey']
     
     def register(self, publicKey, dept, version):
         """Workstation requests registration.  Check DB and register host as
@@ -287,6 +322,14 @@ class Server(object):
         # Require that a row for the hostname exists in the DB
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
+
+        try:
+            # Reformat the key for safety and reproducibility
+            key = ezPyCrypto.key(pubKey)
+            publicKey = key.exportKey()
+        except ezPyCrypto.CryptoKeyError:
+            # Client sent us something else than a key
+            return 4
 
         try:
             id = self.getHostID()
