@@ -165,10 +165,11 @@ class Server(object):
                 where recvdkey = 1 and publickey = %s"""
         q3 = """update realmlinux set hostname = %s where host_id = %s"""
         
+        trustedKey = None
         # Look up the host by its hostname
         self.cursor.execute(q1, (self.client,))
         if self.cursor.rowcount > 0:
-            return self.cursor.fetchone()[0]
+            trustedKey = self.cursor.fetchone()[0]
         if pubKey == None or sig == None:
             return None
 
@@ -189,13 +190,23 @@ class Server(object):
             # Client sent us something other than a signature
             return None
 
+        if trustedKey != None and trustedKey == key.exportKey():
+            return trustedKey
+
         self.cursor.execute(q2, (key.exportKey(),))
         if self.cursor.rowcount < 1:
             return None
 
-        hostinfo = resultSet(self.cursor).dump()
+        hostinfo = resultSet(self.cursor).dump()[0]
         log.warning("Client %s has the host keys for %s. Updating hostname." \
                     % (self.client, hostinfo['hostname']))
+
+        # Change the hostname for this client if it exists
+        hid = self.getHostID()
+        if hid != None:
+            self.cursor.execute(q3, ("unknown - ID: %s" % hid, hid))
+
+        # Now update the registration we found
         self.cursor.execute(q3, (self.client, hostinfo['host_id']))
         self.conn.commit()
         return hostinfo['publickey']

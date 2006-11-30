@@ -94,7 +94,7 @@ def message(publicKey, sig, dict):
     return ret
 
 
-def isRegistered(pubkey=None, sig=None):
+def isRegistered(pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 
     s = server.Server(getHostName())
