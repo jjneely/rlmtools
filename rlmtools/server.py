@@ -466,6 +466,14 @@ class Server(object):
         self.cursor.execute(q1, (dept,))
         return self.cursor.fetchone()[0]
 
+    def getHostName(self, host_id):
+        q = """select hostname from realmlinux where host_id = %s"""
+        self.cursor.execute(q, (host_id,))
+        if self.cursor.rowcount < 1:
+            return None
+        else:
+            return self.cursor.fetchone()[0]
+
     def getHostID(self):
         if self.hostid != None:
             return self.hostid
@@ -627,6 +635,42 @@ class Server(object):
 
         self.cursor.execute(q, (date,))
         return self.cursor.fetchone()[0]
+
+    def deleteClient(self, host_id):
+        """Removes a client from the database."""
+        log.warning("Removing client from database: %s" \
+                    % self.getHostName(host_id))
+        q1 = """delete from realmlinux where host_id = %s"""
+        q2 = """delete from lastheard where host_id = %s"""
+        q3 = """delete from status where host_id = %s"""
+
+        self.cursor.execute(q1, (host_id,))
+        self.cursor.execute(q2, (host_id,))
+        self.cursor.execute(q3, (host_id,))
+        self.conn.commit()
+
+    def cleanDB(self, days=31):
+        """Removes status events older than the variable days and removes
+           clients that have not checked in in variable days."""
+
+        q1 = """select host_id from lastheard where 
+                `timestamp` < %s"""
+        q2 = """delete from status where received < %s"""
+        q3 = """select host_id from realmlinux where 
+                recvdkey = 0 and installdate < %s"""
+
+        date = datetime.today() - timedelta(days)
+
+        self.cursor.execute(q1, (date,))
+        result = resultSet(self.cursor).dump()
+        for client in result: self.deleteClient(client['host_id'])
+
+        self.cursor.execute(q3, (date,))
+        result = resultSet(self.cursor).dump()
+        for client in result: self.deleteClient(client['host_id'])
+
+        self.cursor.execute(q2, (date,))
+        self.conn.commit()
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
