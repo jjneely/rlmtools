@@ -20,6 +20,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import sys
+import os
+import os.path
 import datetime
 import kid
 kid.enable_import()
@@ -27,12 +30,23 @@ kid.enable_import()
 import cherrypy
 import server
 
+def importer(module):
+    tree = module.split('.')
+    for path in sys.path:
+        basepath = apply(os.path.join, [path] + tree[:-1])
+        file = os.path.join(basepath, tree[-1]+'.kid')
+        if os.path.exists(file):
+            return kid.Template(file=file)
+
+    return None
+
 def serialize(mod, dict):
-    template = __import__(mod)
-    if mod.rfind('.') > -1:
-        template = getattr(template, mod[mod.rfind('.')+1:])
-    else:
-        template = getattr(template, mod)
+    template = importer(mod)
+    if template == None:
+        template = importer('rlmtools.%s' % mod)
+
+    if template == None:
+        raise Exception("No kid module %s" % mod)
 
     for key, value in dict.items():
         setattr(template, key, value)
@@ -175,7 +189,18 @@ class Application(object):
                         )
     notregistered.exposed = True
 
-if __name__ == "__main__":
+
+def main():
     cherrypy.root = Application()
     cherrypy.server.start()
 
+def wsgi(start_responce):
+    cherrypy.tree.mount(Application(), '/rlmtools')
+    cherrypy.config.update({"server.environment": "production",
+                            "server.protocolVersion": "HTTP/1.1",
+                            "server.log_file": "/tmp/rlmtools.log"})
+    cherrypy.server.start(initOnly=True, serverClass=None)
+
+if __name__ == "__main__":
+    main()
+    
