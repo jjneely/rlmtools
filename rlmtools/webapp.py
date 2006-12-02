@@ -53,6 +53,13 @@ def serialize(mod, dict):
 
     return template.serialize(encoding='utf-8', output='xhtml')
 
+def url():
+    base = cherrypy.request.base + cherrypy.tree.mount_point()
+    if base.endswith('/'):
+        return base[:-1]
+    else:
+        return base
+
 class Application(object):
 
     def __init__(self):
@@ -64,7 +71,7 @@ class Application(object):
         departments = self.__server.getDepartments()
 
         for dept in departments:
-            dept['url'] = "%s/dept?dept_id=%s" % (cherrypy.request.base,
+            dept['url'] = "%s/dept?dept_id=%s" % (url(),
                                                   dept['dept_id'])
         return serialize('templates.index', 
                          dict(departments=departments,
@@ -82,11 +89,11 @@ class Application(object):
         today = datetime.datetime.today()
         support = []
         nosupport = []
-        backurl = "%s" % cherrypy.request.base
+        backurl = "%s" % url()
 
         for client in clients:
             client['status'] = True
-            client['url'] = "%s/client?host_id=%s" % (cherrypy.request.base,
+            client['url'] = "%s/client?host_id=%s" % (url(),
                                                       client['host_id'])
  
             if client['lastcheck'] < today - days30:
@@ -119,13 +126,13 @@ class Application(object):
                                    detail['lastcheck'] > today - days30
         goodStatus = {}
         if detail['recvdkey'] == 1:
-            backurl = "%s/dept?dept_id=%s" % (cherrypy.request.base,
+            backurl = "%s/dept?dept_id=%s" % (url(),
                                               detail['dept_id'])
         else:
-            backurl = "%s/notregistered" % cherrypy.request.base
+            backurl = "%s/notregistered" % url()
 
         for row in detail['status']:
-            row['url'] = "%s/status?status_id=%s" % (cherrypy.request.base,
+            row['url'] = "%s/status?status_id=%s" % (url(),
                                                      row['st_id'])
             if row['data'] == None:
                 summary = "No data available..."
@@ -151,7 +158,7 @@ class Application(object):
 
     def status(self, status_id):
         status = self.__server.getStatusDetail(int(status_id))
-        backurl = "%s/client?host_id=%s" % (cherrypy.request.base,
+        backurl = "%s/client?host_id=%s" % (url(),
                                             status['host_id'])
             
         if status['data'] == None or status['data'] == "":
@@ -167,14 +174,14 @@ class Application(object):
     status.exposed = True
 
     def notregistered(self):
-        backurl = "%s" % cherrypy.request.base
+        backurl = "%s" % url()
         clients = self.__server.getNotRegistered()
         support = []
         nosupport = []
 
         for client in clients:
             client['status'] = False # Because we aren't registered
-            client['url'] = "%s/client?host_id=%s" % (cherrypy.request.base,
+            client['url'] = "%s/client?host_id=%s" % (url(),
                                                       client['host_id'])
             if client['support'] == 1:
                 support.append(client)
@@ -191,7 +198,7 @@ class Application(object):
 
 
 def main():
-    cherrypy.root = Application()
+    cherrypy.tree.mount(Application(), '/')
     cherrypy.server.start()
 
 def wsgi(start_responce):
