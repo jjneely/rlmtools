@@ -43,8 +43,7 @@ except ImportError:
     import ezPyCrypto
     
 # XMLRPC Interface
-#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
-URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
+URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
@@ -53,7 +52,6 @@ publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
 
 # Where blessings go
 blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
-#blessings_dir = "/ncsu/jjneely/slack2/keys"
 
 # Message Queue Directory
 mqueue = "/var/spool/rlmqueue"
