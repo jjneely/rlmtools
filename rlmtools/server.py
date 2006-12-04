@@ -336,7 +336,7 @@ class Server(object):
 
         try:
             # Reformat the key for safety and reproducibility
-            key = ezPyCrypto.key(pubKey)
+            key = ezPyCrypto.key(publicKey)
             publicKey = key.exportKey()
         except ezPyCrypto.CryptoKeyError:
             # Client sent us something else than a key
