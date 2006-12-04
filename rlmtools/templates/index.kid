@@ -11,6 +11,8 @@
 </head>
 <body>
 
+  <p>Welcome <span py:replace="name"/>.</p>
+
   <h2>Client Statistics</h2>
   <table>
     <tr class="neutral">

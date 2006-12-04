@@ -23,6 +23,7 @@
 import sys
 import os
 import os.path
+import pwd
 import datetime
 import kid
 kid.enable_import()
@@ -60,6 +61,38 @@ def url():
     else:
         return base
 
+class Auth(object):
+    
+    def __init__(self):
+        try:
+            env = cherrypy.request.wsgi_environ
+        except AttributeError:
+            self.null()
+
+        try:
+            self.userid = env['WRAP_USERID']
+            self.affiliation = env['WRAP_AFFIL']
+            self.expire = env['WRAP_EXPDATE']
+            self.ipaddress = env['WRAP_ADDRESS']
+        except KeyError:
+            self.null()
+
+    def null(self):
+        self.userid = None
+        self.affiliation = None
+        self.expire = None
+        self.ipaddress = None
+
+    def isAuthenticated(self):
+        return self.userid != None
+
+    def getName(self):
+        # Note that the users that authenticate will also be in the system's
+        # password db (hesiod/ldap)
+        if not self.isAuthenticated():
+            return "Guest User"
+        return pwd.getpwnam(self.userid)[4]        
+    
 class Application(object):
 
     def __init__(self):
@@ -78,7 +111,8 @@ class Application(object):
                               active=active,
                               supported=t[0],
                               notsupported=t[1],
-                              notregistered=t[2]))
+                              notregistered=t[2],
+                              name=Auth().getName()))
     index.exposed = True
 
     def dept(self, dept_id):
