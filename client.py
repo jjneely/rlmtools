@@ -28,7 +28,6 @@ import re
 import syslog
 import socket
 import stat
-import ezPyCrypto
 import time
 import urllib2
 import httplib
@@ -37,6 +36,12 @@ import pickle
 import optparse
 import base64
 
+try:
+    import ezPyCrypto
+except ImportError:
+    sys.path.append("/afs/bp/project/realmlinux/py-modules/")
+    import ezPyCrypto
+    
 # XMLRPC Interface
 #URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
 URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
