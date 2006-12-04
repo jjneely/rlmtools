@@ -171,7 +171,8 @@ class Server(object):
         if self.cursor.rowcount > 0:
             trustedKey = self.cursor.fetchone()[0]
         if pubKey == None or sig == None:
-            return None
+            # This may be None.  In this case we still want to indecate failure
+            return trustedKey
 
         # Okay, lets search to see if we know about this RSA key.
         # Verify the signature of the key text.  A valid sig requires
