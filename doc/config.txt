@@ -23,14 +23,38 @@ Web-Kickstart's configuration to find its database and pull client
 configuration from the Web-Kickstart config files.  Therefore, Web-Kickstart
 needs to know where its config file solaris2ks.conf lives.  This can either be
 in the current directory (the top level in this project) or in 
-/etc/solaris2ks.conf.
+/etc/solaris2ks.conf.  Things get confusing with what the current directory
+is where some code wants the configuration data.  Using /etc/solaris2ks.conf
+is recommended.
 
 CherryPy Setup
 ==============
 
-Well need some Location configs for this.  Which probably means we should
-setup the XMLRPC interface with some location config files to.
+The CherryPy framework runs the web application that users can see.  It can
+run with the CherryPy standalone web server or through Apache with 
+mod_python using the WSGI gateway that I've included.  It also makes use
+of NCSU's WRAP authentication which is only available via Apache and the
+WRAP module.  The following configuration will get the web interface
+going on /rlmtools.  Note that the app expects to be mounted in that location
+so if that changes you'll need to edit the source.
+
+The PythonPath option basically lets python know in what directory the
+rlmtools module/package is if its not installed in your Python path.
+
+<Location /rlmtools>
+    PythonPath "sys.path + ['/root/ncsu-rlmtools']"
+                            
+    SetHandler python-program
+    PythonHandler modpython_gateway::handler
+    PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
+    PythonOption wsgi.startup rlmtools.webapp::wsgi
+    PythonOption SCRIPT_NAME /rlmtools
+
+    AuthType WRAP
+    require affiliation ncsu.edu
+    require known-user
+</Location>
 
 Jack Neely
-November 16, 2006
+December 4th, 2006
 
