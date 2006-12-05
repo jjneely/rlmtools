@@ -191,10 +191,15 @@ class Server(object):
             # Client sent us something other than a signature
             return None
 
-        if trustedKey != None and trustedKey == key.exportKey():
+        if trustedKey == key.exportKey() or trustedKey == pubKey:
+            # Its possible that they key export may be different text
+            # for the same key, but at this point we know that the
+            # pubKey var is valid as we check it above.
             return trustedKey
 
         self.cursor.execute(q2, (key.exportKey(),))
+        if self.cursor.rowcount < 1:
+            self.cursor.execute(q2, (pubKey,))
         if self.cursor.rowcount < 1:
             return None
 
