@@ -289,6 +289,9 @@ class Server(object):
                    values (%s, %s, %s, %s)"""
             t = (self.client, date, 0, 1)
             self.cursor.execute(q, t)
+        else:
+            q = """update realmlinux set support = 1 where hostname = %s"""
+            self.cursor.execute(q, (self.client,))
             
         # Update db 
         ret = self.__register(publicKey, dept, version)
