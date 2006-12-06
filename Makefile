@@ -1,5 +1,5 @@
 NAME=ncsu-rlmtools
-VERSION=1.0
+VERSION=1.0.1
 TAG = $(VERSION)
 REPO=https://svn.linux.ncsu.edu/svn/cls
 
