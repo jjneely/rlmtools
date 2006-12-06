@@ -191,15 +191,15 @@ class Server(object):
             # Client sent us something other than a signature
             return None
 
-        if trustedKey == key.exportKey() or trustedKey == pubKey:
+        if trustedKey == pubKey or trustedKey == key.exportKey():
             # Its possible that they key export may be different text
             # for the same key, but at this point we know that the
             # pubKey var is valid as we check it above.
             return trustedKey
 
-        self.cursor.execute(q2, (key.exportKey(),))
+        self.cursor.execute(q2, (pubKey,))
         if self.cursor.rowcount < 1:
-            self.cursor.execute(q2, (pubKey,))
+            self.cursor.execute(q2, (key.exportKey(),))
         if self.cursor.rowcount < 1:
             return None
 
@@ -343,10 +343,14 @@ class Server(object):
         ts = time.localtime()
         date = MySQLdb.Timestamp(ts[0], ts[1], ts[2], ts[3], ts[4], ts[5])
 
+        # Validate the passed in key text.
+        # We do not reformat the key by calling key.exportKey() because we
+        # deal with clients that use various versions of the pickle format.
+        # We need to be able to search on this key rather than select all
+        # of them, decode, and compare because the pickle/base64 encoding 
+        # differs.
         try:
-            # Reformat the key for safety and reproducibility
             key = ezPyCrypto.key(publicKey)
-            publicKey = key.exportKey()
         except ezPyCrypto.CryptoKeyError:
             # Client sent us something else than a key
             return 4

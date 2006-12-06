@@ -328,6 +328,22 @@ def getRealmLinuxKey(server):
     return key
 
 
+def isRegistered(server):
+    """Return True if this machine is registered."""
+
+    if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
+        os.mkdir("/etc/sysconfig/RLKeys", 0755)
+
+    if not os.access(privateKey, os.R_OK):
+        return False
+   
+    key = getLocalKey()
+    pubKey = key.exportKey()
+    sig = key.signString(pubKey)
+
+    return doRPC(server.isRegistered, pubKey, sig)
+
+
 def doCheckIn(server):
     "Check in with the XMLRPC server."
 
@@ -495,14 +511,7 @@ def main():
         print "You are not root.  Insert error message here."
         sys.exit(1)
 
-    if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
-        os.mkdir("/etc/sysconfig/RLKeys", 0755)
-    
-    key = getLocalKey()
-    pubKey = key.exportKey()
-    sig = key.signString(pubKey)
-
-    if not doRPC(server.isRegistered, pubKey, sig):
+    if not isRegistered(server):
         if doRegister(server) != 0:
             sys.exit()
 
