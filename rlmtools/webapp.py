@@ -158,7 +158,7 @@ class Application(object):
         detail = self.__server.getClientDetail(int(host_id))
         detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                    detail['lastcheck'] > today - days30
-        goodStatus = {}
+        status = {}
         if detail['recvdkey'] == 1:
             backurl = "%s/dept?dept_id=%s" % (url(),
                                               detail['dept_id'])
@@ -176,12 +176,13 @@ class Application(object):
                     summary = summary[0:21] + "..."
             row['summary'] = summary
 
-            if goodStatus.has_key(row['service']):
+            if status.has_key(row['service']):
                 row['class'] = "neutral"
             elif row['success']:
-                goodStatus[row['service']] = True
+                status[row['service']] = True
                 row['class'] = "good"
             else:
+                status[row['service']] = False
                 row['class'] = "bad"
 
 
