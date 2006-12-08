@@ -359,6 +359,8 @@ def doCheckIn(server):
         error("Checkin failed: Server could not verify our public key and sig.")
     elif ret == 2:
         error("Checkin failed: Server did not find our database entry.")
+    else:
+        error("Checkin failed with return code %s" % ret)
 
 
 def doBlessing(server):

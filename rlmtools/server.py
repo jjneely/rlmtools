@@ -587,12 +587,12 @@ class Server(object):
         #    lastcheck, status
         # status is a list of dicts: service, timestamp, success, data
         q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
-                       d.name as dept, r.dept_id, r.version, 
-                       l.timestamp as lastcheck
-                from realmlinux as r, dept as d, lastheard as l
-                where d.dept_id = r.dept_id and l.host_id = r.host_id and
-                      r.host_id = %s"""
-        q2 = """select service.name as service, status.timestamp, 
+                       d.name as dept, r.dept_id, r.version
+                from realmlinux as r, dept as d
+                where d.dept_id = r.dept_id and r.host_id = %s"""
+        q2 = """select `timestamp` as lastcheck from lastheard where
+                host_id = %s"""
+        q3 = """select service.name as service, status.timestamp, 
                        status.success, status.data, status.st_id,
                        status.received
                 from service, status
@@ -604,10 +604,17 @@ class Server(object):
         self.cursor.execute(q1, (host_id,))
         result1 = resultSet(self.cursor).dump()[0]  # This is one row
 
-        self.cursor.execute(q2, (host_id, history_days))
-        result2 = resultSet(self.cursor).dump()
+        self.cursor.execute(q2, (host_id,))
+        if self.cursor.rowcount > 0:
+            result2 = self.cursor.fetchone()[0]
+        else:
+            result2 = None
 
-        result1['status'] = result2
+        self.cursor.execute(q3, (host_id, history_days))
+        result3 = resultSet(self.cursor).dump()
+
+        result1['lastcheck'] = result2
+        result1['status'] = result3
         return result1
 
     def getTotalClients(self):
