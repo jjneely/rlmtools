@@ -353,8 +353,12 @@ def doCheckIn(server):
 
     ret = doRPC(server.checkIn, pubKeyText, sig)
         
-    if ret != 0:
-        error("Checkin failed with return code %s" % ret)
+    if ret == 0:
+        pass
+    elif ret == 1:
+        error("Checkin failed: Server could not verify our public key and sig.")
+    elif ret == 2:
+        error("Checkin failed: Server did not find our database entry.")
 
 
 def doBlessing(server):

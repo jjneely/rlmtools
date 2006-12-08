@@ -388,7 +388,7 @@ class Server(object):
         id = self.getHostID()
         if id == None:
             # Cannot check in non-registered client
-            return 1
+            return 2
 
         self.cursor.execute("""update lastheard
            set `timestamp` = %s where host_id = %s""", (date, id))
