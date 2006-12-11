@@ -599,7 +599,7 @@ class Server(object):
                 where service.service_id = status.service_id and
                       status.host_id = %s and 
                       TO_DAYS(status.timestamp) > TO_DAYS(NOW()) - %s
-                order by service.name asc, status.timestamp desc"""
+                order by status.received desc"""
 
         self.cursor.execute(q1, (host_id,))
         result1 = resultSet(self.cursor).dump()[0]  # This is one row
