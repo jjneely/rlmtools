@@ -550,7 +550,7 @@ class Server(object):
         return ret
 
     def getClientList(self, dept_id):
-        q1 = """select r.hostname, r.host_id, r.support, 
+        q1 = """select r.hostname, r.host_id, r.support, r.installdate,
                 l.timestamp as lastcheck
                 from realmlinux as r, lastheard as l
                 where r.dept_id = %s and r.recvdkey = 1 and

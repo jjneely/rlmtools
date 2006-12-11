@@ -132,7 +132,10 @@ class Application(object):
  
             if client['lastcheck'] < today - days30:
                 client['status'] = False
-        
+
+            if client['lastcheck'] < client['installdate']:
+                client['status'] = False
+
             for service in services:
                 key = "%s_time" % service
                 if not client.has_key(service) or client[key] < today - days7:
@@ -157,7 +160,8 @@ class Application(object):
         today = datetime.datetime.today()
         detail = self.__server.getClientDetail(int(host_id))
         detail['lastcheck_good'] = detail['lastcheck'] != None and \
-                                   detail['lastcheck'] > today - days30
+                                   detail['lastcheck'] > today - days30 and \
+                                   detail['lastcheck'] > detail['installdate']
         status = {}
         if detail['recvdkey'] == 1:
             backurl = "%s/dept?dept_id=%s" % (url(),
