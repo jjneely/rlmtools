@@ -161,11 +161,6 @@
 
   <h1>Realm Linux Management</h1>
 
-  <p>Within this tool you will find all Realm Linux clients from RL 3 and
-    above that are at least quasi-functional.  These pages are to help you
-    identify clients that may not be functioning correctly and to tell you
-    what may be wrong.  Clients are divided up into Departments.</p>
-
   <div py:content="item[:]" />
 
   </div>

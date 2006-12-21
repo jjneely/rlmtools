@@ -13,13 +13,13 @@
     </ul>
   </p>
 
-  <h1>Client Status: <span py:replace="client['hostname']" /></h1>
-
   <p>All Realm Linux clients phone home to report status information in
     several ways.  This table lists out the status information we know
     about from the last 30 days.  If this client is red or listed as
     not supported the error messages may contain clues as to why this
     client may be malfunctioning.</p>
+
+  <h1>Client Status: <span py:replace="client['hostname']" /></h1>
 
   <table>
     <tr class="neutral">

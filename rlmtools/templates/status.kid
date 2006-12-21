@@ -13,8 +13,6 @@
     </ul>
   </p>
 
-  <h1>Client Status: <span py:replace="status['hostname']" /></h1>
-
   <p>Below are the full details of a specific status entry for this host.
     Remember to check the latest status entry for any errors that you see.
     Note that clients queue up messages to report.  There may be a few hours
@@ -22,6 +20,8 @@
     The Client Time Stamp is directly reported by the client so it will
     also be affected if the client's clock isn't set properly.
   </p>
+
+  <h1>Client Status: <span py:replace="status['hostname']" /></h1>
 
   <table>
     <tr class="neutral">

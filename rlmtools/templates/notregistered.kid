@@ -13,14 +13,14 @@
     </ul>
   </p>
 
-  <h1>Client List: <span py:replace="department" /></h1>
-
   <p>These clients have been entered into the database by Web-Kickstart
     but have not uploaded their RSA key.  Clients must register within
     24 hours of installation.  This normally happens withing 4 hours if
     the machine is running normally.  Clients may be registered manually
     provided that you have access to its Web-Kickstart config directory,
     login as your user and run the <tt>ncsubless</tt> command.</p>
+
+  <h1>Client List: <span py:replace="department" /></h1>
 
   <h2>Supported: <span py:replace="len(support)"/> Clients</h2>
 

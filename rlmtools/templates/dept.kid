@@ -13,14 +13,14 @@
     </ul>
   </p>
 
-  <h1>Client List: <span py:replace="department" /></h1>
-
   <p>Clients are categorized into Supported and Non-Supported.  A Supported
     client is configured with Web-Kickstart and <i>may</i> meet the
     requirements for official support.  Non-Supported clients are unknown
     clients.  Its possible that something has happened to a supported
     client to make it lose its supported status such as removing the
     client's config file from AFS, hostname changes, etc.</p>
+
+  <h1>Client List: <span py:replace="department" /></h1>
 
   <h2>Supported: <span py:replace="len(support)"/> Clients</h2>
 
