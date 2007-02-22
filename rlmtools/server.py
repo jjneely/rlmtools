@@ -675,9 +675,11 @@ class Server(object):
 
         q1 = """select host_id from lastheard where 
                 `timestamp` < %s"""
-        q2 = """delete from status where received < %s"""
+        q2 = """delete from status where received < %s and service_id = %s"""
         q3 = """select host_id from realmlinux where 
                 recvdkey = 0 and installdate < %s"""
+        q4 = """select service_id from service where
+                  name != 'login' and name != 'logout'"""
 
         date = datetime.today() - timedelta(days)
 
@@ -689,7 +691,41 @@ class Server(object):
         result = resultSet(self.cursor).dump()
         for client in result: self.deleteClient(client['host_id'])
 
+        # XXX: Handle persistant statuses
         self.cursor.execute(q2, (date,))
+        self.conn.commit()
+
+    def initHost(self, fqdn):
+        """Logs a newly installing host.  To work with Web-Kickstart.
+           FQDN is the FQDN of the host we are installing."""
+
+        q1 = """select hostname from realmlinux where hostname=%s"""
+        q2 = """update realmlinux set 
+                   installdate = %s, recvdkey = 0, publickey = NULL,
+                   dept_id = %s, version = '', support = 1
+                where host_id = %s"""
+        q3 = """insert into realmlinux 
+                   (hostname, installdate, recvdkey, publickey, dept_id, 
+                    version, support) 
+                values (%s, %s, 0, NULL, %s, '', 1)"""
+        # Log in/out events are persistant
+        q4 = """select service_id from service where
+                  name != 'login' and name != 'logout'"""
+        q5 = """delete from status where host_id = %s and service_di = %s"""
+
+        date = datetime.today()
+        dept = self.getDeptID('unknown')
+        self.cursor.execute(q1, (fqdn,))
+        if self.cursor.rowcount == 0:
+            self.cursor.execute(q3, (fqdn, datetime.today(), dept))
+        else:
+            hostid = self.cursor.fetchone()[0]
+            self.cursor.execute(q2, (datetime.today(), dept, hostid))
+            self.cursor.execute(q4)
+            result = resultSet(self.cursor).dump()
+            for row in result:
+                self.cursor.execute(q5, (row['service_id'],))
+
         self.conn.commit()
 
     def __makeUpdatesConf(self):
