@@ -21,6 +21,11 @@
 
   <h1>Client Status: <span py:replace="client['hostname']" /></h1>
 
+  <div class="alert" py:if="client['warnUpdate']">
+    <p><b>Warning:</b>
+      This client does not appear to be applying security errata.</p>
+  </div>
+
   <table>
     <tr class="neutral">
       <th class="right">Hostname:</th>

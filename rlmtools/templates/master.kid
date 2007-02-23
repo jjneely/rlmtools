@@ -26,6 +26,20 @@
        font-family: Arial,Helvetica,Sans-Serif;
        padding: 1em;
     }
+    div.alert {
+       float: left;
+       width: 20em;
+       background-color: #cc0000;
+       padding: 0.5em;
+       border: 4px solid #ff6666;
+    }
+    div.alert p {
+       color: #ffffff;
+    }
+    div.altert b {
+       font-weight: bold;
+       color: #ffffff;
+    }
     div.category {
        clear: left;
        text-align: center;

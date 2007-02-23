@@ -18,7 +18,9 @@
     requirements for official support.  Non-Supported clients are unknown
     clients.  Its possible that something has happened to a supported
     client to make it lose its supported status such as removing the
-    client's config file from AFS, hostname changes, etc.</p>
+    client's config file from AFS, hostname changes, etc.  Clients are flagged
+    as red due to error or when the client hasn't checked in for 7 days.
+  </p>
 
   <h1>Client List: <span py:replace="department" /></h1>
 

@@ -118,7 +118,6 @@ class Application(object):
     def dept(self, dept_id):
         services = ['updates', 'client'] # Services that affect client status
         clients = self.__server.getClientList(int(dept_id))
-        days30 = datetime.timedelta(30) # 30 days
         days7 = datetime.timedelta(7)
         today = datetime.datetime.today()
         support = []
@@ -130,7 +129,7 @@ class Application(object):
             client['url'] = "%s/client?host_id=%s" % (url(),
                                                       client['host_id'])
  
-            if client['lastcheck'] < today - days30:
+            if client['lastcheck'] < today - days7:
                 client['status'] = False
 
             if client['lastcheck'] < client['installdate']:
@@ -156,11 +155,12 @@ class Application(object):
     dept.exposed = True
 
     def client(self, host_id):
-        days30 = datetime.timedelta(30) # 30 days
+        days7 = datetime.timedelta(7)
         today = datetime.datetime.today()
         detail = self.__server.getClientDetail(int(host_id))
+        detail['warnUpdate'] = False
         detail['lastcheck_good'] = detail['lastcheck'] != None and \
-                                   detail['lastcheck'] > today - days30 and \
+                                   detail['lastcheck'] > today - days7 and \
                                    detail['lastcheck'] > detail['installdate']
         status = {}
         if detail['recvdkey'] == 1:
@@ -180,6 +180,10 @@ class Application(object):
                     summary = summary[0:21] + "..."
             row['summary'] = summary
 
+            if row['service'] == 'updates' and not status.has_key('updates'):
+                if row['timestamp'] < today - days7:
+                    detail['warnUpdate'] = True
+
             if status.has_key(row['service']):
                 row['class'] = "neutral"
             elif row['success']:
@@ -189,6 +193,9 @@ class Application(object):
                 status[row['service']] = False
                 row['class'] = "bad"
 
+        # Did we find an updates status at all?
+        if not status.has_key('updates'):
+            detail['warnUpdate'] = True
 
         return serialize('templates.client',
                          dict(client=detail, status=detail['status'],
