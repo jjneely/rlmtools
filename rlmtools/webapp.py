@@ -194,7 +194,8 @@ class Application(object):
                 row['class'] = "bad"
 
         # Did we find an updates status at all?
-        if not status.has_key('updates'):
+        if not status.has_key('updates') and \
+           detail['installdate'] < today - days7:
             detail['warnUpdate'] = True
 
         return serialize('templates.client',

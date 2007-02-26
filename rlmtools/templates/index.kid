@@ -40,16 +40,19 @@
 
   <h2>Departments</h2>
 
-  <div class="category">
-    <div class="field"
-      py:for="dept in departments">
-      <a href="/dept"
-        py:attrs="'href':dept['url']"
-        py:content="dept['name']">Your Department Here</a>
-    </div>
-  </div>
-
-  <br />
+  <table>
+    <tr class="neutral">
+      <th>Department Name</th><th>Supported RL Clients</th>
+      <th>Unsupported RL Clients</th>
+    </tr>
+    <tr class="neutral" py:for="dept in departments">
+      <td><a href="dept" py:attrs="'href':dept['url']"
+                         py:content="dept['name']">Your Department Here</a>
+      </td>
+      <td py:content="dept['supported']" />
+      <td py:content="dept['unsupported']" />
+    </tr>
+  </table>
 
   <h2 class="space">Tools</h2>
 

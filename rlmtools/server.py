@@ -536,18 +536,15 @@ class Server(object):
         return result[0]
 
     def getDepartments(self):
-        q = """select dept_id, name from dept"""
-        self.cursor.execute(q)
-        ret = []
+        q1 = """select dept.name, dept.dept_id,
+                    count(support = 1 or null) as supported, 
+                    count(support = 0 or null) as unsupported 
+                from dept left join realmlinux on 
+                    dept.dept_id = realmlinux.dept_id 
+                group by dept.name;"""
 
-        for i in range(self.cursor.rowcount):
-            result = self.cursor.fetchone()
-            row = {}
-            row['dept_id'] = result[0]
-            row['name'] = result[1]
-            ret.append(row)
-
-        return ret
+        self.cursor.execute(q1)
+        return resultSet(self.cursor).dump()
 
     def getClientList(self, dept_id):
         q1 = """select r.hostname, r.host_id, r.support, r.installdate,

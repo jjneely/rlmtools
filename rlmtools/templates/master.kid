@@ -19,8 +19,8 @@
        padding-top: 20px;
     }  
     A {
-       text-decoration: none;
-       color: blue;
+       text-decoration: underline;
+       color: #000088;
     }
     div.content {
        font-family: Arial,Helvetica,Sans-Serif;
@@ -146,11 +146,11 @@
     }
     tr.good A {
        text-decoration: underline;
-       color: black;
+       color: #000088;
     }
     tr.neutral A {
        text-decoration: underline;
-       color: black;
+       color: #000088;
     }
     tr.bad A {
        text-decoration: underline;
