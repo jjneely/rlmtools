@@ -19,8 +19,11 @@
        padding-top: 20px;
     }  
     A {
-       text-decoration: underline;
+       text-decoration: none;
        color: #000088;
+    }
+    a:hover {
+       text-decoration: underline;
     }
     div.content {
        font-family: Arial,Helvetica,Sans-Serif;
@@ -63,6 +66,9 @@
        text-decoration: none;
        color: blue;
     }
+    div.field A:hover {
+       text-decoration: underline;
+    }
     div.good {
        margin: 1.0px;
        border: 1.0px solid #000000;
@@ -81,6 +87,9 @@
        text-decoration: none;
        color: black;
     }
+    div.good A:hover {
+       text-decoration: underline;
+    }
     div.bad {
        margin: 1.0px;
        border: 1.0px solid #000000;
@@ -98,6 +107,9 @@
     div.bad A {
        text-decoration: none;
        color: #fbfbfb;
+    }
+    div.bad A:hover {
+       text-decoration: underline;
     }
     table {
        margin-left: auto;
@@ -145,16 +157,19 @@
        color: #ffffff;
     }
     tr.good A {
-       text-decoration: underline;
+       text-decoration: none;
        color: #000088;
     }
     tr.neutral A {
-       text-decoration: underline;
+       text-decoration: none;
        color: #000088;
     }
     tr.bad A {
-       text-decoration: underline;
+       text-decoration: none;
        color: white;
+    }
+    tr A:hover {
+       text-decoration: underline;
     }
   </style>
 
