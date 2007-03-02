@@ -26,15 +26,21 @@
     </tr>
     <tr class="neutral">
       <th class="right">Supported Clients:</th>
-      <td py:content="supported">-1</td>
+      <td py:content="totals['supported']">-1</td>
     </tr>
     <tr class="neutral">
       <th class="right">Non-Supported Clients:</th>
-      <td py:content="notsupported">-1</td>
+      <td py:content="totals['unsupported']">-1</td>
     </tr>
     <tr class="neutral">
       <th class="right">Clients Not Registered:</th>
-      <td><a href="notregistered" py:content="notregistered">-1</a></td>
+      <td><a href="notregistered" 
+             py:content="totals['unregistered']">-1</a></td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Clients Reporting Problems:</th>
+      <td><a href="problems" 
+          py:content="totals['trouble']">-1</a></td>
     </tr>
   </table>
 
@@ -49,8 +55,12 @@
       <td><a href="dept" py:attrs="'href':dept['url']"
                          py:content="dept['name']">Your Department Here</a>
       </td>
-      <td py:content="dept['supported']" />
-      <td py:content="dept['unsupported']" />
+      <td><a href="dept" py:attrs="'href':dept['url']"
+                         py:content="dept['supported']" />
+      </td>
+      <td><a href="dept" py:attrs="'href':dept['url']"
+                         py:content="dept['unsupported']" />
+      </td>
     </tr>
   </table>
 

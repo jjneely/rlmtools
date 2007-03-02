@@ -99,7 +99,7 @@ class Application(object):
         self.__server = server.Server("pamsadmin.pams.ncsu.edu")
 
     def index(self):
-        t = self.__server.getTotalClients()
+        totals = self.__server.getTotalClients()
         active = self.__server.getActiveClients()
         departments = self.__server.getDepartments()
 
@@ -109,9 +109,7 @@ class Application(object):
         return serialize('templates.index', 
                          dict(departments=departments,
                               active=active,
-                              supported=t[0],
-                              notsupported=t[1],
-                              notregistered=t[2],
+                              totals=totals,
                               name=Auth().getName()))
     index.exposed = True
 
@@ -243,6 +241,24 @@ class Application(object):
                         )
     notregistered.exposed = True
 
+    def problems(self):
+        clients = self.__server.getProblemList()
+        data = {}
+
+        for client in clients:
+            host = {}
+            host['hostname'] = client['hostname']
+            host['url'] = "%s/client?host_id=%s" % (url(), client['host_id'])
+            if data.has_key(client['deptname']):
+                data[client['deptname']].append(host)
+            else:
+                data[client['deptname']] = [host]
+        
+        return serialize('templates.problems',
+                         dict( clients=data,
+                               backurl=url())
+                        )
+    problems.exposed = True
 
 def main():
     cherrypy.tree.mount(Application(), '/')

@@ -540,10 +540,29 @@ class Server(object):
                     count(support = 1 or null) as supported, 
                     count(support = 0 or null) as unsupported 
                 from dept left join realmlinux on 
-                    dept.dept_id = realmlinux.dept_id 
+                    dept.dept_id = realmlinux.dept_id
+                    and realmlinux.recvdkey = 1
                 group by dept.name;"""
 
         self.cursor.execute(q1)
+        return resultSet(self.cursor).dump()
+
+    def getProblemList(self):
+        q  = """select status.host_id, realmlinux.hostname, 
+                   dept.name as deptname
+                from realmlinux, dept, status, 
+                   ( select host_id, service_id as sid, 
+                        max(`timestamp`) as maxdate 
+                     from status group by host_id, service_id ) as foo
+                where status.host_id = foo.host_id 
+                   and status.service_id = foo.sid
+                   and status.timestamp = foo.maxdate 
+                   and status.success=0
+                   and status.host_id = realmlinux.host_id
+                   and realmlinux.dept_id = dept.dept_id
+                order by deptname asc"""
+
+        self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
     def getClientList(self, dept_id):
@@ -621,18 +640,34 @@ class Server(object):
         q1 = "select count(*) from realmlinux where support = 1 and recvdkey=1"
         q2 = "select count(*) from realmlinux where support = 0 and recvdkey=1"
         q3 = "select count(*) from realmlinux where recvdkey = 0"
+        q4 = "select count(*) from dept"
+        # q5 select the number of hosts with problems
+        q5 = """select count(*) from status, 
+                   ( select host_id, service_id as sid, 
+                        max(`timestamp`) as maxdate 
+                     from status group by host_id, service_id ) as foo
+                where status.host_id = foo.host_id 
+                   and status.service_id = foo.sid
+                   and status.timestamp = foo.maxdate 
+                   and status.success=0"""
 
-        ret = []
+        ret = {}
         self.cursor.execute(q1)
-        ret.append(self.cursor.fetchone()[0])
+        ret['supported'] = self.cursor.fetchone()[0]
         
         self.cursor.execute(q2)
-        ret.append(self.cursor.fetchone()[0])
+        ret['unsupported'] = self.cursor.fetchone()[0]
 
         self.cursor.execute(q3)
-        ret.append(self.cursor.fetchone()[0])
+        ret['unregistered'] = self.cursor.fetchone()[0]
 
-        return tuple(ret)
+        self.cursor.execute(q4)
+        ret['departments'] = self.cursor.fetchone()[0]
+
+        self.cursor.execute(q5)
+        ret['trouble'] = self.cursor.fetchone()[0]
+
+        return ret
 
     def getNotRegistered(self):
         """Returns information about clients that have not registered."""

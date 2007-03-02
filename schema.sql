@@ -30,6 +30,8 @@ create table status (
     success     TINYINT not null,
     data        TEXT,
 
+    index(`timestamp`),
+    index(`received`),
     foreign key (host_id) references realmlinux(host_id),
     foreign key (service_id) references service(service_id)
 );
