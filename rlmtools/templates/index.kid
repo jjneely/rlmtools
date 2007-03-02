@@ -40,7 +40,12 @@
     <tr class="neutral">
       <th class="right">Clients Reporting Problems:</th>
       <td><a href="problems" 
-          py:content="totals['trouble']">-1</a></td>
+          py:content="totals['problems']">-1</a></td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Clients Not Receiving Errata:</th>
+      <td><a href="noupdates" 
+          py:content="totals['noupdates']">-1</a></td>
     </tr>
   </table>
 

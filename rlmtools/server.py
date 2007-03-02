@@ -547,6 +547,23 @@ class Server(object):
         self.cursor.execute(q1)
         return resultSet(self.cursor).dump()
 
+    def getNoUpdates(self):
+        q = """select foo.host_id, realmlinux.hostname, dept.name as deptname 
+               from realmlinux, dept, 
+                  ( select status.host_id, max(status.timestamp) as maxdate 
+                    from status, service 
+                    where service.service_id = status.service_id 
+                       and service.name = 'updates' 
+                    group by host_id 
+                  ) as foo 
+               where foo.host_id = realmlinux.host_id 
+                  and realmlinux.dept_id = dept.dept_id 
+                  and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
+                  and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
+
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
     def getProblemList(self):
         q  = """select status.host_id, realmlinux.hostname, 
                    dept.name as deptname
@@ -650,6 +667,18 @@ class Server(object):
                    and status.service_id = foo.sid
                    and status.timestamp = foo.maxdate 
                    and status.success=0"""
+        # The number of hosts not updating           
+        q6 = """select count(*) 
+               from realmlinux, 
+                  ( select status.host_id, max(status.timestamp) as maxdate 
+                    from status, service 
+                    where service.service_id = status.service_id 
+                       and service.name = 'updates' 
+                    group by host_id 
+                  ) as foo 
+               where foo.host_id = realmlinux.host_id 
+                  and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
+                  and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
 
         ret = {}
         self.cursor.execute(q1)
@@ -665,7 +694,10 @@ class Server(object):
         ret['departments'] = self.cursor.fetchone()[0]
 
         self.cursor.execute(q5)
-        ret['trouble'] = self.cursor.fetchone()[0]
+        ret['problems'] = self.cursor.fetchone()[0]
+
+        self.cursor.execute(q6)
+        ret['noupdates'] = self.cursor.fetchone()[0]
 
         return ret
 

@@ -13,10 +13,11 @@
     </ul>
   </p>
 
-  <p>The following clients, listed by department, appear to be reporting
-     some problem.  Its possible that this can be caused by a fluke or
-     network oddity, but repeated error reports need to be examined and
-     corrected.
+  <p>The following clients, listed by department, are not receiving updates
+     and security errata.  These clients may be turned off or otherwise
+     prevented from communicating with RHN.  Each client should contain
+     some 'update' error messages that we can use to find the problem.
+     These should be corrected as soon as possible.
   </p>
 
   <div py:for="dept in clients.keys()">

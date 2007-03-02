@@ -260,6 +260,25 @@ class Application(object):
                         )
     problems.exposed = True
 
+    def noupdates(self):
+        clients = self.__server.getNoUpdates()
+        data = {}
+
+        for client in clients:
+            host = {}
+            host['hostname'] = client['hostname']
+            host['url'] = "%s/client?host_id=%s" % (url(), client['host_id'])
+            if data.has_key(client['deptname']):
+                data[client['deptname']].append(host)
+            else:
+                data[client['deptname']] = [host]
+        
+        return serialize('templates.noupdates',
+                         dict( clients=data,
+                               backurl=url())
+                        )
+    noupdates.exposed = True
+
 def main():
     cherrypy.tree.mount(Application(), '/')
     cherrypy.server.start()
