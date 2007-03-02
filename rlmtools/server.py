@@ -590,13 +590,16 @@ class Server(object):
                 r.host_id = l.host_id
                 order by r.hostname"""
 
-        q2 = """select service.name, status.success, status.timestamp
+        q2 = """select status.host_id, service.name, 
+                   status.success, status.timestamp
                 from service, status,
-                ( select host_id, 
-                         service_id as sid, 
-                         max(`timestamp`) as maxdate 
-                  from status where host_id = %s
-                  group by service_id
+                ( select status.host_id, 
+                         status.service_id as sid, 
+                         max(status.timestamp) as maxdate 
+                  from status, realmlinux
+                  where realmlinux.host_id = status.host_id
+                     and realmlinux.dept_id = %s
+                  group by status.host_id, status.service_id
                 ) as current
                 where current.sid = status.service_id and
                 service.service_id = status.service_id and
@@ -606,12 +609,20 @@ class Server(object):
         self.cursor.execute(q1, (dept_id,))
         result = resultSet(self.cursor).dump()
 
+        # I'm going to reference the data in result via a hash
+        hash = {}
+
         for row in result:
-            self.cursor.execute(q2, (row['host_id'],))
-            for i in range(self.cursor.rowcount):
-                result2 = self.cursor.fetchone()
-                row[result2[0]] = result2[1] == 1
-                row[result2[0] + "_time"] = result2[2]
+            hash[row['host_id']] = row
+
+        self.cursor.execute(q2, (dept_id,))
+        status = resultSet(self.cursor).dump()
+
+        for row in status:
+            service = row['name']
+            stime = "%s_time" % service
+            hash[row['host_id']][service] = row['success']
+            hash[row['host_id']][stime] = row['timestamp']
 
         return result
 
