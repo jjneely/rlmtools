@@ -548,20 +548,33 @@ class Server(object):
         return resultSet(self.cursor).dump()
 
     def getNoUpdates(self):
-        q = """select foo.host_id, realmlinux.hostname, dept.name as deptname 
+        # q1 requires the client to have updated sometime
+        # Need to run q3 and substract q2
+        q1 = """select foo.host_id, realmlinux.hostname, dept.name as deptname 
                from realmlinux, dept, 
                   ( select status.host_id, max(status.timestamp) as maxdate 
                     from status, service 
                     where service.service_id = status.service_id 
-                       and service.name = 'updates' 
+                       and service.name = 'updates'
+                       and status.success = 1
                     group by host_id 
                   ) as foo 
                where foo.host_id = realmlinux.host_id 
                   and realmlinux.dept_id = dept.dept_id 
                   and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
                   and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
+        q2 = """select distinct status.host_id                   
+                from status, service                      
+                where service.service_id = status.service_id
+                   and service.name = 'updates'
+                   and status.success = 1 
+                   and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7 ;"""
+        q3 = """select realmlinux.host_id, realmlinux.hostname, 
+                   dept.name as deptname
+                from realmlinux, dept
+                where dept.dept_id = realmlinux.dept_id"""
 
-        self.cursor.execute(q)
+        self.cursor.execute(q1)
         return resultSet(self.cursor).dump()
 
     def getProblemList(self):
