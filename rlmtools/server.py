@@ -563,19 +563,38 @@ class Server(object):
                   and realmlinux.dept_id = dept.dept_id 
                   and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
                   and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
-        q2 = """select distinct status.host_id                   
-                from status, service                      
+        q2 = """select distinct status.host_id, realmlinux.hostname
+                from status, service, realmlinux
                 where service.service_id = status.service_id
+                   and realmlinux.host_id = status.host_id
                    and service.name = 'updates'
                    and status.success = 1 
-                   and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7 ;"""
+                   and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7"""
         q3 = """select realmlinux.host_id, realmlinux.hostname, 
                    dept.name as deptname
                 from realmlinux, dept
-                where dept.dept_id = realmlinux.dept_id"""
+                where dept.dept_id = realmlinux.dept_id
+                   and realmlinux.recvdkey = 1"""
 
-        self.cursor.execute(q1)
-        return resultSet(self.cursor).dump()
+        self.cursor.execute(q3)
+        result = resultSet(self.cursor).dump()
+        hash = {}
+
+        for row in result:
+            hash[row['hostname']] = row
+
+        self.cursor.execute(q2)
+        result2 = resultSet(self.cursor).dump()
+
+        for row in result2:
+            del hash[row['hostname']]
+
+        # This method of gathering the data prevents the database
+        # from sorting for us
+        keys = hash.keys()
+        keys.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()))
+
+        return map(hash.get, keys)
 
     def getProblemList(self):
         q  = """select status.host_id, realmlinux.hostname, 

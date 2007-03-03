@@ -20,7 +20,7 @@
      These should be corrected as soon as possible.
   </p>
 
-  <div py:for="dept in clients.keys()">
+  <div py:for="dept in departments">
 
     <h2 class="space">Department: <span py:replace="dept"/></h2>
 

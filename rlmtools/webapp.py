@@ -273,8 +273,11 @@ class Application(object):
             else:
                 data[client['deptname']] = [host]
         
+        departments = data.keys()
+        departments.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()))
         return serialize('templates.noupdates',
                          dict( clients=data,
+                               departments=departments,
                                backurl=url())
                         )
     noupdates.exposed = True
