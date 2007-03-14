@@ -33,6 +33,7 @@ __API__ = ['hello',
            'checkIn',
            'bless',
            'message',
+           'initHost',
 
            'getServerKey',
            'getEncKeyFile',
@@ -94,6 +95,14 @@ def message(publicKey, sig, dict):
     return ret
 
 
+def initHost(secret, fqdn):
+    """API call for Web-Kickstart to initialize a host in the database.
+       Protected by the knowing of a secret."""
+       
+    s = server.Server(fqdn)
+    return s.initHost(secret, fqdn)
+    
+    
 def isRegistered(pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 

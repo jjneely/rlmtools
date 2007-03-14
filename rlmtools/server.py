@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005, 2006 NC State University
+# Copyright (C) 2003, 2005, 2006, 2007 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -122,6 +122,11 @@ class Server(object):
             self.publicKey = cnf.get('main', 'publickey')
             self.rhnkey = cnf.get('main', 'rhnkey')
             self.keypath = cnf.get('main', 'key_directory')
+            self.knownSecret = cnf.get('main', 'secret')
+
+    def verifySecret(self, secret):
+        # Basically, cheap administrative or script authentication
+        return self.knownSecret == secret
 
     def verifyClient(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
@@ -405,6 +410,8 @@ class Server(object):
         sid = self.getServiceID(service)
         if sid == None:
             # We don't store data about services we don't know
+            log.info("Unknown service message type %s from %s" % \
+                     (service, self.client))
             return 2
 
         q = """insert into status (host_id, service_id, `timestamp`,
@@ -802,11 +809,12 @@ class Server(object):
         self.cursor.execute(q2, (date,))
         self.conn.commit()
 
-    def initHost(self, fqdn):
+    def initHost(self, secret, fqdn):
         """Logs a newly installing host.  To work with Web-Kickstart.
-           FQDN is the FQDN of the host we are installing."""
+           FQDN is the FQDN of the host we are installing.
+           A secret is used to auth web-kickstart or an admin."""
 
-        q1 = """select hostname from realmlinux where hostname=%s"""
+        q1 = """select host_id from realmlinux where hostname=%s"""
         q2 = """update realmlinux set 
                    installdate = %s, recvdkey = 0, publickey = NULL,
                    dept_id = %s, version = '', support = 1
@@ -818,22 +826,37 @@ class Server(object):
         # Log in/out events are persistant
         q4 = """select service_id from service where
                   name != 'login' and name != 'logout'"""
-        q5 = """delete from status where host_id = %s and service_di = %s"""
+        q5 = """delete from status where host_id = %s and service_id = %s"""
+        q6 = """delete from lastheard where host_id = %s"""
+        q7 = """insert into lastheard (host_id, `timestamp`) 
+                values (%s,'0000-00-00 00:00:00')"""
+
+        if not self.verifySecret(secret):
+            log.warning("initHost() called with bad secret")
+            return 1
 
         date = datetime.today()
         dept = self.getDeptID('unknown')
         self.cursor.execute(q1, (fqdn,))
         if self.cursor.rowcount == 0:
-            self.cursor.execute(q3, (fqdn, datetime.today(), dept))
+            self.cursor.execute(q3, (fqdn, date, dept))
+            self.cursor.execute(q1, (fqdn,))
+            hostid = self.cursor.fetchone()[0]
         else:
             hostid = self.cursor.fetchone()[0]
-            self.cursor.execute(q2, (datetime.today(), dept, hostid))
+            self.cursor.execute(q2, (date, dept, hostid))
             self.cursor.execute(q4)
             result = resultSet(self.cursor).dump()
             for row in result:
-                self.cursor.execute(q5, (row['service_id'],))
+                self.cursor.execute(q5, (hostid, row['service_id'],))
 
+        self.cursor.execute(q6, (hostid,))
+        self.cursor.execute(q7, (hostid,))
         self.conn.commit()
+        
+        log.info("Initialized host: %s" % fqdn)
+        
+        return 0
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
