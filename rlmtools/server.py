@@ -594,7 +594,10 @@ class Server(object):
         result2 = resultSet(self.cursor).dump()
 
         for row in result2:
-            del hash[row['hostname']]
+            try:
+                del hash[row['hostname']]
+            except KeyError:
+                pass
 
         # This method of gathering the data prevents the database
         # from sorting for us
