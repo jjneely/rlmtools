@@ -274,7 +274,7 @@ class Application(object):
                 data[client['deptname']] = [host]
         
         departments = data.keys()
-        departments.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()))
+        departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
         return serialize('templates.noupdates',
                          dict( clients=data,
                                departments=departments,

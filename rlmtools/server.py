@@ -599,7 +599,7 @@ class Server(object):
         # This method of gathering the data prevents the database
         # from sorting for us
         keys = hash.keys()
-        keys.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()))
+        keys.sort(lambda x,y: cmp(x.lower(), y.lower()))
 
         return map(hash.get, keys)
 
