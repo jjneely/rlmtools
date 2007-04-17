@@ -23,7 +23,6 @@
 import MySQLdb
 import sys
 import ezPyCrypto
-import ConfigParser
 import os
 import os.path
 import time
@@ -43,7 +42,7 @@ except ImportError:
 else:
     sys.path.append("/home/slack/projects/solaris2ks")
 
-import config
+from webKickstart import config
 from webKickstart import webKickstart
 
 log = logging.getLogger("xmlrpc")
@@ -65,10 +64,10 @@ def logException():
 
 def getDBDict():
     db = {}
-    db['db_host'] = config.config.get('db', 'host')
-    db['db_user'] = config.config.get('db', 'user')
-    db['db_pass'] = config.config.get('db', 'passwd')
-    db['db_name'] = config.config.get('db', 'db')
+    db['db_host'] = config.get('db', 'host')
+    db['db_user'] = config.get('db', 'user')
+    db['db_pass'] = config.get('db', 'passwd')
+    db['db_name'] = config.get('db', 'db')
     
     return db
 
@@ -86,14 +85,6 @@ class Server(object):
     # Use class variables so we don't have to connect each time
     conn = None
     cursor = None
-
-    # Other static data that can be class variables
-    jumpstarts = None
-    defaultKey = None
-    privateKey = None
-    publicKey = None
-    rhnkey = None
-    keypath = None
 
     def __init__(self, client):
         """Set up server and define who we are talking to...well at least
@@ -114,19 +105,9 @@ class Server(object):
             self.conn = DataBase.getConnection()
             self.cursor = DataBase.getCursor()
 
-            # Other config information
-            cnf = config.config
-            self.jumpstarts = cnf.get('main', 'jumpstarts')
-            self.defaultKey = cnf.get('main', 'defaultkey')
-            self.privateKey = cnf.get('main', 'privatekey')
-            self.publicKey = cnf.get('main', 'publickey')
-            self.rhnkey = cnf.get('main', 'rhnkey')
-            self.keypath = cnf.get('main', 'key_directory')
-            self.knownSecret = cnf.get('main', 'secret')
-
     def verifySecret(self, secret):
         # Basically, cheap administrative or script authentication
-        return self.knownSecret == secret
+        return config.secret == secret
 
     def verifyClient(self, publicKey, sig):
         """Make sure that the public key and sig match this client."""
@@ -268,7 +249,7 @@ class Server(object):
         # only a sysadmin can put it there, copied from the client to 
         # bless
 
-        file = os.path.join(self.keypath, self.client+".pub")
+        file = os.path.join(config.key_directory, self.client+".pub")
         # From the above, this must also be called from the client
         # to register
 
@@ -521,7 +502,7 @@ class Server(object):
         data = ks.getKeys('enable', 'activationkey')
         if len(data) == 0:
             # *sigh* no key
-            key = self.rhnkey
+            key = config.rhnkey
         else:
             key = data[0]['options'][0]
 
@@ -867,7 +848,7 @@ class Server(object):
         ks = self.__getWebKs()
         data = ks.getKeys('users')
         if len(data) == 0:
-            usersdata = "users default %s" % self.defaultKey
+            usersdata = "users default %s" % config.defaultKey
         else:
             # a list of the options passed to the 'users' key
             args = data[0]['options']
@@ -876,7 +857,7 @@ class Server(object):
         # root data
         data = ks.getKeys('root')
         if len(data) == 0:
-            rootdata = "root default %s" % self.defaultKey
+            rootdata = "root default %s" % config.defaultKey
         else:
             args = data[0]['options']
             rootdata = "root " + " ".join(args)
@@ -916,7 +897,7 @@ class Server(object):
         enc = client.encStringToAscii(filedata)
 		
         # Get the RK key to sign with
-        fd = open(self.privateKey)
+        fd = open(config.privateKey)
         server = ezPyCrypto.key(fd.read())
         fd.close()
         sig = server.signString(enc)
@@ -931,10 +912,10 @@ class Server(object):
         
         os.chdir(sys.path[-1])
         wks = webKickstart("fakeurl", {})
-        scList = wks.findFile(self.client, self.jumpstarts)
+        scList = wks.findFile(self.client, config.jumpstarts)
         if len(scList) == 0:
             raise Exception("No config for %s in %s" % (self.client,
-                                                        self.jumpstarts))
+                                                        config.jumpstarts))
         # Do we care about collisions?
         # If not, this is the same thing that Web-Kickstart does
         sc = scList[0]
