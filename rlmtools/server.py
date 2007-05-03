@@ -848,7 +848,7 @@ class Server(object):
         ks = self.__getWebKs()
         data = ks.getKeys('users')
         if len(data) == 0:
-            usersdata = "users default %s" % config.defaultKey
+            usersdata = "users default %s" % config.defaultkey
         else:
             # a list of the options passed to the 'users' key
             args = data[0]['options']
@@ -857,7 +857,7 @@ class Server(object):
         # root data
         data = ks.getKeys('root')
         if len(data) == 0:
-            rootdata = "root default %s" % config.defaultKey
+            rootdata = "root default %s" % config.defaultkey
         else:
             args = data[0]['options']
             rootdata = "root " + " ".join(args)
