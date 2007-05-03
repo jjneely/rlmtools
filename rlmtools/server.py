@@ -105,6 +105,10 @@ class Server(object):
             self.conn = DataBase.getConnection()
             self.cursor = DataBase.getCursor()
 
+    def getPublicKey(self):
+        """Return the server's public key"""
+        return getFile(config.publickey)
+
     def verifySecret(self, secret):
         # Basically, cheap administrative or script authentication
         return config.secret == secret
@@ -773,7 +777,8 @@ class Server(object):
 
         q1 = """select host_id from lastheard where 
                 `timestamp` < %s"""
-        q2 = """delete from status where received < %s and service_id = %s"""
+        q2 = """delete from status where received < %s"""
+        #q2 = """delete from status where received < %s and service_id = %s"""
         q3 = """select host_id from realmlinux where 
                 recvdkey = 0 and installdate < %s"""
         q4 = """select service_id from service where
@@ -897,7 +902,7 @@ class Server(object):
         enc = client.encStringToAscii(filedata)
 		
         # Get the RK key to sign with
-        fd = open(config.privateKey)
+        fd = open(config.privatekey)
         server = ezPyCrypto.key(fd.read())
         fd.close()
         sig = server.signString(enc)

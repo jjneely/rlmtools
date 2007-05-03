@@ -104,8 +104,9 @@ def call_method(method, params, req):
             try:
                 func = func.__getattribute__(module)
             except AttributeError, e:
+                log.warning("Attribute Error raised finding API calls")
                 server.logException()
-                raise 
+                #raise 
 
         else:
             log.warning("Requested method %s not exported or found." % method)
@@ -115,6 +116,9 @@ def call_method(method, params, req):
     try:
         ret = apply(func, params)
     except Exception, e:
+        log.warning("Exception during function run!")
+        log.warning(str(e))
+        log.warning(str(dir(server)))
         server.logException()
         return xmlrpclib.Fault(1000, str(e))
 
