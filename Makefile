@@ -1,5 +1,5 @@
 NAME=ncsu-rlmtools
-VERSION=1.0.1
+VERSION=1.0.2
 TAG = $(VERSION)
 REPO=https://svn.linux.ncsu.edu/svn/cls
 
@@ -15,6 +15,7 @@ install:
 	
 	install -m 755 client.py $(DESTDIR)/usr/share/rlmtools
 	install -m 755 sysinfo.py $(DESTDIR)/usr/share/rlmtools
+	install -m 755 usagelog.py $(DESTDIR)/usr/share/rlmtools
 	
 	install -m 755 registerclient.sh $(DESTDIR)/etc/cron.update
 	install -m 755 sysinfo.sh $(DESTDIR)/etc/cron.weekly
