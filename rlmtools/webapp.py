@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # webapp.py - The CherryPy based web app
-# Copyright 2006 NC State University
+# Copyright 2006 - 2007 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -283,7 +283,15 @@ class Application(object):
     noupdates.exposed = True
 
 def main():
-    cherrypy.tree.mount(Application(), '/')
+    staticDir = os.path.join(os.path.dirname(__file__), "static")
+    staticDir = os.path.abspath(staticDir)
+
+    cherrypy.tree.mount(Application(), '/rlmtools')
+    cherrypy.config.update({"/rlmtools/static": {
+                               'static_filter.on': True,
+                               'static_filter.dir': staticDir }
+                           })
+
     cherrypy.server.start()
 
 def wsgi(start_responce):

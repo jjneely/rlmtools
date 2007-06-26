@@ -6,6 +6,8 @@
 
   <link rel="stylesheet" type="text/css" 
     href="http://itd.ncsu.edu/itd-branding/styles/itd_top_nav_iframe.css" /> 
+  <link rel="stylesheet" type="text/css" 
+    href="/rlmtools/static/navbar.css" /> 
 
   <style type="text/css">
     h1 {
@@ -178,13 +180,33 @@
 </head>
 <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'">
 
-  <iframe name="ITDNav" id="ITDNav" 
+<div class="itdnavbar">
+  <div class="itd_logo">
+      <a href="http://www.itd.ncsu.edu/"><img alt="ITD Homepage"
+          src="/rlmtools/static/itd_logo.gif"/></a></div>
+  <div class="ncsu_brick">
+      <a href="http://www.ncsu.edu/"><img src="/rlmtools/static/brick_black.gif"
+          alt="NC State University"/></a></div>
+  <div class="itdcontainer">
+    <ul>
+      <li><a href="http://itd.ncsu.edu">Information Technology Division</a>
+        &nbsp;|&nbsp;</li>
+      <li><a href="http://sysnews.ncsu.edu">SysNews</a>
+        &nbsp;|&nbsp;</li>
+      <li><a href="http://www.linux.ncsu.edu">Campus Linux Services</a>
+        &nbsp;|&nbsp;</li>
+      <li><a href="http://help.ncsu.edu">NC State Help Desk</a></li>
+    </ul>
+  </div>
+</div>
+
+<!--  <iframe name="ITDNav" id="ITDNav" 
     src="http://itd.ncsu.edu/itd-branding/itd_nav.php?color=black" 
     scrolling="no" title="itd-nav-bar">  
     Your browser does not support inline frames or is currently configured  
     not to display inline frames.<br /> 
     Visit <a href="http://itd.ncsu.edu/">http://itd.ncsu.edu</a>.
-  </iframe>
+  </iframe> -->
 
   <div class="content">
 

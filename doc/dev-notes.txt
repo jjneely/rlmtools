@@ -1,0 +1,4 @@
+Copy the live database into a test database:
+
+    mysqldump -h mysql02.unity.ncsu.edu -u realmlinux -p realmlinux | mysql -u slack rltest
+

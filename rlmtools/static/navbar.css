@@ -1,0 +1,64 @@
+
+/* An alternative ITD Navigation bar
+ * Jack Neely 
+ * 06/26/2007
+ */
+
+body {
+    padding: 0em;
+    margin: 0em;
+}
+
+div.itdnavbar {
+    font-family: Arial,Helvetica,Sans-Serif;
+    background-color: #000000;
+    color: #FFFFFF;
+    padding: 0em;
+    margin: 0em;
+    height: 24px;
+}
+div.itdnavbar a {
+    color: #FFFFFF;
+    text-decoration: none;
+}
+div.itdnavbar a:hover {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+div.itdcontainer {
+    padding-top: 2px;
+}
+div.itdnavbar ul {
+    display: inline;
+    padding: 0px;
+    list-style-type: none;
+    white-space: nowrap;
+}
+div.itdnavbar li {
+    display: inline;
+    font-size: 90%;
+}
+div.itd_logo {
+    margin: 0em;
+    padding: 0em;
+    padding-top: 0px;
+    padding-left: 1em;
+    width: 70px;
+    height: 22px;
+    float: left;
+}
+div.itd_logo img {
+    border: none;
+}
+div.ncsu_brick {
+    margin: 0em;
+    padding: 0em;
+    padding-top: 1px;
+    height: 22px;
+    width: 142px;
+    float: right;
+}
+div.ncsu_brick img {
+    border: none;
+}    
+
