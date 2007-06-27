@@ -640,8 +640,8 @@ class Server(object):
         return result
 
     def getClientDetail(self, host_id, history_days=30):
-        # returns, hostname, installdate, recvdkey, support, dept, version,
-        #    lastcheck, status
+        # returns a dict of: hostname, installdate, recvdkey, support, 
+        #    dept, version, lastcheck, status
         # status is a list of dicts: service, timestamp, success, data
         q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
                        d.name as dept, r.dept_id, r.version
@@ -656,7 +656,7 @@ class Server(object):
                 where service.service_id = status.service_id and
                       status.host_id = %s and 
                       TO_DAYS(status.timestamp) > TO_DAYS(NOW()) - %s
-                order by status.received desc"""
+                order by status.received desc, status.timestamp desc"""
 
         self.cursor.execute(q1, (host_id,))
         result1 = resultSet(self.cursor).dump()[0]  # This is one row
