@@ -540,21 +540,7 @@ class Server(object):
         return resultSet(self.cursor).dump()
 
     def getNoUpdates(self):
-        # q1 requires the client to have updated sometime
         # Need to run q3 and substract q2
-        q1 = """select foo.host_id, realmlinux.hostname, dept.name as deptname 
-               from realmlinux, dept, 
-                  ( select status.host_id, max(status.timestamp) as maxdate 
-                    from status, service 
-                    where service.service_id = status.service_id 
-                       and service.name = 'updates'
-                       and status.success = 1
-                    group by host_id 
-                  ) as foo 
-               where foo.host_id = realmlinux.host_id 
-                  and realmlinux.dept_id = dept.dept_id 
-                  and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
-                  and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
         q2 = """select distinct status.host_id, realmlinux.hostname
                 from status, service, realmlinux
                 where service.service_id = status.service_id
@@ -705,18 +691,13 @@ class Server(object):
                    and status.service_id = foo.sid
                    and status.timestamp = foo.maxdate 
                    and status.success=0"""
-        # The number of hosts not updating           
-        q6 = """select count(*) 
-               from realmlinux, 
-                  ( select status.host_id, max(status.timestamp) as maxdate 
-                    from status, service 
-                    where service.service_id = status.service_id 
-                       and service.name = 'updates' 
-                    group by host_id 
-                  ) as foo 
-               where foo.host_id = realmlinux.host_id 
-                  and TO_DAYS(maxdate) <= TO_DAYS(NOW()) - 7 
-                  and TO_DAYS(realmlinux.installdate) <= TO_DAYS(NOW()) - 7"""
+        # The number of hosts not updating
+        q6 = """select count(*) from realmlinux where recvdkey = 1"""
+        q7 = """select count(distinct status.host_id) from status, service 
+                where service.service_id = status.service_id 
+                    and service.name = 'updates' 
+                    and status.success = 1 
+                    and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7"""
 
         ret = {}
         self.cursor.execute(q1)
@@ -735,7 +716,10 @@ class Server(object):
         ret['problems'] = self.cursor.fetchone()[0]
 
         self.cursor.execute(q6)
-        ret['noupdates'] = self.cursor.fetchone()[0]
+        total = self.cursor.fetchone()[0]
+        self.cursor.execute(q7)
+        goodUpdates = self.cursor.fetchone()[0]
+        ret['noupdates'] = total - goodUpdates
 
         return ret
 

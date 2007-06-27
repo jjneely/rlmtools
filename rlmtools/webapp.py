@@ -278,7 +278,7 @@ class Application(object):
         return serialize('templates.noupdates',
                          dict( clients=data,
                                departments=departments,
-                               backurl=url())
+                               backurl=url() )
                         )
     noupdates.exposed = True
 

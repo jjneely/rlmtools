@@ -33,7 +33,7 @@
       <td py:content="totals['unsupported']">-1</td>
     </tr>
     <tr class="neutral">
-      <th class="right">Clients Not Registered:</th>
+      <th class="right">Web-Kickstarting:</th>
       <td><a href="notregistered" 
              py:content="totals['unregistered']">-1</a></td>
     </tr>
@@ -43,7 +43,7 @@
           py:content="totals['problems']">-1</a></td>
     </tr>
     <tr class="neutral">
-      <th class="right">Clients Not Receiving Errata:</th>
+      <th class="right">Not Receiving Updates:</th>
       <td><a href="noupdates" 
           py:content="totals['noupdates']">-1</a></td>
     </tr>
