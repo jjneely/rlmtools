@@ -1,7 +1,7 @@
 How to Upgrade the RLMTools Server
 ==================================
 
-* Run the following SQL in your MySQL Database:
+* 06/28/2007: Run the following SQL in your MySQL Database:
 
 create table dstype (
     ds_id       INTEGER PRIMARY KEY auto_increment,

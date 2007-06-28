@@ -295,10 +295,18 @@ def main():
     cherrypy.server.start()
 
 def wsgi(start_responce):
+    staticDir = os.path.join(os.path.dirname(__file__), "static")
+    staticDir = os.path.abspath(staticDir)
+
     cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.config.update({"server.environment": "production",
                             "server.protocolVersion": "HTTP/1.1",
                             "server.log_file": "/tmp/rlmtools.log"})
+    cherrypy.config.update({"/rlmtools/static": {
+                               'static_filter.on': True,
+                               'static_filter.dir': staticDir }
+                           })
+
     cherrypy.server.start(initOnly=True, serverClass=None)
 
 if __name__ == "__main__":
