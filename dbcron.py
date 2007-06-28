@@ -23,20 +23,6 @@
 import socket
 from rlmtools import server
 
-def cleanDB(cursor):
-    # SQL to delete machines no longer checking in
-    sql1 = """delete from realmlinux where 
-              TO_DAYS(NOW()) - TO_DAYS(lastcheck) > 90;"""
-    
-    # SQL to delete machines that installed but never registered
-    sql2 = """delete from realmlinux where
-              TO_DAYS(NOW()) - TO_DAYS(installdate) > 30 and 
-              lastcheck is NULL;"""
-
-    cursor.execute(sql1)
-    cursor.execute(sql2)
-
-
 def main():
     s = server.Server(socket.getfqdn())
     s.cleanDB()

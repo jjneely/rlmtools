@@ -36,7 +36,7 @@
 
   <div class="content">
 
-  <h1>Realm Linux Management</h1>
+  <h1>Realm Linux Management - Project Liquid Dragon</h1>
 
   <div py:content="item[:]" />
 

@@ -51,3 +51,35 @@ create table service (
     index(name)
 );
 
+create table rrdqueue (
+    q_id        INTEGER PRIMARY KEY auto_increment,
+    ds_id       INTEGER not null,
+    host_id     INTEGER not null,
+    `timestamp` DATETIME not null,
+    received    DATETIME not null,
+    data        INTEGER,
+
+    index(`timestamp`),
+    index(`received`)
+);
+
+create table dstype (
+    ds_id       INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(256) not null unique,
+
+    index(name)
+);
+
+-- The following are service types and RRD data source types to collect.
+-- The server will record status information of these types.  Adding rows
+-- to the tables will allow new status messages, etc to be recorded.
+
+insert into service (name) values ('updates');
+insert into service (name) values ('client');
+insert into service (name) values ('sysinfo');
+insert into service (name) values ('boot');
+insert into service (name) values ('usagelog');
+
+-- For the RRDTool Queue Handler
+insert into dstype (name) values ('usage');
+

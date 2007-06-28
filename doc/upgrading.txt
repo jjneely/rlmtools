@@ -1,0 +1,26 @@
+How to Upgrade the RLMTools Server
+==================================
+
+* Run the following SQL in your MySQL Database:
+
+create table dstype (
+    ds_id       INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(256) not null unique,
+
+    index(name)
+);
+
+create table rrdqueue (
+    q_id        INTEGER PRIMARY KEY auto_increment,
+    ds_id       INTEGER not null,
+    host_id     INTEGER not null,
+    `timestamp` DATETIME not null,
+    received    DATETIME not null,
+    data        INTEGER,
+
+    index(`timestamp`),
+    index(`received`)
+);
+
+insert into dstype (name) values ('usage');
+

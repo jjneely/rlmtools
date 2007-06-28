@@ -29,6 +29,7 @@ import time
 import logging
 import traceback
 import base64
+import pickle
 
 from datetime import datetime, timedelta
 
@@ -386,6 +387,19 @@ class Server(object):
 
         return 0
 
+    def storeUsage(self, hid, receivedstamp, clientstamp, pic):
+        q = """insert into rrdqueue (ds_id, host_id, `timestamp`, 
+                                     received, data)
+               values (%s, %s, %s, %s, %s)"""
+
+        data = pickle.loads(pic)
+        dsid = self.getDSID('usage')
+        self.cursor.execute(q, (dsid, hid, clientstamp, receivedstamp,
+                                data['time']))
+        self.conn.commit()
+
+        return 0
+
     def setServiceStatus(self, service, succeed, timestamp, data=None):
         """Record a service status message into the database.
            timestamp should be a POSIX time...so time.time()
@@ -405,12 +419,16 @@ class Server(object):
         clientstamp = datetime.fromtimestamp(timestamp)
         date = datetime.today()
         id = self.getHostID()
+
         if data != None:
             data = base64.decodestring(data)
 
         if data == "":
             # Enpty message -- we can't marshal None
             data = None
+
+        if service == "usagelog":
+            return self.storeUsage(id, date, clientstamp, data)
 
         if succeed:
             succeed = 1
@@ -420,6 +438,17 @@ class Server(object):
         self.cursor.execute(q, (id, sid, clientstamp, date, succeed, data))
         self.conn.commit()
         return 0
+
+    def getDSID(self, name):
+        """Returns the database ID for the given DS type for use with
+           RRDTool."""
+
+        q = "select ds_id from dstype where name = %s"
+        self.cursor.execute(q, (name,))
+        if self.cursor.rowcount > 0:
+            return self.cursor.fetchone()[0]
+        else:
+            return None
 
     def setServiceID(self, serv):
         "Create a Service ID"
