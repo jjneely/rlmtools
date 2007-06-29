@@ -57,34 +57,34 @@ def getHostName():
     return addr[0]
 
 
-def getServerKey():
+def getServerKey(apiVersion):
     """Return the Server's public key"""
     
-    srv = server.Server(getHostName())
+    srv = server.Server(apiVersion, getHostName())
     ret = srv.getPublicKey()
     return ret
     
 
-def register(publicKey, dept, version):
+def register(apiVersion, publicKey, dept, version):
     """Workstation requests registration.  Check DB and register host as
        appropiate.  A false return code means that registration failed."""
     
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.register(publicKey, dept, version)
     return ret
 
 
-def bless(dept, version):
+def bless(apiVersion, dept, version):
     """Administratively bless a workstation."""
 
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.bless(dept, version)
     return ret
 
 
-def message(publicKey, sig, dict):
+def message(apiVersion, publicKey, sig, dict):
     """Log a message from a client."""
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     if not s.verifyClient(publicKey, sig):
         return 1
 
@@ -95,18 +95,18 @@ def message(publicKey, sig, dict):
     return ret
 
 
-def initHost(secret, fqdn):
+def initHost(apiVersion, secret, fqdn):
     """API call for Web-Kickstart to initialize a host in the database.
        Protected by the knowing of a secret."""
        
-    s = server.Server(fqdn)
+    s = server.Server(apiVersion, fqdn)
     return s.initHost(secret, fqdn)
     
     
-def isRegistered(pubKey=None, sig=None):
+def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.isRegistered(pubKey, sig)
 
     if ret == None:
@@ -118,34 +118,34 @@ def isRegistered(pubKey=None, sig=None):
         return True
 
 
-def isSupported():
+def isSupported(apiVersion):
     "Returns True if the client meets requirments for support."
 
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     return s.isSupported()
 
 
-def checkIn(publicKey, sig):
+def checkIn(apiVersion, publicKey, sig):
     """Workstation checking in.  Update status in DB."""
     
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.checkIn(publicKey, sig)
     return ret
 
 
-def getActivationKey(publicKey, sig):
+def getActivationKey(apiVersion, publicKey, sig):
     "Return the RHN activation key for this host."
 
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.getActivationKey(publicKey, sig)
     return ret
 
 
-def getEncKeyFile(publicKey, sig):
+def getEncKeyFile(apiVersion, publicKey, sig):
     """Returns an ecrypted string containing what should go in /etc/update.conf
        on the workstation."""
        
-    s = server.Server(getHostName())
+    s = server.Server(apiVersion, getHostName())
     ret = s.getEncKeyFile(publicKey, sig)
     return ret
 

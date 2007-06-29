@@ -92,6 +92,12 @@ def call_method(method, params, req):
     API.req = req
 
     list = string.split(method, '.')
+
+    # Handle conversion to a versioned API:  If the method params do NOT
+    # start with an int we make it start with 0.  This requires that the
+    # first param for all functions must always be the api version.
+    if not isinstance(params[0], int):
+        params.insert(0, 0)
                      
     # Now walk down the tree and check export lists
     func = API

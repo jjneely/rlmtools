@@ -51,16 +51,18 @@ class APIServer(server.Server):
     conn = None
     cursor = None
 
-    def __init__(self, client):
+    def __init__(self, apiVersion, client):
         """Set up server and define who we are talking to...well at least
            what we are told we are talking to."""
            
+        server.Server.__init__(self)
+
+        self.apiVersion = apiVersion
         self.client = client
         self.hostid = None
 
-        log.info("Running APIServer object for %s" % self.client)
-
-        server.Server.__init__(self)
+        log.info("API version %s started for client: %s" % (self.apiVersion,
+                                                            self.client))
 
     def getHostID(self):
         """Return the database ID for this host."""
