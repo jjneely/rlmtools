@@ -24,7 +24,7 @@
 # and/or modules that it exposes.
 
 import socket
-import server
+import apiServer as server
 
 from mod_python import apache
 

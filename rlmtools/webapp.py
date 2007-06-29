@@ -29,7 +29,7 @@ import kid
 kid.enable_import()
 
 import cherrypy
-import server
+import webServer
 
 def importer(module):
     tree = module.split('.')
@@ -96,7 +96,7 @@ class Auth(object):
 class Application(object):
 
     def __init__(self):
-        self.__server = server.Server("pamsadmin.pams.ncsu.edu")
+        self.__server = webServer.WebServer()
 
     def index(self):
         totals = self.__server.getTotalClients()

@@ -20,11 +20,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-import socket
-from rlmtools import server
+from rlmtools import miscServer
 
 def main():
-    s = server.Server(socket.getfqdn())
+    s = miscServer.MiscServer()
     s.cleanDB()
 
 if __name__ == "__main__":
