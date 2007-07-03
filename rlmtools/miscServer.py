@@ -46,10 +46,12 @@ class MiscServer(server.Server):
         q1 = """delete from realmlinux where host_id = %s"""
         q2 = """delete from lastheard where host_id = %s"""
         q3 = """delete from status where host_id = %s"""
+        q4 = """delete from hostkeys where host_id = %s"""
 
         self.cursor.execute(q1, (host_id,))
         self.cursor.execute(q2, (host_id,))
         self.cursor.execute(q3, (host_id,))
+        self.cursor.execute(q4, (host_id,))
         self.conn.commit()
 
     def cleanDB(self, days=31):
@@ -57,9 +59,8 @@ class MiscServer(server.Server):
            clients that have not checked in in variable days."""
 
         q1 = """select host_id from lastheard where 
-                `timestamp` < %s"""
+                `timestamp` < %s and `timestamp` > '0000-00-00 00:00:00'"""
         q2 = """delete from status where received < %s"""
-        #q2 = """delete from status where received < %s and service_id = %s"""
         q3 = """select host_id from realmlinux where 
                 recvdkey = 0 and installdate < %s"""
         q4 = """select service_id from service where
@@ -75,7 +76,6 @@ class MiscServer(server.Server):
         result = resultSet(self.cursor).dump()
         for client in result: self.deleteClient(client['host_id'])
 
-        # XXX: Handle persistant statuses
         self.cursor.execute(q2, (date,))
         self.conn.commit()
 

@@ -115,10 +115,14 @@ class APIServer(server.Server):
            on the pubKey parameter is valid attempt to find the host and
            update its hostname."""
 
-        q1 = """select publickey from realmlinux
-                where hostname = %s and recvdkey = 1"""
-        q2 = """select host_id, hostname, publickey from realmlinux
-                where recvdkey = 1 and publickey = %s"""
+        q1 = """select hostkeys.publickey from realmlinux, hostkeys
+                where realmlinux.host_id = hostkeys.host_id
+                and realmlinux.hostname = %s and realmlinux.recvdkey = 1"""
+        q2 = """select realmlinux.host_id, realmlinux.hostname, 
+                       hostkeys.publickey 
+                from realmlinux, hostkeys
+                where realmlinux.host_id = hostkeys.host_id
+                and realmlinux.recvdkey = 1 and hostkeys.publickey = %s"""
         q3 = """update realmlinux set hostname = %s where host_id = %s"""
         
         trustedKey = None
@@ -196,19 +200,12 @@ class APIServer(server.Server):
 
         # Check the Time window for 24 hours
         installDate = self.cursor.fetchone()[0]
-        try:
-            # MySQL-python 1.0
-            if time.time() - installDate.ticks() > 86400:
-                #Install date was more than 24 hours ago
-                log.info("Client %s attempted to register outside security " \
-                         "window" % self.client)
-                return 3
-        except AttributeError:
-            # Mysql-python 1.2
-            if datetime.today() - timedelta(days=1) > installDate:
-                log.info("Client %s attempted to register outside security " \
-                         "window" % self.client)
-                return 3
+        if datetime.today() - timedelta(days=1) > installDate:
+            # Client did not register inside 24 hours
+            log.info("Client %s attempted to register outside security " \
+                     "window" % self.client)
+            # Old return code 3
+            return self.createNoSupport(publicKey, dept, version)
 
         return self.__register(publicKey, dept, version)
         
@@ -267,28 +264,7 @@ class APIServer(server.Server):
 
         log.info("Registering no-support for %s" % self.client)
 
-        date = datetime.today()
-        id = self.getHostID()
-        deptid = self.getDeptID(dept)
-
-        if id == None:
-            q = """insert into realmlinux 
-                   (hostname, installdate, recvdkey, support) 
-                   values (%s, %s, %s, %s)"""
-            t = (self.client, date, 0, 0)
-        else:
-            q = """update realmlinux set 
-                   installdate = %s, 
-                   recvdkey = 0,
-                   publickey = NULL,
-                   dept_id = %s,
-                   version = '',
-                   support = 0
-                   where host_id = %s"""
-            t = (date, deptid, id)
-
-        self.cursor.execute(q, t)
-
+        self.initHost(self.client, 0)
         return self.__register(publicKey, dept, version)
 
     def __register(self, publicKey, dept, version):
@@ -312,11 +288,15 @@ class APIServer(server.Server):
             id = self.getHostID()
             deptid = self.getDeptID(dept)
 
-            q = """update realmlinux 
-                   set recvdkey=1, publickey=%s, dept_id=%s, version=%s
+            q1 = "delete from hostkeys where host_id = %s"
+            q2 = """update realmlinux 
+                   set recvdkey=1, dept_id=%s, version=%s
                    where host_id=%s"""
+            q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
-            self.cursor.execute(q, (publicKey, deptid, version, id))
+            self.cursor.execute(q1, (id,))
+            self.cursor.execute(q2, (deptid, version, id))
+            self.cursor.execute(q3, (id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (id,))
             self.cursor.execute("""insert into lastheard (host_id, `timestamp`)
@@ -382,46 +362,38 @@ class APIServer(server.Server):
     
         return result[0]
 
-    def initHost(self, secret, fqdn):
+    def initHost(self, fqdn, support):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.
            A secret is used to auth web-kickstart or an admin."""
 
         q1 = """select host_id from realmlinux where hostname=%s"""
         q2 = """update realmlinux set 
-                   installdate = %s, recvdkey = 0, publickey = NULL,
-                   dept_id = %s, version = '', support = 1
+                   installdate = %s, recvdkey = 0, uuid = NULL, rhnid = NULL,
+                   dept_id = %s, version = '', support = %s
                 where host_id = %s"""
         q3 = """insert into realmlinux 
-                   (hostname, installdate, recvdkey, publickey, dept_id, 
+                   (hostname, installdate, recvdkey, dept_id, 
                     version, support) 
-                values (%s, %s, 0, NULL, %s, '', 1)"""
-        # Log in/out events are persistant
-        q4 = """select service_id from service where
-                  name != 'login' and name != 'logout'"""
-        q5 = """delete from status where host_id = %s and service_id = %s"""
+                values (%s, %s, 0, %s, '', %s)"""
+        q4 = """delete from hostkeys where host_id = %s"""
+        q5 = """delete from status where host_id = %s"""
         q6 = """delete from lastheard where host_id = %s"""
         q7 = """insert into lastheard (host_id, `timestamp`) 
                 values (%s,'0000-00-00 00:00:00')"""
-
-        if not self.verifySecret(secret):
-            log.warning("initHost() called with bad secret")
-            return 1
 
         date = datetime.today()
         dept = self.getDeptID('unknown')
         self.cursor.execute(q1, (fqdn,))
         if self.cursor.rowcount == 0:
-            self.cursor.execute(q3, (fqdn, date, dept))
+            self.cursor.execute(q3, (fqdn, date, dept, support))
             self.cursor.execute(q1, (fqdn,))
             hostid = self.cursor.fetchone()[0]
         else:
             hostid = self.cursor.fetchone()[0]
-            self.cursor.execute(q2, (date, dept, hostid))
-            self.cursor.execute(q4)
-            result = resultSet(self.cursor).dump()
-            for row in result:
-                self.cursor.execute(q5, (hostid, row['service_id'],))
+            self.cursor.execute(q2, (date, dept, support, hostid))
+            self.cursor.execute(q4, (hostid,))
+            self.cursor.execute(q5, (hostid,))
 
         self.cursor.execute(q6, (hostid,))
         self.cursor.execute(q7, (hostid,))

@@ -24,9 +24,12 @@
 # and/or modules that it exposes.
 
 import socket
+import logging
 import apiServer as server
 
 from mod_python import apache
+
+log = logging.getLogger("xmlrpc")
 
 __API__ = ['hello',
            'register',
@@ -42,6 +45,7 @@ __API__ = ['hello',
            'isRegistered',
            'isSupported',
           ]
+
 
 def hello():
     return "Hello World"
@@ -100,7 +104,11 @@ def initHost(apiVersion, secret, fqdn):
        Protected by the knowing of a secret."""
        
     s = server.Server(apiVersion, fqdn)
-    return s.initHost(secret, fqdn)
+    if not s.verifySecret(secret):
+        log.warning("initHost() called with bad secret")
+        return 1
+
+    return s.initHost(fqdn, support=1)
     
     
 def isRegistered(apiVersion, pubKey=None, sig=None):
