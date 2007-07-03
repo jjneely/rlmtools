@@ -1,8 +1,8 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- client code
-# Copyright (C) 2004 - 2006 NC State University
-# Written by Jack Neely <jjneely@pams.ncsu.edu>
+# Copyright (C) 2004 - 2007 NC State University
+# Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
 #
@@ -25,16 +25,14 @@ import os
 import os.path
 import xmlrpclib
 import re
-import syslog
 import socket
 import stat
 import time
-import urllib2
-import httplib
-import sha
-import pickle
 import optparse
-import base64
+
+from message import Message
+from xmlrpc  import doRPC
+from errors  import *
 
 try:
     import ezPyCrypto
@@ -43,103 +41,20 @@ except ImportError:
     import ezPyCrypto
     
 # XMLRPC Interface
-URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
+URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
 privateKey = "/etc/sysconfig/RLKeys/rkhost.priv"
 publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
+uuid = "/etc/sysconfig/RLKeys/uuid"
 
 # Where blessings go
 blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
 
 # Message Queue Directory
 mqueue = "/var/spool/rlmqueue"
-
-class Message(object):
-
-    def __init__(self):
-        self.data = {}
-        self.sum = None
-
-    def _setCheckSum(self):
-        # dicts are unordered so we need to impose some order to checksum
-        keys = self.data.keys()
-        keys.sort()
-        s = ""
-        for key in keys:
-            s = "%s%s:%s\n" % (s, key, self.data[key])
-        self.sum = sha.new(s).hexdigest()
-
-    def save(self):
-        # Possibly raises IOError
-        if not self.data.has_key('timestamp'):
-            self.setTimeStamp()
-        if self.sum == None:
-            self._setCheckSum()
-
-        filename = os.path.join(mqueue, self.sum)
-        blob = pickle.dumps(self.data)
-        fd = open(filename, 'w')
-        fd.write(blob)
-        fd.close()
-
-    def send(self, server, text, sig):
-        ret = doRPC(server.message, text, sig, self.data)
-        return ret
-
-    def remove(self):
-        if self.sum != None:
-            filename = os.path.join(mqueue, self.sum)
-            try:
-                os.unlink(filename)
-            except (IOError, OSError):
-                pass
-
-    def load(self, filename):
-        # Possibly raises IOError
-        fd = open(filename)
-        blob = fd.read()
-        fd.close()
-        self.data = pickle.loads(blob)
-        self._setCheckSum()
-        if self.sum != os.path.basename(filename):
-            print "ERROR: Checksum does not equal filename."
-            print "Checksum: %s" % self.sum
-            print "Filename: %s" % filename
-
-    def setType(self, t):
-        self.sum = None
-        self.data['type'] = t
-
-    def setSuccess(self, bool):
-        self.sum = None
-        self.data['success'] = bool
-
-    def setTimeStamp(self):
-        self.sum = None
-        self.data['timestamp'] = time.time()
-
-    def setMessage(self, data):
-        self.sum = None
-        blob = base64.encodestring(data)
-        self.data['data'] = blob
-
-    def getTimeStamp(self):
-        if self.data.has_key('timestamp'):
-            return self.data['timestamp']
-        else:
-            return None
-
-
-def error(message, verbose=False):
-    "Log an error message to syslog."
-
-    if verbose:
-        print message
-        
-    priority = syslog.LOG_ERR or syslog.LOG_USER
-    syslog.syslog(priority, "Realm Linux Support: %s" % message)
 
 
 def isSupportOn():
@@ -155,37 +70,6 @@ def isSupportOn():
             return 1
 
     return 0
-
-
-def doRPC(method, *params):
-    "Return the xmlrpc opject we want."
-
-    for i in range(5):
-        try:
-            return apply(method, params)
-        except xmlrpclib.Error, e:
-            error("XMLRPC Error: " + str(e))
-        except socket.error, e:
-            error("Socket Error: %s" % str(e))
-        except socket.sslerror, e:
-            error("Socket SSL Error: %s" % str(e))
-        except AssertionError, e:
-            error("Assertion Error (this is weird): %s" % str(e))
-        except httplib.IncompleteRead, e:
-            error("HTTP library reported an Incomplete Read error: %s" % str(e))
-        except urllib2.HTTPError, e:
-            msg = "\nAn HTTP error occurred:\n"
-            msg = msg + "URL: %s\n" % e.filename
-            msg = msg + "Status Code: %s\n" % e.code
-            msg = msg + "Error Message: %s\n" % e.msg
-            error(msg)
-
-        if i < 5:
-            time.sleep(i*3)
-        
-    error("Giving up trying XMLRPC")
-    print "Error: Could not talk to server at %s" % URL
-    sys.exit(1)
 
 
 def getDepartment():
