@@ -36,8 +36,8 @@ import string
 import os.path
 
 ## API that is exposed
+import configDragon  # setup logging early
 import API
-
 import server
 import logging
 
@@ -96,9 +96,11 @@ def call_method(method, params, req):
     # Handle conversion to a versioned API:  If the method params do NOT
     # start with an int we make it start with 0.  This requires that the
     # first param for all functions must always be the api version.
-    if not isinstance(params[0], int):
+    if len(params) > 0 and not isinstance(params[0], int):
         params.insert(0, 0)
-                     
+    if len(params) == 0:
+        params = [0]
+
     # Now walk down the tree and check export lists
     func = API
     if "__API__" not in dir(API):

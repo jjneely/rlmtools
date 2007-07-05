@@ -26,21 +26,13 @@ import base64
 import pickle
 import server
 
-try:
-    import debug
-except ImportError:
-    sys.path.append("/afs/unity/web/l/linux/web-kickstart")
-else:
-    sys.path.append("/home/slack/projects/solaris2ks")
-
 from datetime import datetime, timedelta
 from resultSet import resultSet
-from webKickstart import config
+from configDragon import config
 
 log = logging.getLogger("xmlrpc")
 
 class WebServer(server.Server):
-
 
     def getStatusDetail(self, status_id):
         """Return historical information regarding this clients status."""

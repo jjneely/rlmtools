@@ -40,7 +40,7 @@ else:
 
 from datetime import datetime, timedelta
 from resultSet import resultSet
-from webKickstart import config
+from configDragon import config
 from webKickstart import webKickstart
 
 log = logging.getLogger("xmlrpc")
@@ -73,7 +73,7 @@ class APIServer(server.Server):
 
     def getPublicKey(self):
         """Return the server's public key"""
-        return server.getFile(config.publickey)
+        return config.publickey
 
     def verifySecret(self, secret):
         # Basically, cheap administrative or script authentication
@@ -480,9 +480,7 @@ class APIServer(server.Server):
         enc = client.encStringToAscii(filedata)
 		
         # Get the RK key to sign with
-        fd = open(config.privatekey)
-        server = ezPyCrypto.key(fd.read())
-        fd.close()
+        server = ezPyCrypto.key(config.privatekey)
         sig = server.signString(enc)
 
         ret = [enc, sig]

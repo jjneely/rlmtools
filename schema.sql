@@ -80,6 +80,15 @@ create table dstype (
     index(name)
 );
 
+create table configvalues (
+    c_id        INTEGER PRIMARY KEY auto_increment,
+    variable    VARCHAR(255),
+    value       TEXT,
+
+    index(variable)
+);
+
+
 -- The following are service types and RRD data source types to collect.
 -- The server will record status information of these types.  Adding rows
 -- to the tables will allow new status messages, etc to be recorded.
@@ -92,4 +101,7 @@ insert into service (name) values ('usagelog');
 
 -- For the RRDTool Queue Handler
 insert into dstype (name) values ('usage');
+
+-- Use python rlmtools/configDragon.py to manage the advanced configuration
+-- stored inside the database.
 

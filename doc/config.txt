@@ -18,14 +18,17 @@ PythonInterpPerDirectory On
 That will start the handler.py script via mod_python when and URL is used that
 looks like URL/*.py.  
 
-This code base imports the Web-Kickstart code and uses that and
-Web-Kickstart's configuration to find its database and pull client
-configuration from the Web-Kickstart config files.  Therefore, Web-Kickstart
-needs to know where its config file solaris2ks.conf lives.  This can either be
-in the current directory (the top level in this project) or in 
-/etc/solaris2ks.conf.  Things get confusing with what the current directory
-is where some code wants the configuration data.  Using /etc/solaris2ks.conf
-is recommended.
+The code looks in ./solaris2ks.conf or /etc/solaris2ks.conf to find the
+following 4 options in a [db] section: host, user, passwd, db.  The rest
+of the configuration RLMTools uses is stored inside the database.  Use
+the CLI in configDragon.py to insert configuration and check the configuration
+for completeness.
+
+The Web-Kickstart code is used to pull client configuration information
+from the client's Web-Kickstart config file.  Web-Kickstart needs its
+full configuration in /etc/solaris2ks.conf.  Yes, there is some duplication
+here but adding additional functionality to RLMTools should not require
+upgrades to Web-Kickstart.
 
 CherryPy Setup
 ==============

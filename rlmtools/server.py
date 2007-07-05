@@ -24,15 +24,7 @@ import sys
 import logging
 import traceback
 import mysql
-
-try:
-    import debug
-except ImportError:
-    sys.path.append("/afs/unity/web/l/linux/web-kickstart")
-else:
-    sys.path.append("/home/slack/projects/solaris2ks")
-
-from webKickstart import config
+import ConfigParser
 
 log = logging.getLogger("xmlrpc")
 
@@ -52,22 +44,24 @@ def logException():
         log.critical(line.strip())
 
 def getDBDict():
-    db = {}
-    db['db_host'] = config.get('db', 'host')
-    db['db_user'] = config.get('db', 'user')
-    db['db_pass'] = config.get('db', 'passwd')
-    db['db_name'] = config.get('db', 'db')
-    
-    return db
+    files = ['./solaris2ks.conf', '/etc/solaris2ks.conf']
 
-def getFile(filename):
-    """Helper function to return a file as a string"""
-    
-    fd = open(filename)
-    s = fd.read()
-    fd.close()
-    return s
-    
+    parser = ConfigParser.ConfigParser()
+    parser.read(files)
+
+    if parser.sections() == []:
+        raise StandardError("Error reading config file to locate database.")
+
+    try:
+        db = {}
+        db['db_host'] = parser.get('db', 'host')
+        db['db_user'] = parser.get('db', 'user')
+        db['db_pass'] = parser.get('db', 'passwd')
+        db['db_name'] = parser.get('db', 'db')
+        return db
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        raise StandardError("Database config file missing sections/options.")
+
 
 class Server(object):
 

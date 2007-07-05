@@ -37,6 +37,24 @@ insert into hostkeys (host_id, publickey)
 
 drop table oldrl2;
 
+create table configvalues (
+    c_id        INTEGER PRIMARY KEY auto_increment,
+    variable    VARCHAR(255),
+    value     TEXT,
+
+    index(variable)
+);
+
+-- Here you must insert the configuration that was previously lifted from
+   the web-kickstart configuration code into this table.  The configDragon.py
+   file has a CLI that can be used to insert configuration and check the
+   current configuration for completeness.
+
+-- The inital host, user, passwd, db options still must be in 
+   /etc/solaris2ks.conf in a [db] section so that we can initially contact
+   the database.  However, that's the only configuration data outside
+   the database we require.
+
 * 06/28/2007: Run the following SQL in your MySQL Database:
 
 create table dstype (

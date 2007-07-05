@@ -47,7 +47,7 @@ __API__ = ['hello',
           ]
 
 
-def hello():
+def hello(apiVersion):
     return "Hello World"
 
 

@@ -24,16 +24,8 @@ import sys
 import logging
 import server
 
-try:
-    import debug
-except ImportError:
-    sys.path.append("/afs/unity/web/l/linux/web-kickstart")
-else:
-    sys.path.append("/home/slack/projects/solaris2ks")
-
 from datetime import datetime, timedelta
 from resultSet import resultSet
-from webKickstart import config
 
 log = logging.getLogger("xmlrpc")
 
