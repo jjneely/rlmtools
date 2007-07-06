@@ -33,6 +33,7 @@ def doRPC(method, *params):
     "Return the xmlrpc opject we want."
 
     # Apply API versioning
+    params = list(params)
     params.insert(0, apiVersion)
 
     for i in range(5):
