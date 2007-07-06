@@ -23,15 +23,45 @@
 import sys
 import logging
 import server
+import ConfigParser
 
-from datetime import datetime, timedelta
-from resultSet import resultSet
-
+config_files = ['./solaris2ks.conf', '/etc/solaris2ks.conf']
 log = logging.getLogger("xmlrpc")
+init_logging = True
+
+def initLogging():
+    global init_logging
+    if not init_logging:
+        return
+
+    parser = ConfigParser.ConfigParser()
+    parser.read(config_files)
+
+    if parser.sections() == []:
+        raise StandardError("Error reading config file to locate database.")
+    try:
+        logfile = parser.get('main', 'logfile')
+        level = int(parser.get('main', 'log_level'))
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        raise StandardError("Database config file missing sections/options.")
+
+    logger = logging.getLogger("xmlrpc")
+    handler = logging.FileHandler(logfile)
+    # Time format: Jun 24 10:16:54
+    formatter = logging.Formatter(
+            '%(asctime)s LD %(levelname)s: %(message)s',
+            '%b %2d %H:%M:%S')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(level)
+
+    logger.info("Liguid Dragon: logging initialized.")
+
+    init_logging = False
 
 class ConfigDragon(server.Server):
 
-    textVars = ['logfile',
+    textVars = [
                 'privatekey',
                 'publickey',
                 'key_directory',
@@ -39,7 +69,7 @@ class ConfigDragon(server.Server):
                 'defaultkey',
                ]
 
-    intVars =  ['log_level',
+    intVars =  [
                ]
 
     init_logging = True
@@ -91,25 +121,6 @@ class ConfigDragon(server.Server):
 
         return True
 
-    def initLogging(self):
-        if not self.init_logging:
-            return
-
-        logger = logging.getLogger("xmlrpc")
-        
-        handler = logging.FileHandler(self.logfile)
-        # Time format: Jun 24 10:16:54
-        formatter = logging.Formatter(
-                '%(asctime)s LD %(levelname)s: %(message)s',
-                '%b %2d %H:%M:%S')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(self.log_level)
-
-        logger.info("Liguid Dragon: logging initialized.")
-
-        self.init_logging = False
-
 
 def checkConfig(config):
     l = []
@@ -134,12 +145,6 @@ def main():
 
     config = ConfigDragon()
     parser = optparse.OptionParser()
-    parser.add_option("--setlogfile", action="store", default=None,
-                      dest="setlogfile", 
-                      help="Set log output filename.")
-    parser.add_option("--setlog_level", action="store", default=None,
-                      dest="setlog_level", 
-                      help="Set logging verbosity. 0 == most verbose.")
     parser.add_option("--setprivatekey", action="store", default=None,
                       dest="setprivatekey", 
                       help="Filename for the private key.")
@@ -184,8 +189,10 @@ def main():
 if __name__ == "__main__":
     main()
 else:
+    if init_logging:
+        initLogging()
+
     config = ConfigDragon()
-    config.initLogging()
     if not config.verifyConfiguration():
         raise StandardError("RLMTools does not have a complete configuration in the database.")
 

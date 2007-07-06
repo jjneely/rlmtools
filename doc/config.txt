@@ -19,8 +19,10 @@ That will start the handler.py script via mod_python when and URL is used that
 looks like URL/*.py.  
 
 The code looks in ./solaris2ks.conf or /etc/solaris2ks.conf to find the
-following 4 options in a [db] section: host, user, passwd, db.  The rest
-of the configuration RLMTools uses is stored inside the database.  Use
+following 4 options in a [db] section: host, user, passwd, db.  Also, [main]
+must include 'logfile' and 'log_level'.
+
+The rest of the configuration RLMTools uses is stored inside the database.  Use
 the CLI in configDragon.py to insert configuration and check the configuration
 for completeness.
 

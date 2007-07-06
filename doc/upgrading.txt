@@ -52,8 +52,10 @@ create table configvalues (
 
 -- The inital host, user, passwd, db options still must be in 
    /etc/solaris2ks.conf in a [db] section so that we can initially contact
-   the database.  However, that's the only configuration data outside
-   the database we require.
+   the database.  Also, so that logging works properly a [main] section
+   is needed with the following: logfile, log_level
+
+-- All other configuration is part of the database.
 
 * 06/28/2007: Run the following SQL in your MySQL Database:
 
