@@ -26,13 +26,23 @@ import server
 import ConfigParser
 
 config_files = ['./solaris2ks.conf', '/etc/solaris2ks.conf']
+config = None
 log = logging.getLogger("xmlrpc")
 init_logging = True
 
+# Format:
+# config option -> (help string, isIntType)
+requiredConfig = {
+        'privatekey': ["Filename for the private key.", False],
+        'publickey': ["Filename for the public key.",   False],
+        'key_directory': ["Directory clients public keys appear.", False],
+        'secret': ["Set an authentication secret for the XMLRPC API.", False],
+        'defaultkey': ["Set default blowfish key for root password crypts.", False],
+        }
+
 def initLogging():
     global init_logging
-    if not init_logging:
-        return
+    if not init_logging: return
 
     parser = ConfigParser.ConfigParser()
     parser.read(config_files)
@@ -55,24 +65,16 @@ def initLogging():
     logger.addHandler(handler)
     logger.setLevel(level)
 
-    logger.info("Liguid Dragon: logging initialized.")
+    logger.info("Liquid Dragon: logging initialized.")
 
     init_logging = False
 
 class ConfigDragon(server.Server):
 
-    textVars = [
-                'privatekey',
-                'publickey',
-                'key_directory',
-                'secret',
-                'defaultkey',
-               ]
-
-    intVars =  [
-               ]
-
-    init_logging = True
+    # Same format as requiredConfig.  The help string probably wont be used.
+    # This defines any internal bits we want to store.
+    vars = {
+           }
 
     def removeValue(self, key, holdCommit=False):
         q = "delete from configvalues where variable = %s"
@@ -83,10 +85,10 @@ class ConfigDragon(server.Server):
     def setValue(self, key, value):
         q = "insert into configvalues (variable, value) values (%s, %s)"
 
-        if key in self.intVars:
-            value = str(value)
+        # Database stores values in a TEXT field
+        value = str(value)
 
-        if key in self.textVars or key in self.intVars:
+        if key in requiredConfig.keys() + self.vars.keys():
             self.removeValue(key, holdCommit=True)
             self.cursor.execute(q, (key, value))
             self.conn.commit()
@@ -96,10 +98,12 @@ class ConfigDragon(server.Server):
     def __getattr__(self, key):
         q = "select value from configvalues where variable = %s"
 
-        if key in self.intVars or key in self.textVars:
+        if key in requiredConfig.keys() + self.vars.keys():
             self.cursor.execute(q, (key,))
             if self.cursor.rowcount > 0:
-                if key in self.intVars:
+                if key in requiredConfig.keys() and requiredConfig[key][1]:
+                    return int(self.cursor.fetchone()[0])
+                elif key in self.vars.keys() and self.vars[key][1]:
                     return int(self.cursor.fetchone()[0])
                 else:
                     return self.cursor.fetchone()[0]
@@ -111,23 +115,14 @@ class ConfigDragon(server.Server):
     def verifyConfiguration(self):
         "Return True for valid configurations."
 
-        for key in self.textVars:
+        for key in requiredConfig.keys() + self.vars.keys():
             if getattr(self, key) == None:
                 return False
-
-        for key in self.intVars:
-            if getattr(self, key) == None:
-                return False
-
         return True
 
 
 def checkConfig(config):
-    l = []
-    l.extend(config.textVars)
-    l.extend(config.intVars)
-
-    for key in l:
+    for key in requiredConfig.keys():
         value = getattr(config, key)
         if key in ['privatekey', 'secret', 'defaultkey'] and value != None:
             print "%s: <Sensitive data not printed>" % key
@@ -145,21 +140,10 @@ def main():
 
     config = ConfigDragon()
     parser = optparse.OptionParser()
-    parser.add_option("--setprivatekey", action="store", default=None,
-                      dest="setprivatekey", 
-                      help="Filename for the private key.")
-    parser.add_option("--setpublickey", action="store", default=None,
-                      dest="setpublickey", 
-                      help="Filename for the public key.")
-    parser.add_option("--setkey_directory", action="store", default=None,
-                      dest="setkey_directory", 
-                      help="Directory clients public keys appear.")
-    parser.add_option("--setsecret", action="store", default=None,
-                      dest="setsecret", 
-                      help="Set an authentication secret for the XMLRPC API.")
-    parser.add_option("--setdefaultkey", action="store", default=None,
-                      dest="setdefaultkey", 
-                      help="Set default blowfish key for root password crypts.")
+    for key in requiredConfig.keys():
+        parser.add_option("--set"+key, action="store", default=None,
+                      dest=key, 
+                      help=requiredConfig[key][0])
 
     parser.add_option("--check", action="store_true", default=False,
                       dest="check", 
@@ -177,9 +161,8 @@ def main():
         checkConfig(config)
         sys.exit(0)
 
-    l = config.textVars + config.intVars
-    for key in l:
-        value = getattr(opts, "set"+key)
+    for key in requiredConfig.keys():
+        value = getattr(opts, key)
         if key in ['privatekey', 'publickey'] and value != None:
             value = open(value).read()
         if value != None:
@@ -189,10 +172,8 @@ def main():
 if __name__ == "__main__":
     main()
 else:
-    if init_logging:
-        initLogging()
-
-    config = ConfigDragon()
+    initLogging()
+    if config == None: config = ConfigDragon()
     if not config.verifyConfiguration():
         raise StandardError("RLMTools does not have a complete configuration in the database.")
 
