@@ -45,13 +45,15 @@ from webKickstart import webKickstart
 
 log = logging.getLogger("xmlrpc")
 
+class APIFault(StandardError): pass
+
 class APIServer(server.Server):
 
     # Use class variables so we don't have to connect each time
     conn = None
     cursor = None
 
-    def __init__(self, apiVersion, client):
+    def __init__(self, apiVersion, client, uuid=None):
         """Set up server and define who we are talking to...well at least
            what we are told we are talking to."""
            
@@ -59,7 +61,11 @@ class APIServer(server.Server):
 
         self.apiVersion = apiVersion
         self.client = client
+        self.uuid = uuid
         self.hostid = None
+
+        if self.apiVersion > 0 and self.uuid == None:
+            raise APIFault("Client must supply its UUID with this API version")
 
         log.info("API version %s started for client: %s" % (self.apiVersion,
                                                             self.client))
@@ -79,7 +85,7 @@ class APIServer(server.Server):
         # Basically, cheap administrative or script authentication
         return config.secret == secret
 
-    def verifyClient(self, publicKey, sig):
+    def verifyClient(self, uuid, sig):
         """Make sure that the public key and sig match this client."""
         
         trustedKey = self.isRegistered()
@@ -88,7 +94,7 @@ class APIServer(server.Server):
             return False
         
         k = ezPyCrypto.key(trustedKey)
-        if k.verifyString(publicKey, sig):
+        if k.verifyString(uuid, sig):
             # the signature is good using our, trusted public key for
             # this client.  I don't really about the publicKey the client
             # sent
@@ -118,21 +124,67 @@ class APIServer(server.Server):
         q1 = """select hostkeys.publickey from realmlinux, hostkeys
                 where realmlinux.host_id = hostkeys.host_id
                 and realmlinux.hostname = %s and realmlinux.recvdkey = 1"""
+        q4 = """select realmlinux.host_id, realmlinux.hostname, 
+                       hostkeys.publickey 
+                from realmlinux, hostkeys
+                where realmlinux.host_id = hostkeys.host_id
+                and realmlinux.recvdkey = 1 and realmlinux.uuid = %s"""
+        q5 = """select hostkeys.publickey from realmlinux, hostkeys
+                where realmlinux.host_id = hostkeys.host_id
+                and realmlinux.uuid = %s and realmlinux.recvdkey = 1"""
+        
+        log.debug("In isRegistered()")
+        log.debug("client: %s  uuid: %s" % (self.client, self.uuid))
+
+        if self.apiVersion < 1:
+            # Look up the host by its hostname
+            self.cursor.execute(q1, (self.client,))
+        else:
+            # Look up by the hosts uuid
+            self.cursor.execute(q5, (self.uuid,))
+        if self.cursor.rowcount > 0:
+            trustedKey = self.cursor.fetchone()[0]
+        else:
+            log.debug("uuid/client not found in database")
+            trustedKey = None
+
+        if pubKey == None or sig == None:
+            # This may be None.  In this case we still want to indecate failure
+            log.debug("No key/sig to check, returning public key from db")
+            return trustedKey
+
+        if self.apiVersion == 0:
+            return self._isRegistered_api_0(trustedKey, pubKey, sig)
+
+        if trustedKey == None:
+            return None
+
+        try:
+            tkey = ezPyCrypto.key(trustedKey)
+        except ezPyCrypto.CryptoKeyError:
+            log.warning("Public RSA key from database does not validate!")
+            return None
+
+        try:
+            if not tkey.verifyString(pubKey, sig):
+                return None
+        except Exception:
+            log.debug("Client sent us a bad signature.")
+            return None
+
+        self.cursor.execute(q4, (self.uuid,))
+        hostinfo = resultSet(self.cursor).dump()[0]
+        if hostinfo['hostname'] != self.client:
+            self.changeHostname(hostinfo['host_id'], self.client)
+
+        return trustedKey
+
+    def _isRegistered_api_0(self, trustedKey, pubKey, sig)
         q2 = """select realmlinux.host_id, realmlinux.hostname, 
                        hostkeys.publickey 
                 from realmlinux, hostkeys
                 where realmlinux.host_id = hostkeys.host_id
                 and realmlinux.recvdkey = 1 and hostkeys.publickey = %s"""
-        q3 = """update realmlinux set hostname = %s where host_id = %s"""
-        
-        trustedKey = None
-        # Look up the host by its hostname
-        self.cursor.execute(q1, (self.client,))
-        if self.cursor.rowcount > 0:
-            trustedKey = self.cursor.fetchone()[0]
-        if pubKey == None or sig == None:
-            # This may be None.  In this case we still want to indecate failure
-            return trustedKey
 
         # Okay, lets search to see if we know about this RSA key.
         # Verify the signature of the key text.  A valid sig requires
@@ -142,6 +194,7 @@ class APIServer(server.Server):
             key = ezPyCrypto.key(pubKey)
         except ezPyCrypto.CryptoKeyError:
             # Client sent us something else than a key
+            log.warning("Client sent a malformed public key")
             return None
 
         try:
@@ -166,16 +219,23 @@ class APIServer(server.Server):
         hostinfo = resultSet(self.cursor).dump()[0]
         log.warning("Client %s has the host keys for %s. Updating hostname." \
                     % (self.client, hostinfo['hostname']))
+        self.changeHostname(hostinfo['host_id'], self.client)
+
+        return hostinfo['publickey']
+
+    def changeHostname(self, hostID, newname):
+        q1 = """select host_id from realmlinux where hostname = %s"""
+        q2 = """update realmlinux set hostname = %s where host_id = %s"""
 
         # Change the hostname for this client if it exists
-        hid = self.getHostID()
-        if hid != None:
-            self.cursor.execute(q3, ("unknown - ID: %s" % hid, hid))
+        self.cursor.execute(q1, (newname,))
+        if self.cursor.rowcount > 0:
+            hid = self.cursor.fetchone()[0]
+            self.cursor.execute(q2, ("unknown - ID: %s" % hid, hid))
 
         # Now update the registration we found
-        self.cursor.execute(q3, (self.client, hostinfo['host_id']))
+        self.cursor.execute(q2, (newname, hostID))
         self.conn.commit()
-        return hostinfo['publickey']
     
     def register(self, publicKey, dept, version):
         """Workstation requests registration.  Check DB and register host as

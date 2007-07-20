@@ -114,7 +114,11 @@ def initHost(apiVersion, secret, fqdn):
 def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 
-    s = server.Server(apiVersion, getHostName())
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+
     ret = s.isRegistered(pubKey, sig)
 
     if ret == None:
