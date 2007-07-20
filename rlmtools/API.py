@@ -69,19 +69,19 @@ def getServerKey(apiVersion):
     return ret
     
 
-def register(apiVersion, publicKey, dept, version):
+def register(apiVersion, publicKey, dept, version, uuid=None):
     """Workstation requests registration.  Check DB and register host as
        appropiate.  A false return code means that registration failed."""
     
-    s = server.Server(apiVersion, getHostName())
+    s = server.Server(apiVersion, getHostName(), uuid)
     ret = s.register(publicKey, dept, version)
     return ret
 
 
-def bless(apiVersion, dept, version):
+def bless(apiVersion, dept, version, uuid=None):
     """Administratively bless a workstation."""
 
-    s = server.Server(apiVersion, getHostName())
+    s = server.Server(apiVersion, getHostName(), uuid)
     ret = s.bless(dept, version)
     return ret
 

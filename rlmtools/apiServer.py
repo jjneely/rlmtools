@@ -73,7 +73,10 @@ class APIServer(server.Server):
     def getHostID(self):
         """Return the database ID for this host."""
         if self.hostid == None:
-            self.hostid = server.Server.getHostID(self, self.client)
+            if self.apiVersion > 0:
+                self.hostid server.Server.getUuidID(self, self.uuid)
+            else:
+                self.hostid = server.Server.getHostID(self, self.client)
             
         return self.hostid
 
@@ -89,6 +92,7 @@ class APIServer(server.Server):
         """Make sure that the public key and sig match this client."""
         
         trustedKey = self.isRegistered()
+
         if trustedKey == None:
             # We are not registered bail!
             return False
@@ -179,7 +183,7 @@ class APIServer(server.Server):
 
         return trustedKey
 
-    def _isRegistered_api_0(self, trustedKey, pubKey, sig)
+    def _isRegistered_api_0(self, trustedKey, pubKey, sig):
         q2 = """select realmlinux.host_id, realmlinux.hostname, 
                        hostkeys.publickey 
                 from realmlinux, hostkeys
@@ -295,20 +299,22 @@ class APIServer(server.Server):
             return 99
 
         # check to see if client has been logged in DB
-        self.cursor.execute("""select * from realmlinux where 
-            hostname=%s""", (self.client,))
+        if self.apiVersion < 1:
+            self.cursor.execute("""select host_id from realmlinux where 
+                hostname=%s""", (self.client,))
+        else:
+            q = """select host_id from realmlinux where
+                      uuid = %s or
+                      isnull(uuid) and hostname = %s"""
+            self.cursor.execute(q, (self.uuid, self.client))
         
         if not self.cursor.rowcount > 0:
             # Then we put it there
-            date = datetime.today()
-            q = """insert into realmlinux 
-                   (hostname, installdate, recvdkey, support) 
-                   values (%s, %s, %s, %s)"""
-            t = (self.client, date, 0, 1)
-            self.cursor.execute(q, t)
+            self.initHost(self.client, 1)
         else:
-            q = """update realmlinux set support = 1 where hostname = %s"""
-            self.cursor.execute(q, (self.client,))
+            hid = self.cursor.fetchone()[0]
+            q = """update realmlinux set support = 1 where host_id = %s"""
+            self.cursor.execute(q, (hid,))
             
         # Update db 
         ret = self.__register(publicKey, dept, version)
@@ -350,12 +356,15 @@ class APIServer(server.Server):
 
             q1 = "delete from hostkeys where host_id = %s"
             q2 = """update realmlinux 
-                   set recvdkey=1, dept_id=%s, version=%s
+                   set recvdkey=1, dept_id=%s, version=%s, uuid=%s
                    where host_id=%s"""
             q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
             self.cursor.execute(q1, (id,))
-            self.cursor.execute(q2, (deptid, version, id))
+            if self.apiVersion > 0:
+                self.cursor.execute(q2, (deptid, version, id, self.uuid))
+            else:
+                self.cursor.execute(q2, (deptid, version, id, None))
             self.cursor.execute(q3, (id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (id,))
@@ -369,12 +378,12 @@ class APIServer(server.Server):
         return 0
     
     
-    def checkIn(self, publicKey, sig):
+    def checkIn(self, uuid, sig):
         """Workstation checking in.  Update status in DB."""
         
         date = datetime.today()
 
-        if not self.verifyClient(publicKey, sig):
+        if not self.verifyClient(uuid, sig):
             return 1
 
         id = self.getHostID()

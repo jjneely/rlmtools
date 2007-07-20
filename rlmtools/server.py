@@ -160,7 +160,17 @@ class Server(object):
                                hostname = %s""", (hostname,))
         if self.cursor.rowcount == 0:
             log.warning("Tried to pull host_id for %s who doesn't exist" \
-                        % self.client)
+                        % hostname)
+            return None
+
+        return self.cursor.fetchone()[0]
+
+    def getUuidID(self, uuid):
+        self.cursor.execute("""select host_id from realmlinux where
+                               uuid = %s""", (uuid,))
+        if self.cursor.rowcount == 0:
+            log.warning("Tried to pull host_id for %s who doesn't exist" \
+                        % uuid)
             return None
 
         return self.cursor.fetchone()[0]
