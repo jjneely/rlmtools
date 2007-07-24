@@ -67,6 +67,9 @@ class APIServer(server.Server):
         if self.apiVersion > 0 and self.uuid == None:
             raise APIFault("Client must supply its UUID with this API version")
 
+        if self.apiVersion == 0 and self.uuid != None:
+            raise APIFault("Client passed in a UUID for invalid API version")
+
         log.info("API version %s started for client: %s" % (self.apiVersion,
                                                             self.client))
 
@@ -74,7 +77,7 @@ class APIServer(server.Server):
         """Return the database ID for this host."""
         if self.hostid == None:
             if self.apiVersion > 0:
-                self.hostid server.Server.getUuidID(self, self.uuid)
+                self.hostid = server.Server.getUuidID(self, self.uuid)
             else:
                 self.hostid = server.Server.getHostID(self, self.client)
             
@@ -123,16 +126,17 @@ class APIServer(server.Server):
         """Returns a clients public key from the database if this client 
            is registered.  Otherwise None is returned.  If the signature
            on the pubKey parameter is valid attempt to find the host and
-           update its hostname."""
+           update its hostname.
+           
+           In API versions > 0 the pubKey parameter is the clients UUID.
+        """
 
         q1 = """select hostkeys.publickey from realmlinux, hostkeys
                 where realmlinux.host_id = hostkeys.host_id
                 and realmlinux.hostname = %s and realmlinux.recvdkey = 1"""
-        q4 = """select realmlinux.host_id, realmlinux.hostname, 
-                       hostkeys.publickey 
-                from realmlinux, hostkeys
-                where realmlinux.host_id = hostkeys.host_id
-                and realmlinux.recvdkey = 1 and realmlinux.uuid = %s"""
+        q4 = """select realmlinux.host_id, realmlinux.hostname
+                from realmlinux
+                where realmlinux.recvdkey = 1 and realmlinux.uuid = %s"""
         q5 = """select hostkeys.publickey from realmlinux, hostkeys
                 where realmlinux.host_id = hostkeys.host_id
                 and realmlinux.uuid = %s and realmlinux.recvdkey = 1"""
@@ -167,6 +171,7 @@ class APIServer(server.Server):
             tkey = ezPyCrypto.key(trustedKey)
         except ezPyCrypto.CryptoKeyError:
             log.warning("Public RSA key from database does not validate!")
+            log.warning("Failed key belongs to UUID: %s" % self.uuid)
             return None
 
         try:
@@ -182,6 +187,23 @@ class APIServer(server.Server):
             self.changeHostname(hostinfo['host_id'], self.client)
 
         return trustedKey
+
+    def findHostByKey(self, publicKey):
+        """Return a dict with keys 'host_id', 'uuid', 'hostname', 'publickey'
+           for the host that matches this key.  Possibly very slowly."""
+
+        q = """select realmlinux.host_id, realmlinux.uuid, realmlinux.hostname, 
+               hostkeys.publickey from realmlinux, hostkeys
+               where realmlinux.host_id = hostkeys.host_id
+               and realmlinux.recvdkey = 1 and hostkeys.publickey = %s"""
+
+        self.cursor.execute(q, (pubKey,))
+        if self.cursor.rowcount < 1:
+            self.cursor.execute(q, (ezPyCrypto.key(pubKey).exportKey(),))
+        if self.cursor.rowcount < 1:
+            return None
+
+        return resultSet(self.cursor).dump()[0]
 
     def _isRegistered_api_0(self, trustedKey, pubKey, sig):
         q2 = """select realmlinux.host_id, realmlinux.hostname, 
@@ -214,13 +236,9 @@ class APIServer(server.Server):
             # pubKey var is valid as we check it above.
             return trustedKey
 
-        self.cursor.execute(q2, (pubKey,))
-        if self.cursor.rowcount < 1:
-            self.cursor.execute(q2, (key.exportKey(),))
-        if self.cursor.rowcount < 1:
-            return None
+        hostinfo = self.findHostByKey(pubKey)
+        if hostinfo == None: return None
 
-        hostinfo = resultSet(self.cursor).dump()[0]
         log.warning("Client %s has the host keys for %s. Updating hostname." \
                     % (self.client, hostinfo['hostname']))
         self.changeHostname(hostinfo['host_id'], self.client)
@@ -555,6 +573,34 @@ class APIServer(server.Server):
         ret = [enc, sig]
 
         return ret
+
+    def attachUUID(self, publicKey, uuid, sig):
+        """Find a client via its public key, and attach the UUID to it."""
+       
+        q = """update realmlinux set uuid = %s where host_id = %s"""
+
+        if self.apiVersion < 1:
+            raise APIFault("Invaild API version for attachUUID()")
+
+        if self.getHostID() != None:
+            log.debug("client already has its UUID registered: %s" % self.uuid)
+            return 0
+
+        hostinfo = self.findHostByKey(publicKey)
+        if hostinfo == None:
+            log.warning("Cound not convert client to API 1.  Not registered?")
+            log.warning("Hostname: %s   UUID: %s" % (self.client, self.uuid))
+            return 10
+
+        key = ezPyCrypto.key(hostinfo['publickey'])
+        if not key.verifyString(uuid, sig):
+            log.debug("Could not verify signature in attachUUID()")
+            return 1
+
+        self.cursor.execute(q, (self.uuid, hostinfo['host_id']))
+        self.conn.commit()
+        log.info("Attached UUID %s to host %s" % (self.uuid, self.client))
+        return 0
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
