@@ -132,17 +132,21 @@ def isRegistered(apiVersion, pubKey=None, sig=None):
         return True
 
 
-def isSupported(apiVersion):
+def isSupported(apiVersion, uuid=None):
     "Returns True if the client meets requirments for support."
 
-    s = server.Server(apiVersion, getHostName())
+    s = server.Server(apiVersion, getHostName(), uuid)
     return s.isSupported()
 
 
 def checkIn(apiVersion, publicKey, sig):
     """Workstation checking in.  Update status in DB."""
     
-    s = server.Server(apiVersion, getHostName())
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+
     ret = s.checkIn(publicKey, sig)
     return ret
 
@@ -150,7 +154,11 @@ def checkIn(apiVersion, publicKey, sig):
 def getActivationKey(apiVersion, publicKey, sig):
     "Return the RHN activation key for this host."
 
-    s = server.Server(apiVersion, getHostName())
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+
     ret = s.getActivationKey(publicKey, sig)
     return ret
 
@@ -159,7 +167,11 @@ def getEncKeyFile(apiVersion, publicKey, sig):
     """Returns an ecrypted string containing what should go in /etc/update.conf
        on the workstation."""
        
-    s = server.Server(apiVersion, getHostName())
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+    
     ret = s.getEncKeyFile(publicKey, sig)
     return ret
 
