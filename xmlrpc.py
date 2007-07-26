@@ -60,7 +60,7 @@ def doRPC(method, *params):
             time.sleep(i*3)
         
     error("Giving up trying XMLRPC")
-    print "Error: Could not talk to server at %s" % URL
+    print "Realm Linux Management: Error: Could not talk to server at %s" % URL
     sys.exit(1)
 
 

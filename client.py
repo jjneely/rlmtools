@@ -29,16 +29,13 @@ import socket
 import stat
 import time
 import optparse
+import rpm
 
 from message import Message
 from xmlrpc  import doRPC
 from errors  import *
 
-try:
-    import ezPyCrypto
-except ImportError:
-    sys.path.append("/afs/bp/project/realmlinux/py-modules/")
-    import ezPyCrypto
+import ezPyCrypto
     
 # XMLRPC Interface
 #URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
@@ -86,19 +83,23 @@ def getDepartment():
 def getVersion():
     "Return the version string for a Realm Linux product."
 
-    if os.path.exists("/etc/redhat-release") and not os.path.islink("/etc/redhat-release"):
-        pipe = os.popen("/bin/rpm -q redhat-release --qf '%{version}'")
-        version = pipe.read().strip()
-        pipe.close()
-        return version
-    elif os.path.exists("/etc/fedora-release"):
-        pipe = os.popen("/bin/rpm -q fedora-release --qf '%{version}'")
-        version = pipe.read().strip()
-        pipe.close()
-        return "FC%s" % version
-    else:
-        return "Unknown"
+    packages = ['redhat-release', 'centos-release', 'fedora-release']
+    ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
+                                 rpm.RPMVSF_NOHDRCHK or
+                                 rpm._RPMVSF_NODIGESTS or
+                                 rpm.RPMVSF_NEEDPAYLOAD))
+
+    for pkg in packages:
+        mi = ts.dbMatch('name', pkg)
+        for h in mi:
+            if pkg.startswith('centos'):
+                return "CentOS%s" % h['version']
+            elif pkg.startswith('fedora'):
+                return "FC%s" % h['version']
+
+    return "Unknown"
     
+
 def saveKey(key):
     # make sure the key is written to disk
 

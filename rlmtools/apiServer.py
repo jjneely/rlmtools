@@ -31,6 +31,10 @@ import server
 import time
 import MySQLdb
 
+from datetime import datetime, timedelta
+from resultSet import resultSet
+from configDragon import config
+
 try:
     import debug
 except ImportError:
@@ -38,10 +42,7 @@ except ImportError:
 else:
     sys.path.append("/home/slack/projects/solaris2ks")
 
-from datetime import datetime, timedelta
-from resultSet import resultSet
-from configDragon import config
-from webKickstart import webKickstart
+import webKickstart
 
 log = logging.getLogger("xmlrpc")
 
@@ -508,7 +509,9 @@ class APIServer(server.Server):
            timestamp should be a POSIX time...so time.time()
            
            data should be a Base64 encoded blob."""
-        
+       
+        log.debug("Received a %s status message from %s" % (service, 
+                                                            self.client))
         sid = self.getServiceID(service)
         if sid == None:
             # We don't store data about services we don't know
@@ -636,11 +639,11 @@ class APIServer(server.Server):
         """Find and return the web-kickstart config object"""
         
         os.chdir(sys.path[-1])
-        wks = webKickstart("fakeurl", {})
-        scList = wks.findFile(self.client, config.jumpstarts)
+        wks = webKickstart.webKickstart("fakeurl", {})
+        scList = wks.findFile(self.client, webKickstart.config.jumpstarts)
         if len(scList) == 0:
             raise Exception("No config for %s in %s" % (self.client,
-                                                        config.jumpstarts))
+                                       webKickstart.config.jumpstarts))
         # Do we care about collisions?
         # If not, this is the same thing that Web-Kickstart does
         sc = scList[0]

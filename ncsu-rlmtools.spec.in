@@ -8,6 +8,9 @@ Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-root
 Requires: realm-hooks
 Requires: python-ezpycrypto
+Requires: rpm-python >= 4.2
+# For uuidgen we require e2fsprogs
+Requires: e2fsprogs 
 BuildArch: noarch
 
 %description
