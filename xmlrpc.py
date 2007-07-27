@@ -24,6 +24,7 @@ import socket
 import httplib
 import urllib2
 import xmlrpclib
+import os
 
 from errors import error
 
@@ -63,4 +64,16 @@ def doRPC(method, *params):
     print "Realm Linux Management: Error: Could not talk to server at %s" % URL
     sys.exit(1)
 
+def parseSystemID(file):
+    if not os.access(file, os.R_OK):
+        return None
+
+    fd = open(file)
+    blob = fd.read()
+    fd.close()
+
+    try:
+        return xmlrpclib.loads(blob)[0][0]
+    except Exception:
+        return {}
 

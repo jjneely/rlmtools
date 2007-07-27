@@ -83,19 +83,20 @@ def getDepartment():
 def getVersion():
     "Return the version string for a Realm Linux product."
 
-    packages = ['redhat-release', 'centos-release', 'fedora-release']
+    packages = [('redhat-release', ''),
+                ('centos-release', 'CentOS'),
+                ('fedora-release', 'FC'),
+               ]
     ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
                                  rpm.RPMVSF_NOHDRCHK or
                                  rpm._RPMVSF_NODIGESTS or
                                  rpm.RPMVSF_NEEDPAYLOAD))
 
-    for pkg in packages:
+    for pkg, prefix in packages:
         mi = ts.dbMatch('name', pkg)
         for h in mi:
-            if pkg.startswith('centos'):
-                return "CentOS%s" % h['version']
-            elif pkg.startswith('fedora'):
-                return "FC%s" % h['version']
+            # If the Match Iterator is empty we don't get here
+            return "%s%s" % (prefix, h['version'])
 
     return "Unknown"
     

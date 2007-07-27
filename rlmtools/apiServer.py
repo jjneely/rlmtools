@@ -260,7 +260,7 @@ class APIServer(server.Server):
         self.cursor.execute(q2, (newname, hostID))
         self.conn.commit()
     
-    def register(self, publicKey, dept, version):
+    def register(self, publicKey, dept, version, rhnid):
         """Workstation requests registration.  Check DB and register host as
            appropiate.  On success 0 is returned, otherwise a non-zero error
            code is returned."""
@@ -279,7 +279,7 @@ class APIServer(server.Server):
         if not self.cursor.rowcount > 0:
             # SQL query returned zero rows...this client isn't logged
             # to be registered with support (old return code 2)
-            return self.createNoSupport(publicKey, dept, version)
+            return self.createNoSupport(publicKey, dept, version, rhnid)
 
         # Check the Time window for 24 hours
         installDate = self.cursor.fetchone()[0]
@@ -288,12 +288,12 @@ class APIServer(server.Server):
             log.info("Client %s attempted to register outside security " \
                      "window" % self.client)
             # Old return code 3
-            return self.createNoSupport(publicKey, dept, version)
+            return self.createNoSupport(publicKey, dept, version, rhnid)
 
-        return self.__register(publicKey, dept, version)
+        return self.__register(publicKey, dept, version, rhnid)
         
 
-    def bless(self, dept, version):
+    def bless(self, dept, version, rhnid):
         # Take a System Administrator's Blessing as registration
         # This works by finding the public key on disk.  Supposedly
         # only a sysadmin can put it there, copied from the client to 
@@ -336,7 +336,7 @@ class APIServer(server.Server):
             self.cursor.execute(q, (hid,))
             
         # Update db 
-        ret = self.__register(publicKey, dept, version)
+        ret = self.__register(publicKey, dept, version, rhnid)
         try:
             os.unlink(file)
         except OSError, e:
@@ -350,10 +350,18 @@ class APIServer(server.Server):
         log.info("Registering no-support for %s" % self.client)
 
         self.initHost(self.client, 0)
-        return self.__register(publicKey, dept, version)
+        return self.__register(publicKey, dept, version, rhnid)
 
-    def __register(self, publicKey, dept, version):
+    def __register(self, publicKey, dept, version, rhnid):
         log.info("Registering %s" % self.client)
+
+        if self.apiVersion > 0 and not isinstance(rhnid, int):
+            raise APIFault("API version requires an integer for the RHN ID")
+
+        # We can't marshal None so -1 == no RHN ID
+        if rhnid == -1:
+            rhnid = None
+
         # Require that a row for the hostname exists in the DB
         date = datetime.today()
 
@@ -375,15 +383,15 @@ class APIServer(server.Server):
 
             q1 = "delete from hostkeys where host_id = %s"
             q2 = """update realmlinux 
-                   set recvdkey=1, dept_id=%s, version=%s, uuid=%s
+                   set recvdkey=1, dept_id=%s, version=%s, uuid=%s, rhnid=%s
                    where host_id=%s"""
             q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
             self.cursor.execute(q1, (id,))
             if self.apiVersion > 0:
-                self.cursor.execute(q2, (deptid, version, id, self.uuid))
+                self.cursor.execute(q2, (deptid, version, id, self.uuid, rhnid))
             else:
-                self.cursor.execute(q2, (deptid, version, id, None))
+                self.cursor.execute(q2, (deptid, version, id, None, None))
             self.cursor.execute(q3, (id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (id,))
