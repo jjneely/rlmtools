@@ -45,7 +45,7 @@ __API__ = ['hello',
            'isRegistered',
            'isSupported',
 
-           'attachUUID',
+           'convertApi_1',
           ]
 
 
@@ -175,16 +175,17 @@ def getEncKeyFile(apiVersion, publicKey, sig):
     ret = s.getEncKeyFile(publicKey, sig)
     return ret
 
-def attachUUID(apiVersion, uuid, publicKey, sig):
+def convertApi_1(apiVersion, uuid, rhnid, publicKey, sig):
     """Converts an API version 0 client to API version 1 and links the
        new UUID with this public key.
 
        apiVersion - Must be > 0
        uuid - The UUID of the client
+       rhnid - The RHN ID of the client.  -1 indicates no ID
        publicKey - The public key of the client
        sig - The signature of the uuid text
     """
 
     s = server.Server(apiVersion, getHostName(), uuid)
-    return s.attachUUID(publicKey, uuid, sig)
+    return s.convertApi_1(publicKey, uuid, rhnid, sig)
 

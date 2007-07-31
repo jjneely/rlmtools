@@ -401,6 +401,7 @@ class APIServer(server.Server):
         except MySQLdb.Warning, e:
             # What's this about?
             log.critical("MySQL Waring: %s\n" % str(e))
+            return 99
 
         return 0
     
@@ -585,17 +586,27 @@ class APIServer(server.Server):
 
         return ret
 
-    def attachUUID(self, publicKey, uuid, sig):
+    def convertApi_1(self, publicKey, uuid, rhnid, sig):
         """Find a client via its public key, and attach the UUID to it."""
        
-        q = """update realmlinux set uuid = %s where host_id = %s"""
+        q = """update realmlinux set uuid = %s and rhnid = %s
+               where host_id = %s"""
 
         if self.apiVersion < 1:
-            raise APIFault("Invaild API version for attachUUID()")
+            raise APIFault("Invaild API version %s for convertApi_1()" % \
+                           self.apiVersion)
 
         if self.getHostID() != None:
             log.debug("client already has its UUID registered: %s" % self.uuid)
             return 0
+
+        # -1 equates to "I don't have an RHN ID"
+        try:
+            rhnid = int(rhnid)
+            if rhnid == -1: 
+                rhnid = None
+        except ValueError:
+            rhnid = None
 
         hostinfo = self.findHostByKey(publicKey)
         if hostinfo == None:
@@ -608,7 +619,7 @@ class APIServer(server.Server):
             log.debug("Could not verify signature in attachUUID()")
             return 1
 
-        self.cursor.execute(q, (self.uuid, hostinfo['host_id']))
+        self.cursor.execute(q, (self.uuid, rhnid, hostinfo['host_id']))
         self.conn.commit()
         log.info("Attached UUID %s to host %s" % (self.uuid, self.client))
         return 0
