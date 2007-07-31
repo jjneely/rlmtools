@@ -56,8 +56,8 @@ class Message(object):
         fd.write(blob)
         fd.close()
 
-    def send(self, server, text, sig):
-        ret = doRPC(server.message, text, sig, self.data)
+    def send(self, server, uuid, sig):
+        ret = doRPC(server.message, uuid, sig, self.data)
         return ret
 
     def remove(self):

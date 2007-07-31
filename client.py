@@ -31,28 +31,12 @@ import time
 import optparse
 import rpm
 
-from message import Message
-from xmlrpc  import doRPC
-from errors  import *
+from message   import Message
+from xmlrpc    import doRPC, parseSystemID
+from errors    import *
+from constants import *
 
 import ezPyCrypto
-    
-# XMLRPC Interface
-#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
-URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
-
-# Locally stored keys
-publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
-privateKey = "/etc/sysconfig/RLKeys/rkhost.priv"
-publicRLKey = "/etc/sysconfig/RLKeys/realmlinux.pub"
-uuid = "/etc/sysconfig/RLKeys/uuid"
-
-# Where blessings go
-blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
-
-# Message Queue Directory
-mqueue = "/var/spool/rlmqueue"
-
 
 def isSupportOn():
     file = "/etc/sysconfig/support"
@@ -67,6 +51,49 @@ def isSupportOn():
             return 1
 
     return 0
+
+
+def getUUID():
+    """Return my unique ID for this machine.  Returns None if we are not
+       root and a UUID has not been previously created."""
+
+    cmd = "/usr/bin/uuidgen -t"
+    if not os.path.exists(uuidFile):
+        fd = popen(cmd)
+        uuid = fd.read().strip()
+        fd.close()
+        try:
+            fd = open(uuidFile, 'w')
+            fd.write(uuid + '\n')
+            fd.close()
+            os.chmod(uuidFile, 0644)
+        except IOError:
+            # We are not root!
+            return None
+    else:
+        fd = open(uuidFile)
+        uuid = fd.read().strip()
+        fd.close()
+
+    return uuid
+
+
+def getRHNSystemID():
+    "Return the RHN System ID or -1 if not present."
+
+    file = "/etc/sysconfig/rhn/systemid"
+    if not os.access(file, os.R_OK):
+        return -1
+
+    rhn = parseSystemID(file)
+    if rhn == None or rhn == {}:
+        return -1
+
+    id = rhn['system_id']
+    if isinstance(id, str) and id.startswith('ID-'):
+        return int(id[3:])
+    else:
+        return int(id)
 
 
 def getDepartment():
@@ -119,15 +146,42 @@ def saveKey(key):
         os.chmod(privateKey, 0600)
 
 
+def getLocalKey():
+    "Return an ezPyCrypto keypair for this local host."
+    
+    if not os.access(privateKey, os.R_OK):
+        error("Creating public/private keypair.")
+        key = ezPyCrypto.key(1024)
+        saveKey(key)
+    else: 
+        # Check bits
+        mode = os.stat(publicKey).st_mode
+        if not stat.S_IMODE(mode) == 0644:
+            os.chmod(publicKey, 0644)
+        mode = os.stat(privateKey).st_mode
+        if not stat.S_IMODE(mode) == 0600:
+            os.chmod(publicKey, 0600)
+
+        fd = open(privateKey)
+        privKeyText = fd.read()
+        fd.close()
+
+        key = ezPyCrypto.key()
+        key.importKey(privKeyText)
+
+    return key
+
+
 def doRegister(server):
     # Need a new public/private key pair, dept, and version
     # Generate new key pair
     keypair = getLocalKey()
     pubKey = keypair.exportKey()
+    rhnid = getRHNSystemID()
+    uuid = getUUID()
 
-    saveKey(keypair)
-    
-    ret = doRPC(server.register, pubKey, getDepartment(), getVersion())
+    ret = doRPC(server.register, pubKey, getDepartment(), getVersion(),
+                uuid, rhnid)
     
     if ret == 0:
         return ret
@@ -139,6 +193,8 @@ def doRegister(server):
         error("Registration failed: Client did not register within 24 hours")
     elif ret == 4:
         error("Registration failed: Client sent a malformed public key")
+    elif ret == 99:
+        error("Registration failed: Server blew up -- Bad day.")
     else:
         error("Registration failed with return code %s" % ret)
         
@@ -149,10 +205,10 @@ def getUpdateConf(server):
     "Get the update.conf file"
     
     keypair = getLocalKey()
-    pubKey = keypair.exportKey()
-    sig = keypair.signString(pubKey)
+    uuid = getUUID()
+    sig = keypair.signString(uuid)
    
-    update = doRPC(server.getEncKeyFile, pubKey, sig)
+    update = doRPC(server.getEncKeyFile, uuid, sig)
         
     if update == []:
         error("Error receiving update.conf file")
@@ -169,28 +225,6 @@ def getUpdateConf(server):
     fd.write(dec)
     fd.close()
     os.chmod("/etc/update.conf", 0600)
-
-
-def getLocalKey():
-    "Return an ezPyCrypto keypair for this local host."
-    
-    if not os.access(privateKey, os.R_OK):
-        error("Creating public/private keypair.")
-        key = ezPyCrypto.key(1024)
-    else: 
-        # Check bits
-        mode = os.stat(publicKey).st_mode
-        if not stat.S_IMODE(mode) == 0644:
-            os.chmod(publicKey, 0644)
-
-        fd = open(privateKey)
-        privKeyText = fd.read()
-        fd.close()
-
-        key = ezPyCrypto.key()
-        key.importKey(privKeyText)
-
-    return key
 
 
 def getRealmLinuxKey(server):
@@ -217,27 +251,44 @@ def getRealmLinuxKey(server):
 def isRegistered(server):
     """Return True if this machine is registered."""
 
+    apiVersion = 1
+
     if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
         os.mkdir("/etc/sysconfig/RLKeys", 0755)
 
     if not os.access(privateKey, os.R_OK):
         return False
    
+    if not os.path.exists(uuidFile):
+        apiVersion = 0
+
     key = getLocalKey()
     pubKey = key.exportKey()
-    sig = key.signString(pubKey)
+    uuid = getUUID()
+    sig = key.signString(uuid)
 
-    return doRPC(server.isRegistered, pubKey, sig)
+    if apiVersion < 1:
+        ret = doRPC(server.convertApi_1, uuid, getRHNSystemID(), pubKey, sig)
+        if ret == 0:
+            apiVersion = 1
+        elif ret == 10:
+            # not registered
+            return False
+        elif ret == 1:
+            error("Server could not verify RSA signature.")
+            sys.exit()
+
+    return doRPC(server.isRegistered, uuid, sig)
 
 
 def doCheckIn(server):
     "Check in with the XMLRPC server."
 
     key = getLocalKey()
-    pubKeyText = key.exportKey()
-    sig = key.signString(pubKeyText)
+    uuid = getUUID()
+    sig = key.signString(uuid)
 
-    ret = doRPC(server.checkIn, pubKeyText, sig)
+    ret = doRPC(server.checkIn, uuid, sig)
         
     if ret == 0:
         pass
@@ -252,8 +303,16 @@ def doCheckIn(server):
 def doBlessing(server):
     """Administratively bless a client."""
 
+    rhnid = getRHNSystemID()
+    uuid = getUUID()
     fqdn = socket.getfqdn()
-    
+
+    if uuid == None:
+        print "This client has not created its Universally Unique Identifier"
+        print "(UUID). Please wait until the UUID is created before blessing"
+        print "this machine.  It should be created within 4 hours."
+        sys.exit(13)
+
     print "Hostname: %s" % fqdn
     print "The above hostname must match the A record for your IP address."
     print
@@ -285,7 +344,7 @@ def doBlessing(server):
         sys.exit(10)
 
     print "Sending XMLRPC request..."
-    ret = doRPC(server.bless, getDepartment(), getVersion())
+    ret = doRPC(server.bless, getDepartment(), getVersion(), uuid, rhnid)
 
     if ret != 0:
         error("Blessing failed with return code %s" % ret, True)
@@ -301,8 +360,8 @@ def runQueue(server):
                                           # for python 2.2)
 
     key = getLocalKey()
-    pubKeyText = key.exportKey()
-    sig = key.signString(pubKeyText)
+    uuid = getUUID()
+    sig = key.signString(uuid)
 
     queue = []
 
@@ -326,7 +385,7 @@ def runQueue(server):
             queue.append(m)
 
     for m in queue:
-        code = m.send(server, pubKeyText, sig)
+        code = m.send(server, uuid, sig)
         if code == 0:
             m.remove()
         else:
@@ -334,54 +393,6 @@ def runQueue(server):
             error("Failed to send message, return code %s" % code)
 
 
-def doReport():
-    usage = """Realm Linux Management report tool.  Licensed under the 
-GNU General Public License.
-ncsureport --service < --ok | --fail > --message <file>"""
-    parser = optparse.OptionParser(usage)
-    parser.add_option("-s", "--service", action="store", default=None,
-                     dest="service", help="Message/service type to send.")
-    parser.add_option("-o", "--ok", action="store_true", default=None,
-                     dest="ok", help="Service is a success.")
-    parser.add_option("-f", "--fail", action="store_true", default=None,
-                     dest="fail", help="Service is a failure.")
-    parser.add_option("-m", "--message", action="store", default=False,
-                     dest="message", help="Filename or '-' of message to send.")
-
-    opts, args = parser.parse_args(sys.argv[1:])
-    if opts.ok == None and opts.fail == None:
-        parser.print_help()
-        return
-
-    if opts.service == None:
-        parser.print_help()
-        return
-
-    success = opts.ok == True
-    if opts.message == "-":
-        fd = sys.stdin
-        blob = fd.read()
-    elif opts.message == False:
-        blob = ""
-    else:
-        try:
-            fd = open(opts.message)
-            blob = fd.read()
-        except IOError, e:
-            print "Count not open file: %s" % opts.message
-            return
-
-    m = Message()
-    m.setType(opts.service)
-    m.setSuccess(success)
-    m.setMessage(blob)
-    try:
-        m.save()
-    except (OSError, IOError), e:
-        print "There was an error queuing your message: %s" % str(e)
-        print "Message will not be sent."
-
-    
 def main():
     """This either runs via a cron job to register and checkin
        with the trusted Realm Linux security stuffs or it can be
@@ -395,10 +406,6 @@ def main():
         doBlessing(server)
         return
 
-    if os.path.basename(sys.argv[0]) == "ncsureport":
-        doReport()
-        return
-    
     if os.getuid() != 0:
         print "You are not root.  Insert error message here."
         sys.exit(1)

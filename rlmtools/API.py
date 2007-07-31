@@ -90,7 +90,11 @@ def bless(apiVersion, dept, version, uuid=None, rhnid=None):
 
 def message(apiVersion, publicKey, sig, dict):
     """Log a message from a client."""
-    s = server.Server(apiVersion, getHostName())
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid=publicKey)
+
     if not s.verifyClient(publicKey, sig):
         return 1
 
@@ -135,7 +139,11 @@ def isRegistered(apiVersion, pubKey=None, sig=None):
 def isSupported(apiVersion, uuid=None):
     "Returns True if the client meets requirments for support."
 
-    s = server.Server(apiVersion, getHostName(), uuid)
+    if apiVersion == 0:
+        s = server.Server(apiVersion, getHostName())
+    else:
+        s = server.Server(apiVersion, getHostName(), uuid)
+
     return s.isSupported()
 
 

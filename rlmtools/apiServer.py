@@ -616,7 +616,7 @@ class APIServer(server.Server):
 
         key = ezPyCrypto.key(hostinfo['publickey'])
         if not key.verifyString(uuid, sig):
-            log.debug("Could not verify signature in attachUUID()")
+            log.debug("Could not verify signature in convertApi_1()")
             return 1
 
         self.cursor.execute(q, (self.uuid, rhnid, hostinfo['host_id']))
