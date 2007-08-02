@@ -36,6 +36,8 @@ __API__ = ['hello',
            'checkIn',
            'bless',
            'message',
+           'updateRHNSystemID',
+
            'initHost',
 
            'getServerKey',
@@ -196,4 +198,13 @@ def convertApi_1(apiVersion, uuid, rhnid, publicKey, sig):
 
     s = server.Server(apiVersion, getHostName(), uuid)
     return s.convertApi_1(publicKey, uuid, rhnid, sig)
+
+def updateRHNSystemID(apiVersion, uuid, sig, rhnid):
+    """Update the clients RHN ID."""
+
+    s = server.Server(apiVersion, getHostName(), uuid)
+    if not s.verifyClient(uuid, sig):
+        return 1
+
+    return s.updateRHNSystemID(rhnid)
 

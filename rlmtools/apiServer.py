@@ -629,6 +629,21 @@ class APIServer(server.Server):
                  % (self.uuid, self.client))
         return 0
 
+    def updateRHNSystemID(self, rhnid):
+        "Client must be already verified.  Update the RHN ID."
+
+        q = """update realmlinux set rhnid = %s where uuid = %s"""
+
+        if rhnid == -1:
+            # Can't marshal None
+            rhnid = None
+
+        self.cursor.execute(q, (rhnid, self.uuid))
+        self.conn.commit()
+        log.info("Updated RHN System ID for host %s" % self.client)
+
+        return 0
+
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
