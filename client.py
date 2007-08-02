@@ -32,11 +32,12 @@ import optparse
 import rpm
 
 from message   import Message
-from xmlrpc    import doRPC, parseSystemID
+from xmlrpc    import doRPC
 from errors    import *
 from constants import *
 
 import ezPyCrypto
+import xmlrpc
 
 def isSupportOn():
     file = "/etc/sysconfig/support"
@@ -59,7 +60,7 @@ def getUUID():
 
     cmd = "/usr/bin/uuidgen -t"
     if not os.path.exists(uuidFile):
-        fd = popen(cmd)
+        fd = os.popen(cmd)
         uuid = fd.read().strip()
         fd.close()
         try:
@@ -85,7 +86,7 @@ def getRHNSystemID():
     if not os.access(file, os.R_OK):
         return -1
 
-    rhn = parseSystemID(file)
+    rhn = xmlrpc.parseSystemID(file)
     if rhn == None or rhn == {}:
         return -1
 
@@ -251,34 +252,32 @@ def getRealmLinuxKey(server):
 def isRegistered(server):
     """Return True if this machine is registered."""
 
-    apiVersion = 1
-
     if not os.access("/etc/sysconfig/RLKeys", os.X_OK):
         os.mkdir("/etc/sysconfig/RLKeys", 0755)
 
     if not os.access(privateKey, os.R_OK):
         return False
    
-    if not os.path.exists(uuidFile):
-        apiVersion = 0
-
     key = getLocalKey()
-    pubKey = key.exportKey()
     uuid = getUUID()
     sig = key.signString(uuid)
 
-    if apiVersion < 1:
-        ret = doRPC(server.convertApi_1, uuid, getRHNSystemID(), pubKey, sig)
-        if ret == 0:
-            apiVersion = 1
-        elif ret == 10:
-            # not registered
-            return False
-        elif ret == 1:
-            error("Server could not verify RSA signature.")
-            sys.exit()
+    uuidRegistered = doRPC(server.isRegistered, uuid, sig)
+    if not uuidRegistered:
+        pubKey = key.exportKey()
+        keysig = key.signString(pubKey)
+        api = xmlrpc.apiVersion
+        xmlrpc.apiVersion = 0
+        keyRegistered = doRPC(server.isRegistered, pubKey, keysig)
+        xmlrpc.apiVersion = api
 
-    return doRPC(server.isRegistered, uuid, sig)
+        if keyRegistered:
+            ret = doRPC(server.convertApi_1, uuid, getRHNSystemID(), 
+                                             pubKey, sig)
+            if ret == 0:
+                uuidRegistered = doRPC(server.isRegistered, uuid, sig)
+
+    return uuidRegistered
 
 
 def doCheckIn(server):

@@ -2,7 +2,7 @@
 #
 # RealmLinux Manager -- client code
 # Copyright (C) 2004 - 2007 NC State University
-# Written by Jack Neely <jjneely@pams.ncsu.edu>
+# Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
 #
@@ -26,7 +26,8 @@ import pickle
 import base64
 import os.path
 
-from xmlrpc import doRPC
+from xmlrpc    import doRPC
+from constants import *
 
 class Message(object):
 
