@@ -55,8 +55,6 @@ class MiscServer(server.Server):
         q2 = """delete from status where received < %s"""
         q3 = """select host_id from realmlinux where 
                 recvdkey = 0 and installdate < %s"""
-        q4 = """select service_id from service where
-                  name != 'login' and name != 'logout'"""
 
         date = datetime.today() - timedelta(days)
 

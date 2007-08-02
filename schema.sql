@@ -88,6 +88,24 @@ create table configvalues (
     index(variable)
 );
 
+create table htype (
+    htype_id    INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(256) not null unique,
+
+    index(name)
+);
+
+create table history (
+    history_id  INTEGER PRIMARY KEY auto_increment,
+    htype_id    INTEGER not null,
+    host_id     INTEGER,
+    `timestamp` DATETIME not null,
+    data        TEXT,
+
+    index(`timestamp`),
+    foreign key (htype_id) references htype(htype_id)
+);
+
 
 -- The following are service types and RRD data source types to collect.
 -- The server will record status information of these types.  Adding rows
@@ -101,6 +119,11 @@ insert into service (name) values ('usagelog');
 
 -- For the RRDTool Queue Handler
 insert into dstype (name) values ('usage');
+
+-- For the stored history
+insert into htype (name) values ('install_support');
+insert into htype (name) values ('install_nosupport');
+insert into htype (name) values ('blessing');
 
 -- Use python rlmtools/configDragon.py to manage the advanced configuration
 -- stored inside the database.

@@ -38,6 +38,7 @@ requiredConfig = {
         'key_directory': ["Directory clients public keys appear.", False],
         'secret': ["Set an authentication secret for the XMLRPC API.", False],
         'defaultkey': ["Set default blowfish key for root password crypts.", False],
+        'rrd_dir': ["Directory round robin databases will live.", False],
         }
 
 def initLogging():

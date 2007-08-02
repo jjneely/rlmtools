@@ -26,9 +26,10 @@ import base64
 import pickle
 import server
 
-from datetime import datetime, timedelta
-from resultSet import resultSet
+from datetime     import datetime, timedelta
+from resultSet    import resultSet
 from configDragon import config
+from statsServer  import StatsServer
 
 log = logging.getLogger("xmlrpc")
 
@@ -200,48 +201,14 @@ class WebServer(server.Server):
         """Returns a tuple with the number of supported, non-supported, 
            and clients that have not registered."""
 
-        q1 = "select count(*) from realmlinux where support = 1 and recvdkey=1"
-        q2 = "select count(*) from realmlinux where support = 0 and recvdkey=1"
-        q3 = "select count(*) from realmlinux where recvdkey = 0"
-        q4 = "select count(*) from dept"
-        # q5 select the number of hosts with problems
-        q5 = """select count(*) from status, 
-                   ( select host_id, service_id as sid, 
-                        max(`timestamp`) as maxdate 
-                     from status group by host_id, service_id ) as foo
-                where status.host_id = foo.host_id 
-                   and status.service_id = foo.sid
-                   and status.timestamp = foo.maxdate 
-                   and status.success=0"""
-        # The number of hosts not updating
-        q6 = """select count(*) from realmlinux where recvdkey = 1"""
-        q7 = """select count(distinct status.host_id) from status, service 
-                where service.service_id = status.service_id 
-                    and service.name = 'updates' 
-                    and status.success = 1 
-                    and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7"""
+        stats = StatsServer()
 
         ret = {}
-        self.cursor.execute(q1)
-        ret['supported'] = self.cursor.fetchone()[0]
-        
-        self.cursor.execute(q2)
-        ret['unsupported'] = self.cursor.fetchone()[0]
-
-        self.cursor.execute(q3)
-        ret['unregistered'] = self.cursor.fetchone()[0]
-
-        self.cursor.execute(q4)
-        ret['departments'] = self.cursor.fetchone()[0]
-
-        self.cursor.execute(q5)
-        ret['problems'] = self.cursor.fetchone()[0]
-
-        self.cursor.execute(q6)
-        total = self.cursor.fetchone()[0]
-        self.cursor.execute(q7)
-        goodUpdates = self.cursor.fetchone()[0]
-        ret['noupdates'] = total - goodUpdates
+        ret['supported'] = stats.getSupported()
+        ret['unsupported'] = stats.getUnsupported()
+        ret['webkickstarting'] = stats.getWebKickstarting()
+        ret['problems'] = stats.getProblems()
+        ret['noupdates'] = stats.getNotUpdating()
 
         return ret
 

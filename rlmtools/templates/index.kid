@@ -35,7 +35,7 @@
     <tr class="neutral">
       <th class="right">Web-Kickstarting:</th>
       <td><a href="notregistered" 
-             py:content="totals['unregistered']">-1</a></td>
+             py:content="totals['webkickstarting']">-1</a></td>
     </tr>
     <tr class="neutral">
       <th class="right">Clients Reporting Problems:</th>
