@@ -153,7 +153,7 @@ def checkIn(apiVersion, publicKey, sig):
     if apiVersion == 0:
         s = server.Server(apiVersion, getHostName())
     else:
-        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+        s = server.Server(apiVersion, getHostName(), uuid=publicKey)
 
     ret = s.checkIn(publicKey, sig)
     return ret
@@ -165,7 +165,7 @@ def getActivationKey(apiVersion, publicKey, sig):
     if apiVersion == 0:
         s = server.Server(apiVersion, getHostName())
     else:
-        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+        s = server.Server(apiVersion, getHostName(), uuid=publicKey)
 
     ret = s.getActivationKey(publicKey, sig)
     return ret
@@ -178,7 +178,7 @@ def getEncKeyFile(apiVersion, publicKey, sig):
     if apiVersion == 0:
         s = server.Server(apiVersion, getHostName())
     else:
-        s = server.Server(apiVersion, getHostName(), uuid=pubKey)
+        s = server.Server(apiVersion, getHostName(), uuid=publicKey)
     
     ret = s.getEncKeyFile(publicKey, sig)
     return ret

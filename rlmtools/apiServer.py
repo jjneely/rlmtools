@@ -74,13 +74,17 @@ class APIServer(server.Server):
         log.info("API version %s started for client: %s" % (self.apiVersion,
                                                             self.client))
 
-    def getHostID(self):
-        """Return the database ID for this host."""
+    def getHostID(self, byFQDN=False):
+        """Return the database ID for this host.  byFQDN can be set
+           to True to force a lookup via the hostname rather than UUID.
+           Which is useful during registration when we haven't received
+           the UUID yet.
+           """
         if self.hostid == None:
-            if self.apiVersion > 0:
-                self.hostid = server.Server.getUuidID(self, self.uuid)
-            else:
+            if byFQDN or self.apiVersion == 0:
                 self.hostid = server.Server.getHostID(self, self.client)
+            else:
+                self.hostid = server.Server.getUuidID(self, self.uuid)
             
         return self.hostid
 
@@ -159,7 +163,7 @@ class APIServer(server.Server):
 
         if pubKey == None or sig == None:
             # This may be None.  In this case we still want to indecate failure
-            log.debug("No key/sig to check, returning public key from db")
+            #log.debug("No key/sig to check, returning public key from db")
             return trustedKey
 
         if self.apiVersion == 0:
@@ -198,9 +202,9 @@ class APIServer(server.Server):
                where realmlinux.host_id = hostkeys.host_id
                and realmlinux.recvdkey = 1 and hostkeys.publickey = %s"""
 
-        self.cursor.execute(q, (pubKey,))
+        self.cursor.execute(q, (publicKey,))
         if self.cursor.rowcount < 1:
-            self.cursor.execute(q, (ezPyCrypto.key(pubKey).exportKey(),))
+            self.cursor.execute(q, (ezPyCrypto.key(publicKey).exportKey(),))
         if self.cursor.rowcount < 1:
             return None
 
@@ -344,7 +348,7 @@ class APIServer(server.Server):
 
         return ret
             
-    def createNoSupport(self, publicKey, dept, version):
+    def createNoSupport(self, publicKey, dept, version, rhnid):
         "Create a db entry for a non supported client."
 
         log.info("Registering no-support for %s" % self.client)
@@ -378,7 +382,7 @@ class APIServer(server.Server):
             return 4
 
         try:
-            id = self.getHostID()
+            id = self.getHostID(byFQDN=True) 
             deptid = self.getDeptID(dept)
 
             q1 = "delete from hostkeys where host_id = %s"
@@ -389,9 +393,9 @@ class APIServer(server.Server):
 
             self.cursor.execute(q1, (id,))
             if self.apiVersion > 0:
-                self.cursor.execute(q2, (deptid, version, id, self.uuid, rhnid))
+                self.cursor.execute(q2, (deptid, version, self.uuid, rhnid, id))
             else:
-                self.cursor.execute(q2, (deptid, version, id, None, None))
+                self.cursor.execute(q2, (deptid, version, None, None, id))
             self.cursor.execute(q3, (id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (id,))
@@ -519,8 +523,8 @@ class APIServer(server.Server):
            
            data should be a Base64 encoded blob."""
        
-        log.debug("Received a %s status message from %s" % (service, 
-                                                            self.client))
+        log.info("Received a %s status message from %s" % (service, 
+                                                           self.client))
         sid = self.getServiceID(service)
         if sid == None:
             # We don't store data about services we don't know
@@ -621,7 +625,8 @@ class APIServer(server.Server):
 
         self.cursor.execute(q, (self.uuid, rhnid, hostinfo['host_id']))
         self.conn.commit()
-        log.info("Attached UUID %s to host %s" % (self.uuid, self.client))
+        log.info("Converted UUID %s Host %s to APIv1" \
+                 % (self.uuid, self.client))
         return 0
 
     def __makeUpdatesConf(self):
