@@ -39,6 +39,8 @@ requiredConfig = {
         'secret': ["Set an authentication secret for the XMLRPC API.", False],
         'defaultkey': ["Set default blowfish key for root password crypts.", False],
         'rrd_dir': ["Directory round robin databases will live.", False],
+        #'graphs_dir': ["Directory where auto-generated graphics will live.", False],
+        #'graphs_url': ["Web URL where graphs_dir can be accessed.", False],
         }
 
 def initLogging():

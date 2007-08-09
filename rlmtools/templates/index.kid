@@ -33,6 +33,10 @@
       <td py:content="totals['unsupported']">-1</td>
     </tr>
     <tr class="neutral">
+      <th class="right">Total Clients:</th>
+      <td py:content="totals['unsupported'] + totals['supported']">-1</td>
+    </tr>
+    <tr class="neutral">
       <th class="right">Web-Kickstarting:</th>
       <td><a href="notregistered" 
              py:content="totals['webkickstarting']">-1</a></td>
