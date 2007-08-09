@@ -162,3 +162,38 @@ tr A:hover {
    text-decoration: underline;
 }
 
+
+ul.makemenu {
+    float: right;
+    width: 12em;
+    background-color: #000000;
+    padding: 0px;
+    margin: 0px;
+    margin-left: 1em;
+}
+ul.makemenu li {
+    list-style-type: none;
+    background-color: #0000bb;
+    margin: 1px;
+    padding: 0.3em;
+    position: relative;
+    color: #ffffff;
+}
+ul.makemenu li:hover {
+    background-color: #000088;
+}
+ul.makemenu li.title {
+    text-align: center;
+    font-style: italic;
+}
+ul.makemenu li.title:hover {
+    background-color: #0000bb;
+}
+ul.makemenu a {
+    color: #ffffff;
+    text-decoration: none;
+}
+ul.makemenu a:hover {
+    text-decoration: underline;
+}
+

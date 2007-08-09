@@ -38,6 +38,14 @@
 
   <h1>Realm Linux Management - Project Liquid Dragon</h1>
 
+  <ul class="makemenu">
+    <li class="title">Liquid Dragon Menu</li>
+    <li><a href="/rlmtools">Front Page</a></li>
+    <li><a href="/rlmtools/notregistered">Web-Kickstarting</a></li>
+    <li><a href="/rlmtools/problems">Problem Clients</a></li>
+    <li><a href="/rlmtools/noupdates">Not Running Updates</a></li>
+  </ul>
+
   <div py:content="item[:]" />
 
   </div>
