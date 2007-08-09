@@ -116,8 +116,9 @@ def initHost(apiVersion, secret, fqdn):
         log.warning("initHost() called with bad secret")
         return 1
 
-    return s.initHost(fqdn, support=1)
-    
+    s.initHost(fqdn, support=1)  # returns host_id
+    return 0
+
     
 def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""

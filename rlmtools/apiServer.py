@@ -333,14 +333,19 @@ class APIServer(server.Server):
         
         if not self.cursor.rowcount > 0:
             # Then we put it there
-            self.initHost(self.client, 1)
+            hid = self.initHost(self.client, 1, True)
         else:
             hid = self.cursor.fetchone()[0]
             q = """update realmlinux set support = 1 where host_id = %s"""
             self.cursor.execute(q, (hid,))
-            
+
         # Update db 
         ret = self.__register(publicKey, dept, version, rhnid)
+
+        # Log history information
+        if ret == 0:
+            self.storeHistoryEvent('blessing', hid, self.client)
+        
         try:
             os.unlink(file)
         except OSError, e:
@@ -463,7 +468,7 @@ class APIServer(server.Server):
     
         return result[0]
 
-    def initHost(self, fqdn, support):
+    def initHost(self, fqdn, support, blessing=False):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.
            A secret is used to auth web-kickstart or an admin."""
@@ -501,8 +506,14 @@ class APIServer(server.Server):
         self.conn.commit()
         
         log.info("Initialized host: %s" % fqdn)
+        if support:
+            htype = 'install_support'
+        else:
+            htype = 'install_nosupport'
+        if not blessing:
+            self.storeHistoryEvent(htype, hostid, fqdn)
         
-        return 0
+        return hostid
 
     def storeUsage(self, hid, receivedstamp, clientstamp, pic):
         q = """insert into rrdqueue (ds_id, host_id, `timestamp`, 

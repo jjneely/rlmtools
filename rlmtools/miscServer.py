@@ -39,11 +39,13 @@ class MiscServer(server.Server):
         q2 = """delete from lastheard where host_id = %s"""
         q3 = """delete from status where host_id = %s"""
         q4 = """delete from hostkeys where host_id = %s"""
+        q5 = """update history set host_id = NULL where host_id = %s"""
 
         self.cursor.execute(q1, (host_id,))
         self.cursor.execute(q2, (host_id,))
         self.cursor.execute(q3, (host_id,))
         self.cursor.execute(q4, (host_id,))
+        self.cursor.execute(q5, (host_id,))
         self.conn.commit()
 
     def cleanDB(self, days=31):

@@ -26,6 +26,8 @@ import traceback
 import mysql
 import ConfigParser
 
+from datetime import datetime
+
 log = logging.getLogger("xmlrpc")
 
 # Holds the database class
@@ -174,4 +176,34 @@ class Server(object):
             return None
 
         return self.cursor.fetchone()[0]
+
+    def getHistTypeID(self, htype):
+        q = "select htype_id from htype where name = %s"
+
+        self.cursor.execute(q, (htype,))
+        if self.cursor.rowcount == 0:
+            log.warning("Tried to pull history type for unknown event: %s" \
+                        % htype)
+            return None
+
+        return self.cursor.fetchone()[0]
+
+    def storeHistoryEvent(self, htype, host_id, data):
+        """Store a history event.
+              htype - string form of history type
+              host_id - affected host ID or None
+              data - arbitrary string
+        """
+
+        q = """insert into history (htype_id, host_id, `timestamp`, data)
+               values (%s, %s, %s, %s)"""
+
+        data = str(data)
+        htype_id = self.getHistTypeID(htype)
+        if htype_id == None:
+            return
+
+        self.cursor.execute(q, (htype_id, host_id, datetime.today(), data))
+        self.conn.commit()
+
 
