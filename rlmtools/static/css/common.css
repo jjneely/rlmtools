@@ -1,5 +1,5 @@
 h1 {
-   clear: both;
+   /*clear: both;*/
 }
 h2 {
    clear: both;
@@ -164,6 +164,7 @@ tr A:hover {
 
 
 ul.makemenu {
+    font-family: Arial,Helvetica,Sans-Serif;
     float: right;
     width: 12em;
     background-color: #000000;
