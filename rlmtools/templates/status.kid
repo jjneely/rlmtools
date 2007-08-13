@@ -7,12 +7,6 @@
 </head>
 <body>
 
-  <p>Return to:
-    <ul>
-      <li><a href="" py:attrs="'href':backurl">Client Detail</a></li>
-    </ul>
-  </p>
-
   <p>Below are the full details of a specific status entry for this host.
     Remember to check the latest status entry for any errors that you see.
     Note that clients queue up messages to report.  There may be a few hours

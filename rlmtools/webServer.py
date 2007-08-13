@@ -39,9 +39,11 @@ class WebServer(server.Server):
         """Return historical information regarding this clients status."""
         
         q = """select serv.name, s.timestamp, s.success, s.data,
-                      s.received, r.hostname, r.host_id
-               from status as s, service as serv, realmlinux as r 
+                      s.received, r.hostname, r.host_id, d.name as dept,
+                      d.dept_id
+               from status as s, service as serv, realmlinux as r, dept as d 
                where r.host_id = s.host_id and
+                     r.dept_id = d.dept_id and
                      serv.service_id = s.service_id and
                      s.st_id = %s"""
     
@@ -230,4 +232,59 @@ class WebServer(server.Server):
 
         self.cursor.execute(q, (date,))
         return self.cursor.fetchone()[0]
+
+    def getVersionList(self):
+        """Returns a table of version to number of clients."""
+
+        q = """select version, count(*) as count from realmlinux
+               group by version order by version asc"""
+
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
+    def getVersionPile(self, version):
+        # Ever so slightly different from the dept() method
+        q1 = """select r.hostname, r.host_id, r.support, r.installdate,
+                l.timestamp as lastcheck, d.name as deptname
+                from realmlinux as r, lastheard as l, dept as d
+                where r.version = %s and r.recvdkey = 1 and
+                r.host_id = l.host_id and 
+                r.dept_id = d.dept_id
+                order by r.hostname"""
+
+        q2 = """select status.host_id, service.name, 
+                   status.success, status.timestamp
+                from service, status,
+                ( select status.host_id, 
+                         status.service_id as sid, 
+                         max(status.timestamp) as maxdate 
+                  from status, realmlinux
+                  where realmlinux.host_id = status.host_id
+                     and realmlinux.version = %s
+                  group by status.host_id, status.service_id
+                ) as current
+                where current.sid = status.service_id and
+                service.service_id = status.service_id and
+                status.timestamp = current.maxdate and
+                status.host_id = current.host_id"""
+
+        self.cursor.execute(q1, (version,))
+        result = resultSet(self.cursor).dump()
+
+        # I'm going to reference the data in result via a hash
+        hash = {}
+
+        for row in result:
+            hash[row['host_id']] = row
+
+        self.cursor.execute(q2, (version,))
+        status = resultSet(self.cursor).dump()
+
+        for row in status:
+            service = row['name']
+            stime = "%s_time" % service
+            hash[row['host_id']][service] = row['success']
+            hash[row['host_id']][stime] = row['timestamp']
+
+        return result
 

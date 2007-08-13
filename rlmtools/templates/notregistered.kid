@@ -7,14 +7,9 @@
 </head>
 <body>
 
-  <p>Return to:
-    <ul>
-      <li><a href="" py:attrs="'href':backurl">Department Listing</a></li>
-    </ul>
-  </p>
-
   <p>These clients have been entered into the database by Web-Kickstart
-    but have not uploaded their RSA key.  Clients must register within
+    but have not uploaded their RSA key.  This normally means that these 
+    clients are in the provisioning process.  Clients must register within
     24 hours of installation.  This normally happens withing 4 hours if
     the machine is running normally.  Clients may be registered manually
     provided that you have access to its Web-Kickstart config directory,

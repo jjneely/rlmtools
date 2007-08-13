@@ -7,15 +7,10 @@
 </head>
 <body>
 
-  <p>Return to:
-    <ul>
-      <li><a href="" py:attrs="'href':backurl">Department Listing</a></li>
-    </ul>
-  </p>
-
   <p>The following clients, listed by department, are not receiving updates
      and security errata.  These clients may be turned off or otherwise
-     prevented from communicating with RHN.  Each client should contain
+     prevented from communicating with RHN or their Yum repositories.
+     Each client should contain
      some 'update' error messages that we can use to find the problem.
      These should be corrected as soon as possible.
   </p>

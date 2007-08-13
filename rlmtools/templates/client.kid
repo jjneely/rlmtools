@@ -7,12 +7,6 @@
 </head>
 <body>
 
-  <p>Return to:
-    <ul>
-      <li><a href="" py:attrs="'href':backurl">Client Listing</a></li>
-    </ul>
-  </p>
-
   <p>All Realm Linux clients phone home to report status information in
     several ways.  This table lists out the status information we know
     about from the last 30 days.  If this client is red or listed as

@@ -7,14 +7,8 @@
 </head>
 <body>
 
-  <p>Return to:
-    <ul>
-      <li><a href="" py:attrs="'href':backurl">Department Listing</a></li>
-    </ul>
-  </p>
-
   <p>The following clients, listed by department, appear to be reporting
-     some problem.  Its possible that this can be caused by a fluke or
+     a problem.  Its possible that this can be caused by a fluke or
      network oddity, but repeated error reports need to be examined and
      corrected.
   </p>

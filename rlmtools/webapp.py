@@ -63,6 +63,9 @@ def url():
     else:
         return base
 
+def short(fqdn):
+    return fqdn.split('.')[0]
+
 class Auth(object):
     
     def __init__(self):
@@ -115,6 +118,48 @@ class Application(object):
                               name=Auth().getName()))
     index.exposed = True
 
+    def versionIndex(self, version):
+        # See also dept()
+        services = ['updates', 'client'] # Services that affect client status
+        clients = self.__server.getVersionPile(version)
+        days7 = datetime.timedelta(7)
+        today = datetime.datetime.today()
+        pile = {}
+
+        for client in clients:
+            client['status'] = True
+            client['url'] = "%s/client?host_id=%s" % (url(),
+                                                      client['host_id'])
+ 
+            if client['lastcheck'] < today - days7:
+                client['status'] = False
+
+            if client['lastcheck'] < client['installdate']:
+                client['status'] = False
+
+            for service in services:
+                key = "%s_time" % service
+                if not client.has_key(service) or client[key] < today - days7:
+                    client['status'] = False
+                    break
+                if not client[service]:
+                    client['status'] = False
+
+            if pile.has_key(client['deptname']):
+                pile[client['deptname']].append(client)
+            else:
+                pile[client['deptname']] = [client]
+        
+        departments = pile.keys()
+        departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
+
+        return serialize('templates.versionindex', 
+                    dict(departments=departments,
+                         clients=pile,
+                         count=len(clients),
+                         version=version))
+    versionIndex.exposed = True
+
     def dept(self, dept_id):
         services = ['updates', 'client'] # Services that affect client status
         clients = self.__server.getClientList(int(dept_id))
@@ -122,7 +167,6 @@ class Application(object):
         today = datetime.datetime.today()
         support = []
         nosupport = []
-        backurl = "%s" % url()
 
         for client in clients:
             client['status'] = True
@@ -150,8 +194,7 @@ class Application(object):
 
         return serialize('templates.dept', dict(support=support, 
                          nosupport=nosupport, 
-                         department=self.__server.getDeptName(int(dept_id)),
-                         backurl=backurl ))
+                         department=self.__server.getDeptName(int(dept_id))  ))
     dept.exposed = True
 
     def client(self, host_id):
@@ -164,10 +207,15 @@ class Application(object):
                                    detail['lastcheck'] > detail['installdate']
         status = {}
         if detail['recvdkey'] == 1:
-            backurl = "%s/dept?dept_id=%s" % (url(),
-                                              detail['dept_id'])
+            backlinks = [
+                         ('Version: %s' % detail['version'],
+                          '%s/versionIndex?version=%s' % (url(), 
+                                                          detail['version'])),
+                         ('Dept: %s' % detail['dept'],
+                          "%s/dept?dept_id=%s" % (url(), detail['dept_id'])),
+                         ]
         else:
-            backurl = "%s/notregistered" % url()
+            backlinks = []
 
         for row in detail['status']:
             row['url'] = "%s/status?status_id=%s" % (url(),
@@ -200,14 +248,18 @@ class Application(object):
 
         return serialize('templates.client',
                          dict(client=detail, status=detail['status'],
-                              backurl=backurl))
+                              backlinks=backlinks))
     client.exposed = True
 
     def status(self, status_id):
         status = self.__server.getStatusDetail(int(status_id))
-        backurl = "%s/client?host_id=%s" % (url(),
-                                            status['host_id'])
-            
+        backlinks = [
+                     ('Dept: %s' % status['dept'],
+                      "%s/dept?dept_id=%s" % (url(), status['dept_id'])),
+                     ('Host: %s' % short(status['hostname']),
+                      "%s/client?host_id=%s" % (url(), status['host_id'])),
+                    ]
+
         if status['data'] == None or status['data'] == "":
             status['data'] = "No data available."
             status['data_class'] = "neutral"
@@ -217,11 +269,10 @@ class Application(object):
             status['data_class'] = "bad"
 
         return serialize('templates.status', 
-                         dict(status=status, backurl=backurl))
+                         dict(status=status, backlinks=backlinks))
     status.exposed = True
 
     def notregistered(self):
-        backurl = "%s" % url()
         clients = self.__server.getNotRegistered()
         support = []
         nosupport = []
@@ -238,8 +289,7 @@ class Application(object):
         return serialize('templates.notregistered',
                          dict(support=support,
                               nosupport=nosupport,
-                              department="Not Registered",
-                              backurl=backurl)
+                              department="Not Registered")
                         )
     notregistered.exposed = True
 
@@ -257,8 +307,7 @@ class Application(object):
                 data[client['deptname']] = [host]
         
         return serialize('templates.problems',
-                         dict( clients=data,
-                               backurl=url())
+                         dict( clients=data )
                         )
     problems.exposed = True
 
@@ -279,10 +328,16 @@ class Application(object):
         departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
         return serialize('templates.noupdates',
                          dict( clients=data,
-                               departments=departments,
-                               backurl=url() )
+                               departments=departments )
                         )
     noupdates.exposed = True
+
+    def versionList(self):
+        versions = self.__server.getVersionList()
+
+        return serialize('templates.versionlist',
+                         dict( versions=versions ))
+    versionList.exposed = True
 
 def main():
     staticDir = os.path.join(os.path.dirname(__file__), "static")

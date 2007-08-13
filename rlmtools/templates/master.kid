@@ -39,7 +39,11 @@
     <li><a href="/rlmtools">Front Page</a></li>
     <li><a href="/rlmtools/notregistered">Web-Kickstarting</a></li>
     <li><a href="/rlmtools/problems">Problem Clients</a></li>
+    <li><a href="/rlmtools/versionList">Version List</a></li>
     <li><a href="/rlmtools/noupdates">Not Running Updates</a></li>
+    <li py:for="name, href in value_of('backlinks', [])">
+      <a href="" py:attrs="'href':href" py:content="name">Backwards</a>
+    </li>
   </ul>
 
   <div class="content">
