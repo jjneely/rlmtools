@@ -57,6 +57,16 @@ class StatsServer(server.Server):
         q = "select count(*) from realmlinux where support = 0 and recvdkey = 1"
         return self.count(q)
 
+    def getActiveClients(self, hours=6):
+        """Returns the number of clients heard from in the last hours hours."""
+
+        q = """select count(host_id) from lastheard where
+               `timestamp` > %s"""
+        date = datetime.today() - timedelta(hours=hours)
+
+        self.cursor.execute(q, (date,))
+        return self.cursor.fetchone()[0]
+
     def getWebKickstarting(self):
         "Number of clients currently installing."
         q = "select count(*) from realmlinux where recvdkey = 0"
@@ -83,4 +93,13 @@ class StatsServer(server.Server):
                     and status.success = 1 
                     and TO_DAYS(status.timestamp) >= TO_DAYS(NOW()) - 7"""
         return self.count(q1) - self.count(q2)
+
+    def getVersions(self):
+        """Returns a table of version to number of clients."""
+
+        q = """select version, count(*) as count from realmlinux
+               group by version"""
+
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
 

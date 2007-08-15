@@ -28,11 +28,14 @@
 
 # The rrd_dir has the following inside:
 # <rrd_dir>
-#   |-> rra/       - Directory containing the actual RRDs
-#   |-> graphs/    - Directory containing dynamically generated graphs
-#   |-> master.rra - RRD file containing general statistics
+#   |-> hosts/       - Directory containing RRDs for hosts
+#   |-> global/      - Directory containing RRDs for the global system
+#   | |-> master.rra - RRD file containing general statistics
+#   | |-> <version>  - RRDs for deployed versions
+#   |-> graphs/      - Directory containing dynamically generated graphs
 
 import sys
+import sha
 import logging
 import os
 import os.path
@@ -57,20 +60,26 @@ class RRDGraphs(object):
                    DS:checkin:GAUGE:3600:0:U \
                    DS:webkickstart:GAUGE:3600:0:U \
                    DS:problems:GAUGE:3600:0:U \
-                   DS:noupdates:GAUGE:3600:0:U \
-                   RRA:AVERAGE:0.5:1:336 \
+                   DS:noupdates:GAUGE:3600:0:U"""
+
+    versionDef ="""DS:version:GAUGE:3600:0:U"""
+
+    rraDef =    """RRA:AVERAGE:0.5:1:336 \
                    RRA:AVERAGE:0.5:4:336 \
                    RRA:AVERAGE:0.5:12:336 \
                    RRA:AVERAGE:0.5:52:336 \
                    RRA:AVERAGE:0.5:156:336"""
 
     def __init__(self):
+        self.stats = StatsServer()
+
         self.dir    = config.rrd_dir
         self.graphs = os.path.join(self.dir, 'graphs/')
-        self.rra    = os.path.join(self.dir, 'rra/')
-        self.master = os.path.join(self.dir, 'master.rra')
+        self.hosts  = os.path.join(self.dir, 'hosts/')
+        self.misc   = os.path.join(self.dir, 'global/')
+        self.master = os.path.join(self.misc, self.hash('master'))
 
-        for dir in [self.dir, self.graphs, self.rra]:
+        for dir in [self.dir, self.graphs, self.hosts, self.misc]:
             try:
                 if not os.path.exists(dir):
                     os.mkdir(dir)
@@ -80,16 +89,54 @@ class RRDGraphs(object):
             except IOError:
                 raise StandardError("RLMTools could not create %s" % dir)
 
-        if not os.path.exists(self.master):
-            os.system("rrdtool create %s -s 1800 %s" % (self.master, 
-                                                        self.masterDef))
-
     def time(self):
         return str(int(time.time()))
 
+    def hash(self, s):
+        return sha.new(s).hexdigest() + ".rra"
+
+    def goVersions(self):
+        data = self.stats.getVersions()
+
+        for v in data:
+            # Get rid of bad data
+            if len(v['version']) < 1:
+                continue
+            if v['version'].find(' ') > -1:
+                continue
+            if v['version'].find('\t') > -1:
+                continue
+
+            path = os.path.join(self.misc, self.hash(v['version']))
+            if not os.path.exists(path):
+                os.system("rrdtool create %s -s 1800 %s %s" % \
+                          (path, self.versionDef, self.rraDef))
+
+            os.system("rrdtool update %s N:%s" % (path, v['count']))
+
+    def goMaster(self):
+        fields = [
+                  self.stats.getTotal(),
+                  self.stats.getSupported(),
+                  self.stats.getUnsupported(),
+                  self.stats.getActiveClients(),
+                  self.stats.getWebKickstarting(),
+                  self.stats.getProblems(),
+                  self.stats.getNotUpdating(),
+                 ]
+
+        if not os.path.exists(self.master):
+            os.system("rrdtool create %s -s 1800 %s %s" % (self.master, 
+                                                           self.masterDef,
+                                                           self.rraDef))
+        
+        os.system("rrdtool update %s N:%s" % (self.master, 
+                  ":".join([ str(s) for s in fields ])))
 
 def main():
     graphs = RRDGraphs()
+    graphs.goMaster()
+    graphs.goVersions()
 
 
 if __name__ == "__main__":

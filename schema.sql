@@ -80,6 +80,16 @@ create table dstype (
     index(name)
 );
 
+create table rrdlocation (
+    loc_id      INTEGER PRIMARY KEY auto_increment,
+    ds_id       INTEGER not null,
+    host_id     INTEGER,
+    path        TEXT,
+
+    index(ds_id),
+    index(host_id)
+);
+
 create table configvalues (
     c_id        INTEGER PRIMARY KEY auto_increment,
     variable    VARCHAR(255),
@@ -118,7 +128,9 @@ insert into service (name) values ('boot');
 insert into service (name) values ('usagelog');
 
 -- For the RRDTool Queue Handler
+insert into dstype (name) values ('master');
 insert into dstype (name) values ('usage');
+insert into dstype (name) values ('version');
 
 -- For the stored history
 insert into htype (name) values ('install_support');

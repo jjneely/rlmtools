@@ -63,11 +63,24 @@ create table history (
     foreign key (htype_id) references htype(htype_id)
 );
 
+create table rrdlocation (
+    loc_id      INTEGER PRIMARY KEY auto_increment,
+    ds_id       INTEGER not null,
+    host_id     INTEGER,
+    path        TEXT,
+
+    index(ds_id),
+    index(host_id)
+);
+
 -- For the stored history
 insert into htype (name) values ('install_support');
 insert into htype (name) values ('install_nosupport');
 insert into htype (name) values ('blessing');
 
+-- More RRD types
+insert into dstype (name) values ('master');
+insert into dstype (name) values ('version');
 
 -- Here you must insert the configuration that was previously lifted from
    the web-kickstart configuration code into this table.  The configDragon.py
@@ -80,6 +93,8 @@ insert into htype (name) values ('blessing');
    is needed with the following: logfile, log_level
 
 -- All other configuration is part of the database.
+
+-- Create a cron job to run graphsCron.py every 30 minutes.
 
 * 06/28/2007: Run the following SQL in your MySQL Database:
 

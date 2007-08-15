@@ -41,7 +41,7 @@
   </div>
 
   <p py:if="len(clients) == 0">
-    No clients reporting problems.
+    No known clients with this version.
   </p>
 
 </body>
