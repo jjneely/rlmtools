@@ -103,3 +103,58 @@ class StatsServer(server.Server):
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
+    def getDSID(self, name):
+        """Return the ds_id for this name.  We raise an error if the
+           name doesn't exist."""
+
+        q = """select ds_id from dstype where name = %s"""
+        self.cursor.execute(q, (name,))
+        if self.cursor.rowcount == 0:
+            raise StandardError("DS Type %s does not exist." % name)
+
+        return self.cursor.fetchone()[0]
+
+    def getRRALocations(self, dstype, host_id, label):
+        """Return list of file locations.  host_id and label may
+           be None."""
+        q1 = """select path, label, host_id from rrdlocation 
+                where ds_id = %s """
+        if dstype == None:
+            raise StandardError("getRRALocations() requires a dstype")
+        if host_id != None:
+            q1 = a1 + "and host_id = %s "
+        if label != None:
+            q1 = q1 + "and label = %s"
+       
+        if isinstance(dstype, str):
+            ds_id = self.getDSID(dstype)
+        else:
+            ds_id = dstype
+
+        tup = filter(lambda b: b != None, [ds_id, host_id, label])
+        self.cursor.execute(q1, tup)
+        return resultSet(self.cursor).dump()
+
+    def setRRALocation(self, dstype, host_id, label, path):
+        """Set a RRA location in the db.  host_id xor label can be
+           None."""
+        q1 = """select loc_id from rrdlocation where
+                path = %s and ds_id = %s"""
+        q2 = """insert into rrdlocation (ds_id, host_id, label, path)
+                values (%s, %s, %s, %s)"""
+
+        if isinstance(dstype, str):
+            ds_id = self.getDSID(dstype)
+        else:
+            ds_id = dstype
+
+        self.cursor.execute(q1, (path, ds_id))
+        if self.cursor.rowcount > 0:
+            log.warning("Attempted insert of duplicate RRD path")
+            log.warning("ds_id: %s\nhost_id: %s\nlabel: %s\npath: %s" % \
+                        (ds_id, host_id, label, path))
+            raise StandardError("Attempted insert of duplicate RRD path.")
+
+        self.cursor.execute(q2, (ds_id, host_id, label, path))
+        self.conn.commit()
+

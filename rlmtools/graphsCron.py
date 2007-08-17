@@ -50,10 +50,16 @@ class RRDGraphs(object):
 
     # Sampling ever 30 minutes.
     # 1*336 = 1 week
+    weekTime = 168 * 3600
     # 4*336 = 1 month (28 days)
+    monthTime = 4 * weekTime
     # 12*336 = 6 months (28 * 6)
+    halfYearTime = 12 * weekTime
     # 52*336 = 1 year (364 days)
+    yearTime = 52 * weekTime
     # 156*336 = 3 years
+    threeYearTime = 156 * weekTime
+
     masterDef = """DS:total:GAUGE:3600:0:U   \
                    DS:support:GAUGE:3600:0:U \
                    DS:nonsupport:GAUGE:3600:0:U \
@@ -74,23 +80,23 @@ class RRDGraphs(object):
         self.stats = StatsServer()
 
         self.dir    = config.rrd_dir
-        self.graphs = os.path.join(self.dir, 'graphs/')
-        self.hosts  = os.path.join(self.dir, 'hosts/')
-        self.misc   = os.path.join(self.dir, 'global/')
-        self.master = os.path.join(self.misc, self.hash('master'))
+        self.graphs = 'graphs/'
+        self.hosts  = 'hosts/'
+        self.misc   = 'global/'
 
         for dir in [self.dir, self.graphs, self.hosts, self.misc]:
+            path = os.path.isabs(dir) and dir or os.path.join(self.dir, dir)
             try:
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                if not os.access(dir, os.W_OK):
+                if not os.path.exists(path):
+                    os.mkdir(path)
+                if not os.access(path, os.W_OK):
                     raise StandardError("RLMTools needs write access to %s" \
-                                        % dir)
+                                        % path)
             except IOError:
                 raise StandardError("RLMTools could not create %s" % dir)
 
     def time(self):
-        return str(int(time.time()))
+        return int(time.time())
 
     def hash(self, s):
         return sha.new(s).hexdigest() + ".rra"
@@ -107,7 +113,15 @@ class RRDGraphs(object):
             if v['version'].find('\t') > -1:
                 continue
 
-            path = os.path.join(self.misc, self.hash(v['version']))
+            list = self.stats.getRRALocations('version', None, v['version'])
+            if len(list) == 0:
+                path = os.path.join(self.misc, self.hash(v['version']))
+                self.stats.setRRALocation('version', None, v['version'], path)
+            else:
+                path = list[0]['path']
+
+            if not os.path.isabs(path):
+                path = os.path.join(self.dir, path)
             if not os.path.exists(path):
                 os.system("rrdtool create %s -s 1800 %s %s" % \
                           (path, self.versionDef, self.rraDef))
@@ -115,6 +129,16 @@ class RRDGraphs(object):
             os.system("rrdtool update %s N:%s" % (path, v['count']))
 
     def goMaster(self):
+        masterList = self.stats.getRRALocations('master', None, None)
+        # Made sure we are in the DB proper
+        if len(masterList) > 0:
+            if len(masterList) > 1: 
+                log.warning("RRDGraphs: Multiple entries for the master RRA!")
+            master = masterList[0]['path']
+        else:
+            master = os.path.join(self.misc, self.hash('master'))
+            self.stats.setRRALocation('master', None, None, master)
+
         fields = [
                   self.stats.getTotal(),
                   self.stats.getSupported(),
@@ -125,18 +149,51 @@ class RRDGraphs(object):
                   self.stats.getNotUpdating(),
                  ]
 
-        if not os.path.exists(self.master):
-            os.system("rrdtool create %s -s 1800 %s %s" % (self.master, 
+        if not os.path.isabs(master):
+            master = os.path.join(self.dir, master)
+        if not os.path.exists(master):
+            os.system("rrdtool create %s -s 1800 %s %s" % (master, 
                                                            self.masterDef,
                                                            self.rraDef))
         
-        os.system("rrdtool update %s N:%s" % (self.master, 
+        os.system("rrdtool update %s N:%s" % (master, 
                   ":".join([ str(s) for s in fields ])))
+
+    def graphMaster(self):
+        masterList = self.stats.getRRALocations('master', None, None)
+        if len(masterList) == 0:
+            return
+        if os.path.isabs(masterList[0]['path']):
+            path = masterList[0]['path']
+        else:
+            path = os.path.join(self.dir, masterList[0]['path'])
+        dest = os.path.join(self.dir, self.graphs, 'master.png')
+        
+        grdef = """DEF:total=%(file)s:total:AVERAGE \
+                DEF:support=%(file)s:support:AVERAGE \
+                DEF:nonsupport=%(file)s:nonsupport:AVERAGE \
+                DEF:checkin=%(file)s:checkin:AVERAGE \
+                DEF:webkickstart=%(file)s:webkickstart:AVERAGE \
+                DEF:problems=%(file)s:problems:AVERAGE \
+                DEF:noupdates=%(file)s:noupdates:AVERAGE \
+                'LINE:total#FF0000:Total Clients' \
+                'LINE:support#4D18E4:Supported Clients' \
+                'LINE:nonsupport#CC3118:Unsupported Clients' \
+                'LINE:checkin#B415C7:Active Clients' \
+                'LINE:webkickstart#CC7016:Web Kickstarting' \
+                'LINE:problems#1598C3:Clients with Problems' \
+                'LINE:noupdates#C9B215:Clients Not Updating' \
+                """ % {'file':path}
+
+        cmd = "%s -s -%s -t 'Liquid Dragon Stats' -v Clients %s" % \
+                (dest, self.weekTime, grdef)
+        os.system("rrdtool graph %s > /dev/null 2>&1" % cmd)
 
 def main():
     graphs = RRDGraphs()
     graphs.goMaster()
     graphs.goVersions()
+    graphs.graphMaster()
 
 
 if __name__ == "__main__":

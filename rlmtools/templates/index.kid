@@ -73,10 +73,6 @@
     </tr>
   </table>
 
-  <h2 class="space">Tools</h2>
-
-  <p>Other tools may appear here in the future.</p>
-
 </body>
 
 </html>

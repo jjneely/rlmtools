@@ -67,6 +67,7 @@ create table rrdlocation (
     loc_id      INTEGER PRIMARY KEY auto_increment,
     ds_id       INTEGER not null,
     host_id     INTEGER,
+    label       VARCHAR(255),
     path        TEXT,
 
     index(ds_id),
