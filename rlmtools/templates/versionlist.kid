@@ -17,6 +17,13 @@
     that are currently deployed.</p>
 
   <h2 style="clear:none;">Version List</h2>
+
+  <table class="noborder">
+    <tr><td>
+        <img src="/rlmtools/static/graphs/versions-3d.png"/>
+    </td>
+    <td>
+
   <table>
     <tr class="neutral">
       <th>Realm Linux Version</th>
@@ -28,6 +35,9 @@
           py:content="version['count']">-1</a></td>
     </tr>
   </table>
+
+  </td>
+  </tr></table>
 
 </body>
 

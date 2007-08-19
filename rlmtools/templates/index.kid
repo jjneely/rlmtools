@@ -19,6 +19,10 @@
   <p>Welcome <span py:replace="name"/>.</p>
 
   <h2>Client Statistics</h2>
+
+  <table class="noborder">
+    <tr><td>
+
   <table>
     <tr class="neutral">
       <th class="right">Clients Currently Checking In:</th>
@@ -51,6 +55,24 @@
       <td><a href="noupdates" 
           py:content="totals['noupdates']">-1</a></td>
     </tr>
+  </table>
+  
+  </td><td>
+
+  <table class="noborder">
+    <tr>
+      <td>
+        <img src="/rlmtools/static/graphs/master-3d.png"/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <img src="/rlmtools/static/graphs/problems-3d.png"/>
+      </td>
+    </tr>
+  </table>
+
+  </td></tr>
   </table>
 
   <h2>Departments</h2>

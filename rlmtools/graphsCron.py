@@ -43,38 +43,11 @@ import os.path
 from datetime     import datetime, timedelta
 from configDragon import config
 from statsServer  import StatsServer
+from rrdconstants import *
 
 log = logging.getLogger("xmlrpc")
 
 class RRDGraphs(object):
-
-    # Sampling ever 30 minutes.
-    # 1*336 = 1 week
-    weekTime = 168 * 3600
-    # 4*336 = 1 month (28 days)
-    monthTime = 4 * weekTime
-    # 12*336 = 6 months (28 * 6)
-    halfYearTime = 12 * weekTime
-    # 52*336 = 1 year (364 days)
-    yearTime = 52 * weekTime
-    # 156*336 = 3 years
-    threeYearTime = 156 * weekTime
-
-    masterDef = """DS:total:GAUGE:3600:0:U   \
-                   DS:support:GAUGE:3600:0:U \
-                   DS:nonsupport:GAUGE:3600:0:U \
-                   DS:checkin:GAUGE:3600:0:U \
-                   DS:webkickstart:GAUGE:3600:0:U \
-                   DS:problems:GAUGE:3600:0:U \
-                   DS:noupdates:GAUGE:3600:0:U"""
-
-    versionDef ="""DS:version:GAUGE:3600:0:U"""
-
-    rraDef =    """RRA:AVERAGE:0.5:1:336 \
-                   RRA:AVERAGE:0.5:4:336 \
-                   RRA:AVERAGE:0.5:12:336 \
-                   RRA:AVERAGE:0.5:52:336 \
-                   RRA:AVERAGE:0.5:156:336"""
 
     def __init__(self):
         self.stats = StatsServer()
@@ -124,7 +97,7 @@ class RRDGraphs(object):
                 path = os.path.join(self.dir, path)
             if not os.path.exists(path):
                 os.system("rrdtool create %s -s 1800 %s %s" % \
-                          (path, self.versionDef, self.rraDef))
+                          (path, versionDef, rraDef))
 
             os.system("rrdtool update %s N:%s" % (path, v['count']))
 
@@ -153,11 +126,17 @@ class RRDGraphs(object):
             master = os.path.join(self.dir, master)
         if not os.path.exists(master):
             os.system("rrdtool create %s -s 1800 %s %s" % (master, 
-                                                           self.masterDef,
-                                                           self.rraDef))
+                                                           masterDef,
+                                                           rraDef))
         
         os.system("rrdtool update %s N:%s" % (master, 
                   ":".join([ str(s) for s in fields ])))
+
+    def graph(self, dest, args, defs):
+        cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
+
+        for zone in timeZones:
+            os.system(cmd % (dest, zone, zone, args, defs))
 
     def graphMaster(self):
         masterList = self.stats.getRRALocations('master', None, None)
@@ -167,34 +146,48 @@ class RRDGraphs(object):
             path = masterList[0]['path']
         else:
             path = os.path.join(self.dir, masterList[0]['path'])
-        dest = os.path.join(self.dir, self.graphs, 'master.png')
-        
-        grdef = """DEF:total=%(file)s:total:AVERAGE \
-                DEF:support=%(file)s:support:AVERAGE \
-                DEF:nonsupport=%(file)s:nonsupport:AVERAGE \
-                DEF:checkin=%(file)s:checkin:AVERAGE \
-                DEF:webkickstart=%(file)s:webkickstart:AVERAGE \
-                DEF:problems=%(file)s:problems:AVERAGE \
-                DEF:noupdates=%(file)s:noupdates:AVERAGE \
-                'LINE:total#FF0000:Total Clients' \
-                'LINE:support#4D18E4:Supported Clients' \
-                'LINE:nonsupport#CC3118:Unsupported Clients' \
-                'LINE:checkin#B415C7:Active Clients' \
-                'LINE:webkickstart#CC7016:Web Kickstarting' \
-                'LINE:problems#1598C3:Clients with Problems' \
-                'LINE:noupdates#C9B215:Clients Not Updating' \
-                """ % {'file':path}
+        dest1 = os.path.join(self.dir, self.graphs, 'master')
+        dest2 = os.path.join(self.dir, self.graphs, 'problems')
+        self.graph(dest1, "-t 'Liquid Dragon Totals' -v Clients",
+                   masterGraph % {'file':path})
+        self.graph(dest2, "-t 'Liquid Dragon Problem Clients' -v Clients",
+                   problemsGraph % {'file':path})
 
-        cmd = "%s -s -%s -t 'Liquid Dragon Stats' -v Clients %s" % \
-                (dest, self.weekTime, grdef)
-        os.system("rrdtool graph %s > /dev/null 2>&1" % cmd)
+    def graphVersions(self):
+        list = self.stats.getRRALocations('version', None, None)
+        defs = ""
+        actions = ""
+        c = 0
+        for v in list:
+            c = c + 1
+            if not os.path.isabs(v['path']):
+                path = os.path.join(self.dir, v['path'])
+            else:
+                path = v['path']
+            
+            reflist = ['v%s,' % str(i+1) for i in range(c) ]
+            rpn = "+," * (c - 1) + "UNKN,IF"
+            d = {'c':c, 'file':path, 'reflist':''.join(reflist), 'rpn':rpn,
+                 'light':rrdColors[c % 7][0], 'label':v['label']}
+            defs = defs + "DEF:v%(c)s=%(file)s:version:AVERAGE " % d
+            defs = defs + "CDEF:ln%(c)s=v%(c)s,%(reflist)s%(rpn)s " % d
+            actions = actions + "'AREA:v%(c)s%(light)s:%(label)s:STACK' " % d
+            
+        for i in range(len(list)):
+            actions = actions + "LINE1:ln%s%s " % (i+1, rrdColors[(i+1) % 7][1])
+
+        self.graph(os.path.join(self.dir, self.graphs, 'versions'),
+                "-t 'Realm Linux Versions' -v Clients -h 200",
+                   defs + actions)
 
 def main():
     graphs = RRDGraphs()
     graphs.goMaster()
     graphs.goVersions()
     graphs.graphMaster()
+    graphs.graphVersions()
 
 
 if __name__ == "__main__":
     main()
+

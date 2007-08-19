@@ -108,6 +108,9 @@ table {
    border-color: gray;
    border-width: 1px;
 }
+table.noborder {
+    border-width: 0px;
+}
 td {
    padding: 4px;
    border-style: none;
