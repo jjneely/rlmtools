@@ -132,6 +132,11 @@ class RRDGraphs(object):
         os.system("rrdtool update %s N:%s" % (master, 
                   ":".join([ str(s) for s in fields ])))
 
+    def handleUsage(self):
+        """Pulls the usage information out of the db and into the RRDs."""
+
+        pass
+
     def graph(self, dest, args, defs):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
 
