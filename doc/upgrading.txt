@@ -82,6 +82,7 @@ insert into htype (name) values ('blessing');
 -- More RRD types
 insert into dstype (name) values ('master');
 insert into dstype (name) values ('version');
+insert into dstype (name) values ('usagesync');
 
 -- Here you must insert the configuration that was previously lifted from
    the web-kickstart configuration code into this table.  The configDragon.py

@@ -132,6 +132,7 @@ insert into service (name) values ('usagelog');
 insert into dstype (name) values ('master');
 insert into dstype (name) values ('usage');
 insert into dstype (name) values ('version');
+insert into dstype (name) values ('usagesync');
 
 -- For the stored history
 insert into htype (name) values ('install_support');

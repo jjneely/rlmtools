@@ -20,12 +20,29 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import os
 import sys
 import pickle
 
 from client import Message
 
 ServiceType = "usagelog"
+
+def isSafe():
+    """Return true if there are no other realm users logged in to the
+       system."""
+
+    # The database needs a sync check to know when its safe to populate
+    # the RRDs as they must be populated sequentially.
+
+    pipe = os.popen("/usr/bin/who")
+    blob = pipe.read()
+    pipe.close()
+
+    if blob.strip() == "":
+        return True
+    else:
+        return False
 
 def main():
     """Create a message from pam_ncsu_access's session usage report
@@ -46,7 +63,7 @@ def main():
         print "Invalud format for seconds: %s" % sys.argv[2]
         sys.exit(1)
 
-    data = {'userid': userid, 'time': session}
+    data = {'userid': userid, 'time': session, 'sync':isSafe()}
     blob = pickle.dumps(data)
 
     m = Message()

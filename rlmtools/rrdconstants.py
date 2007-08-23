@@ -67,6 +67,14 @@ rraDef =    """RRA:AVERAGE:0.5:1:336 \
                RRA:AVERAGE:0.5:52:336 \
                RRA:AVERAGE:0.5:156:336"""
 
+usageDef = \
+"""DS:users:GAUGE:600:0:U \
+RRA:AVERAGE:0.5:1:600 \
+RRA:AVERAGE:0.5:6:384 \
+RRA:AVERAGE:0.5:24:840 \
+RRA:AVERAGE:0.5:144:730 \
+RRA:AVERAGE:0.5:288:1095"""
+
 masterGraph = \
 """DEF:support=%(file)s:support:AVERAGE \
 DEF:nonsupport=%(file)s:nonsupport:AVERAGE \

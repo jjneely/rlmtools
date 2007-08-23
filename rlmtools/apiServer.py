@@ -515,6 +515,16 @@ class APIServer(server.Server):
         
         return hostid
 
+    def setUsageSync(self, host_id, timestamp):
+        # We need to know when its safe to populate the RRDs for
+        # the usage information per host.  This must be done sequentially.
+        q = """insert into rrdqueue (ds_id, host_id, `timestamp`) 
+               values (%s, %s, %s)"""
+
+        ds_id = self.getDSID('usagesync')
+        self.cursor.execute(q, (ds_id, host_id, timestamp))
+        # self.conn.commit() purposely left out
+
     def storeUsage(self, hid, receivedstamp, clientstamp, pic):
         q = """insert into rrdqueue (ds_id, host_id, `timestamp`, 
                                      received, data)
@@ -524,6 +534,10 @@ class APIServer(server.Server):
         dsid = self.getDSID('usage')
         self.cursor.execute(q, (dsid, hid, clientstamp, receivedstamp,
                                 data['time']))
+
+        if data.has_key('sync') and data['sync']:
+            self.setUsageSync(hid, clientstamp)
+
         self.conn.commit()
 
         return 0
@@ -559,6 +573,8 @@ class APIServer(server.Server):
 
         if service == "usagelog":
             return self.storeUsage(id, date, clientstamp, data)
+        if service == "boot":
+            self.setUsageSync(hid, clientstamp)
 
         if succeed:
             succeed = 1
