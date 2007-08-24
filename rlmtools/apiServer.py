@@ -574,7 +574,7 @@ class APIServer(server.Server):
         if service == "usagelog":
             return self.storeUsage(id, date, clientstamp, data)
         if service == "boot":
-            self.setUsageSync(hid, clientstamp)
+            self.setUsageSync(id, clientstamp)
 
         if succeed:
             succeed = 1

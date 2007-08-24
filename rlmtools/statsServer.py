@@ -158,3 +158,45 @@ class StatsServer(server.Server):
         self.cursor.execute(q2, (ds_id, host_id, label, path))
         self.conn.commit()
 
+    def getSyncStates(self):
+        """Returns a list of dicts contianing 'host_id' and 'timestamp'
+           keys representing the latest sync state for the host."""
+
+        q = """select rrdqueue.host_id, max(rrdqueue.timestamp) as timestamp
+               from rrdqueue, dstype
+               where dstype.ds_id = rrdqueue.ds_id
+                  and dstype.name = 'usagesync'
+               group by host_id"""
+
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
+    def clearUsageData(self, timestamp):
+        """Removes all usage and sync events from the rrdqueue table that
+           have a timestamp equal to or before the given datetime object
+           timestamp."""
+
+        q = """delete from rrdqueue where ds_type = %s and
+               `timestamp` <= %s"""
+
+        usage_id = self.getDSID('usage')
+        sync_id = self.getDSID('usagesync')
+
+        self.cursor.execute(q, (usage_id, timestamp))
+        self.cursor.execute(q, (sync_id, timestamp))
+        self.conn.commit()
+
+    def getUsageEvents(self, host_id, timestamp):
+        """Return all the usage events for a host before or equal to
+           the given timestamp."""
+
+        q = """select rrdqueue.timestamp, rrdqueue.data as length
+               from rrdqueue, dstype
+               where dstype.ds_id = rrdqueue.ds_id
+               and dstype.name = 'usage'
+               and rrdqueue.host_id = %s
+               and rrdqueue.timestamp <= %s"""
+
+        self.cursor.execute(q, (host_id, timestamp))
+        return resultSet(self.cursor).dump()
+

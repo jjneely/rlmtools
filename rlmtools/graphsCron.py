@@ -39,6 +39,7 @@ import sha
 import logging
 import os
 import os.path
+import time
 
 from datetime     import datetime, timedelta
 from configDragon import config
@@ -132,10 +133,40 @@ class RRDGraphs(object):
         os.system("rrdtool update %s N:%s" % (master, 
                   ":".join([ str(s) for s in fields ])))
 
+    def getHostRRA(self, host_id):
+        "Return the abolute path the the host RRA."
+
+        path = self.stats.getRRALocations('usage', host_id, None)
+        if path == []:
+            s = "usage %s" % host_id
+            rra = self.hash(s)
+            dir = rra[0:2]
+            path = os.path.join(self.hosts, dir, rra)
+            self.stats.setRRALocation('usage', host_id, None, path)
+        else:
+            path = path[0]['path']
+
+        abspath = os.path.join(self.dir, path)
+        if not os.path.exists(os.path.dirname(abspath)):
+            try:
+                os.mkdir(os.path.dirname(abspath))
+            except IOError:
+                raise StandardError("RLMTools: cound not create %s" % \
+                                    os.path.dirname(abspath))
+        if not os.path.exists(abspath):
+            os.system("rrdtool create %s -s 300 %s" % (abspath, usageDef))
+
+        return abspath
+
     def handleUsage(self):
         """Pulls the usage information out of the db and into the RRDs."""
-
-        pass
+        # timestamp + (increment - (timestamp % increment)) = first iteration
+        
+        hosts = self.stats.getSyncStates()
+        for host in hosts:
+            host_id = host['host_id']
+            timestamp = time.mktime(host['timestamp'].timetuple())
+            print "Host: %s  Time: %s" % (host_id, timestamp)
 
     def graph(self, dest, args, defs):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
@@ -191,6 +222,7 @@ def main():
     graphs.goVersions()
     graphs.graphMaster()
     graphs.graphVersions()
+    #graphs.handleUsage()
 
 
 if __name__ == "__main__":
