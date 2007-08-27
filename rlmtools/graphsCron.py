@@ -154,19 +154,50 @@ class RRDGraphs(object):
                 raise StandardError("RLMTools: cound not create %s" % \
                                     os.path.dirname(abspath))
         if not os.path.exists(abspath):
-            os.system("rrdtool create %s -s 300 %s" % (abspath, usageDef))
+            # RRDs are created with start time of 03/14/2007 to start
+            # before any potential data may have been generated.
+            os.system("rrdtool create %s -s 300 -b %s %s" % (abspath, 
+                                                             '1173844800',
+                                                             usageDef))
 
         return abspath
 
     def handleUsage(self):
         """Pulls the usage information out of the db and into the RRDs."""
-        # timestamp + (increment - (timestamp % increment)) = first iteration
         
+        increment = 300 # 300 seconds or 5 minutes
         hosts = self.stats.getSyncStates()
         for host in hosts:
             host_id = host['host_id']
-            timestamp = time.mktime(host['timestamp'].timetuple())
-            print "Host: %s  Time: %s" % (host_id, timestamp)
+            maxSafe = host['timestamp']
+            #print "Host: %s  SafeTime: %s" % (host_id, maxSafe)
+            usage = self.stats.getUsageEvents(host_id, maxSafe)
+            pdps = {}
+            CLI = ""
+
+            for event in usage:
+                # Everthing needs to be in seconds sence the epoch now
+                stamp = int(time.mktime(event['timestamp'].timetuple()))
+                start = stamp - event['length']
+                i = start + (increment - (start % increment))
+                #print "Login from %s to %s" % (start, stamp)
+                while i <= stamp:
+                    if pdps.has_key(i):
+                        pdps[i] = pdps[i] + 1
+                    else:
+                        pdps[i] = 1
+                    i = i + increment
+
+            keys = pdps.keys()
+            keys.sort()
+            for i in keys:
+                # Build the RRDTool update command
+                CLI = "%s %s:%s" % (CLI, i, pdps[i])
+
+            path = self.getHostRRA(host_id)
+            ret = os.system("rrdtool update %s %s" % (path, CLI))
+            #print "CLI: %s" % CLI
+            #print "rrdtool returned: %s" % ret
 
     def graph(self, dest, args, defs):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"

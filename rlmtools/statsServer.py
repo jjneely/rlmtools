@@ -122,7 +122,7 @@ class StatsServer(server.Server):
         if dstype == None:
             raise StandardError("getRRALocations() requires a dstype")
         if host_id != None:
-            q1 = a1 + "and host_id = %s "
+            q1 = q1 + "and host_id = %s "
         if label != None:
             q1 = q1 + "and label = %s"
        
