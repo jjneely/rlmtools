@@ -171,19 +171,19 @@ class StatsServer(server.Server):
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
-    def clearUsageData(self, timestamp):
+    def clearUsageEvents(self, host_id, timestamp):
         """Removes all usage and sync events from the rrdqueue table that
            have a timestamp equal to or before the given datetime object
            timestamp."""
 
-        q = """delete from rrdqueue where ds_type = %s and
-               `timestamp` <= %s"""
+        q = """delete from rrdqueue 
+               where ds_id = %s and host_id = %s and `timestamp` <= %s"""
 
         usage_id = self.getDSID('usage')
         sync_id = self.getDSID('usagesync')
 
-        self.cursor.execute(q, (usage_id, timestamp))
-        self.cursor.execute(q, (sync_id, timestamp))
+        self.cursor.execute(q, (usage_id, host_id, timestamp))
+        self.cursor.execute(q, (sync_id, host_id, timestamp))
         self.conn.commit()
 
     def getUsageEvents(self, host_id, timestamp):

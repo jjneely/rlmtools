@@ -170,7 +170,6 @@ class RRDGraphs(object):
         for host in hosts:
             host_id = host['host_id']
             maxSafe = host['timestamp']
-            #print "Host: %s  SafeTime: %s" % (host_id, maxSafe)
             usage = self.stats.getUsageEvents(host_id, maxSafe)
             pdps = {}
             CLI = ""
@@ -180,7 +179,6 @@ class RRDGraphs(object):
                 stamp = int(time.mktime(event['timestamp'].timetuple()))
                 start = stamp - event['length']
                 i = start + (increment - (start % increment))
-                #print "Login from %s to %s" % (start, stamp)
                 while i <= stamp:
                     if pdps.has_key(i):
                         pdps[i] = pdps[i] + 1
@@ -196,8 +194,12 @@ class RRDGraphs(object):
 
             path = self.getHostRRA(host_id)
             ret = os.system("rrdtool update %s %s" % (path, CLI))
-            #print "CLI: %s" % CLI
-            #print "rrdtool returned: %s" % ret
+
+            if ret != 0:
+                log.warning("RRDTool returned %s for usage update of host %s" \
+                            % (ret, host_id))
+            else:
+                self.stats.clearUsageEvents(host_id, maxSafe)
 
     def graph(self, dest, args, defs):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
@@ -253,7 +255,7 @@ def main():
     graphs.goVersions()
     graphs.graphMaster()
     graphs.graphVersions()
-    #graphs.handleUsage()
+    graphs.handleUsage()
 
 
 if __name__ == "__main__":
