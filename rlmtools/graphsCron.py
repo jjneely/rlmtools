@@ -40,6 +40,7 @@ import logging
 import os
 import os.path
 import time
+import rrdtool
 
 from datetime     import datetime, timedelta
 from configDragon import config
@@ -97,10 +98,10 @@ class RRDGraphs(object):
             if not os.path.isabs(path):
                 path = os.path.join(self.dir, path)
             if not os.path.exists(path):
-                os.system("rrdtool create %s -s 1800 %s %s" % \
-                          (path, versionDef, rraDef))
+                cli = [path, '-s', '1800'] + versionDef + rraDef
+                rrdtool.create(*cli)
 
-            os.system("rrdtool update %s N:%s" % (path, v['count']))
+            rrdtool.update(path, "N:%s" % v['count'])
 
     def goMaster(self):
         masterList = self.stats.getRRALocations('master', None, None)
@@ -126,12 +127,11 @@ class RRDGraphs(object):
         if not os.path.isabs(master):
             master = os.path.join(self.dir, master)
         if not os.path.exists(master):
-            os.system("rrdtool create %s -s 1800 %s %s" % (master, 
-                                                           masterDef,
-                                                           rraDef))
+            cli = [master, '-s', '1800'] + masterDef + rraDef
+            rrdtool.create(*cli)
         
-        os.system("rrdtool update %s N:%s" % (master, 
-                  ":".join([ str(s) for s in fields ])))
+        cli = [master, "N:%s" % ":".join([ str(s) for s in fields ])]
+        rrdtool.update(*cli)
 
     def getHostRRA(self, host_id):
         "Return the abolute path the the host RRA."
@@ -156,9 +156,8 @@ class RRDGraphs(object):
         if not os.path.exists(abspath):
             # RRDs are created with start time of 03/14/2007 to start
             # before any potential data may have been generated.
-            os.system("rrdtool create %s -s 300 -b %s %s" % (abspath, 
-                                                             '1173844800',
-                                                             usageDef))
+            cli = [abspath, '-s', '300', '-b', '1173844800'] + usageDef
+            rrdtool.create(*cli)
 
         return abspath
 
@@ -172,7 +171,7 @@ class RRDGraphs(object):
             maxSafe = host['timestamp']
             usage = self.stats.getUsageEvents(host_id, maxSafe)
             pdps = {}
-            CLI = ""
+            updates = []
 
             for event in usage:
                 # Everthing needs to be in seconds sence the epoch now
@@ -190,22 +189,22 @@ class RRDGraphs(object):
             keys.sort()
             for i in keys:
                 # Build the RRDTool update command
-                CLI = "%s %s:%s" % (CLI, i, pdps[i])
+                updates.append("%s:%s" % (i, pdps[i]))
 
-            path = self.getHostRRA(host_id)
-            ret = os.system("rrdtool update %s %s" % (path, CLI))
+            if len(updates) > 0:
+                path = self.getHostRRA(host_id)
+                updates.insert(0, path)
+                rrdtool.update(*updates)
 
-            if ret != 0:
-                log.warning("RRDTool returned %s for usage update of host %s" \
-                            % (ret, host_id))
-            else:
-                self.stats.clearUsageEvents(host_id, maxSafe)
+            self.stats.clearUsageEvents(host_id, maxSafe)
 
-    def graph(self, dest, args, defs):
+    def graph(self, dest, defs, *args):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
 
         for zone in timeZones:
-            os.system(cmd % (dest, zone, zone, args, defs))
+            cli = ["%s-%s.png" % (dest, zone),
+                   "-s", "-%s" % zone, ] + list(args) + defs
+            rrdtool.graph(*cli)
 
     def graphMaster(self):
         masterList = self.stats.getRRALocations('master', None, None)
@@ -217,15 +216,15 @@ class RRDGraphs(object):
             path = os.path.join(self.dir, masterList[0]['path'])
         dest1 = os.path.join(self.dir, self.graphs, 'master')
         dest2 = os.path.join(self.dir, self.graphs, 'problems')
-        self.graph(dest1, "-t 'Liquid Dragon Totals' -v Clients",
-                   masterGraph % {'file':path})
-        self.graph(dest2, "-t 'Liquid Dragon Problem Clients' -v Clients",
-                   problemsGraph % {'file':path})
+        self.graph(dest1, masterGraph({'file':path}), "-t",
+                   "Liquid Dragon Totals", "-v", "Clients")
+        self.graph(dest2, problemsGraph({'file':path}), "-t",
+                   "Liquid Dragon Problem Clients", "-v", "Clients")
 
     def graphVersions(self):
         list = self.stats.getRRALocations('version', None, None)
-        defs = ""
-        actions = ""
+        defs = []
+        actions = []
         c = 0
         for v in list:
             c = c + 1
@@ -238,16 +237,16 @@ class RRDGraphs(object):
             rpn = "+," * (c - 1) + "UNKN,IF"
             d = {'c':c, 'file':path, 'reflist':''.join(reflist), 'rpn':rpn,
                  'light':rrdColors[c % 7][0], 'label':v['label']}
-            defs = defs + "DEF:v%(c)s=%(file)s:version:AVERAGE " % d
-            defs = defs + "CDEF:ln%(c)s=v%(c)s,%(reflist)s%(rpn)s " % d
-            actions = actions + "'AREA:v%(c)s%(light)s:%(label)s:STACK' " % d
+            defs.append("DEF:v%(c)s=%(file)s:version:AVERAGE" % d)
+            defs.append("CDEF:ln%(c)s=v%(c)s,%(reflist)s%(rpn)s" % d)
+            actions.append("AREA:v%(c)s%(light)s:%(label)s:STACK" % d)
             
         for i in range(len(list)):
-            actions = actions + "LINE1:ln%s%s " % (i+1, rrdColors[(i+1) % 7][1])
+            actions.append("LINE1:ln%s%s" % (i+1, rrdColors[(i+1) % 7][1]))
 
         self.graph(os.path.join(self.dir, self.graphs, 'versions'),
-                "-t 'Realm Linux Versions' -v Clients -h 200",
-                   defs + actions)
+                defs + actions,
+                "-t", "Realm Linux Versions", "-v", "Clients", "-h", "200")
 
 def main():
     graphs = RRDGraphs()
