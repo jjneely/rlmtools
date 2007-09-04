@@ -114,25 +114,47 @@ class StatsServer(server.Server):
 
         return self.cursor.fetchone()[0]
 
-    def getRRALocations(self, dstype, host_id, label):
+    def getDepartments(self):
+        """Return a list of departments."""
+        q = "select name from dept order by name asc"
+        self.cursor.execute(q)
+        r = resultSet(self.cursor)
+
+        return [ row['name'] for row in r ]
+
+    def getRRALocations(self, dstype, host_id=None, label=None, dept=None):
         """Return list of file locations.  host_id and label may
            be None."""
         q1 = """select path, label, host_id from rrdlocation 
                 where ds_id = %s """
+        q2 = """select rrdlocation.path, rrdlocation.label, 
+                   realmlinux.host_id 
+                from rrdlocation, dept, realmlinux 
+                where realmlinux.host_id = rrdlocation.host_id 
+                   and realmlinux.dept_id = dept.dept_id
+                   and rrdlocation.ds_id = %s
+                   and dept.name = %s"""
+        extra = ""
+
         if dstype == None:
             raise StandardError("getRRALocations() requires a dstype")
         if host_id != None:
-            q1 = q1 + "and host_id = %s "
+            extra = " and rrdlocation.host_id = %s"
         if label != None:
-            q1 = q1 + "and label = %s"
+            extra = extra + " and rrdlocation.label = %s"
+
+        if dept != None:
+            q = q2 + extra
+        else:
+            q = q1 + extra
        
         if isinstance(dstype, str):
             ds_id = self.getDSID(dstype)
         else:
             ds_id = dstype
 
-        tup = filter(lambda b: b != None, [ds_id, host_id, label])
-        self.cursor.execute(q1, tup)
+        tup = filter(lambda b: b != None, [ds_id, dept, host_id, label])
+        self.cursor.execute(q, tup)
         return resultSet(self.cursor).dump()
 
     def setRRALocation(self, dstype, host_id, label, path):

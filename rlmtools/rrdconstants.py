@@ -44,10 +44,10 @@ def __subs(src, dict):
 
 rrdColors = [
         ('#EA644A',  '#CC3118'), # red
-        ('#48C4EC',  '#1598C3'), # blue
         ('#EC9D48',  '#CC7016'), # orage
-        ('#54EC48',  '#24BC14'), # green
         ('#ECD748',  '#C9B215'), # yellow
+        ('#54EC48',  '#24BC14'), # green
+        ('#48C4EC',  '#1598C3'), # blue
         ('#DE48EC',  '#B415C7'), # indigo
         ('#7648EC',  '#4D18E4'), # violet
        ]

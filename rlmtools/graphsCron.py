@@ -245,8 +245,36 @@ class RRDGraphs(object):
             actions.append("LINE1:ln%s%s" % (i+1, rrdColors[(i+1) % 7][1]))
 
         self.graph(os.path.join(self.dir, self.graphs, 'versions'),
-                defs + actions,
+                defs + actions, '-l', '0',
                 "-t", "Realm Linux Versions", "-v", "Clients", "-h", "200")
+
+    def __usageHelper(self, list, domain):
+        defs = []
+        actions = []
+        c = 0
+
+        for rra in list:
+            if os.path.isabs(rra['path']):
+                path = rra['path']
+            else:
+                path = os.path.join(self.dir, rra['path'])
+
+            defs.append("DEF:v%s=%s:users:AVERAGE" % (c, path))
+            actions.append("AREA:v%s%s::STACK" % (c, rrdColors[3][0]))
+            c = c + 1
+
+        self.graph(os.path.join(self.dir, self.graphs, domain),
+                   defs+actions, '-l', '0', '-t', 'Realm Linux Usage',
+                   '-v', 'People')
+
+    def graphMasterUsage(self):
+        list = self.stats.getRRALocations('usage')
+        self.__usageHelper(list, 'usage')
+
+    def graphDeptUsage(self):
+        for dept in self.stats.getDepartments():
+            list = self.stats.getRRALocations('usage', dept=dept)
+            self.__usageHelper(list, 'usage@%s' % dept)
 
 def main():
     graphs = RRDGraphs()
@@ -255,7 +283,8 @@ def main():
     graphs.graphMaster()
     graphs.graphVersions()
     graphs.handleUsage()
-
+    graphs.graphMasterUsage()
+    graphs.graphDeptUsage()
 
 if __name__ == "__main__":
     main()
