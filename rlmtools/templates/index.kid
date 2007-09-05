@@ -60,14 +60,14 @@
   </td><td>
 
   <table class="noborder">
-    <tr>
-      <td>
-        <img src="/rlmtools/static/graphs/master-3d.png"/>
+    <tr py:for="graph in graphs">
+      <td py:if="graph['url'] != ''">
+        <a href="" py:attrs="'href':graph['href']">
+          <img src="" py:attrs="'src':graph['url']"/>
+        </a>
       </td>
-    </tr>
-    <tr>
-      <td>
-        <img src="/rlmtools/static/graphs/problems-3d.png"/>
+      <td py:if="graph['url'] == ''">
+        No graph available for the ${graph['domain']} domain.
       </td>
     </tr>
   </table>

@@ -30,6 +30,7 @@ kid.enable_import()
 
 import cherrypy
 import webServer
+import rrdconstants
 
 from configDragon import config
 
@@ -107,12 +108,30 @@ class Application(object):
         totals = self.__server.getTotalClients()
         active = self.__server.getActiveClients()
         departments = self.__server.getDepartments()
+        graphs = []
+        domainTable = [('master', 'Liquid Dragon Totals'),
+                       ('problems', 'Liquid Dragon Problem Clients'),
+                      ]
+
+        for domain, t in domainTable:
+            image = "%s-3d.png" % domain
+            path = os.path.join(config.rrd_dir, 'graphs', image)
+            if os.path.exists(path):
+                img = os.path.join('/rlmtools/static/graphs/', image)
+                href = '/rlmtools/showGraph?title=%s&domain=%s' % (t, domain)
+            else:
+                img = ""
+                href = ""
+
+            graphs.append( {'url':img, 'domain':domain,
+                            'href':href, 'title':t} )
 
         for dept in departments:
             dept['url'] = "%s/dept?dept_id=%s" % (url(),
                                                   dept['dept_id'])
         return serialize('templates.index', 
                          dict(departments=departments,
+                              graphs=graphs,
                               active=active,
                               totals=totals,
                               name=Auth().getName()))
@@ -338,6 +357,66 @@ class Application(object):
         return serialize('templates.versionlist',
                          dict( versions=versions ))
     versionList.exposed = True
+
+    def showGraph(self, title, domain):
+        graphs = []
+        for zone in rrdconstants.timeZones:
+            d = {}
+            if zone.endswith('d'):
+                d['summary'] = "%s day view." % zone[:-1]
+            elif zone.endswith('w'):
+                d['summary'] = "%s week view." % zone[:-1]
+            else:
+                d['summary'] = zone
+
+            image = "%s-%s.png" % (domain, zone)
+            path = os.path.join(config.rrd_dir, 'graphs', image)
+            if not os.path.exists(path):
+                url = ""
+            else:
+                url = "/rlmtools/static/graphs/%s" % image
+
+            d['url'] = url
+            graphs.append(d)
+
+        return serialize('templates.graphs',
+                         dict( title=title, graphs=graphs )
+                        )
+    showGraph.exposed = True
+
+    def usage(self):
+        depts = self.__server.getDeptNames()
+        graphs = []
+
+        image = "usage-3d.png"
+        path = os.path.join(config.rrd_dir, 'graphs', image)
+        if os.path.exists(path):
+            d = dict(summary="Total Usage Statistics",
+                     url="/rlmtools/static/graphs/%s" % image,
+                     href="/rlmtools/showGraph?title=%s&domain=%s" % \
+                             ("Total Usage Statistics", "usage"))
+        else:
+            d = dict(summary="Total Usage Statistics", url="", href="")
+
+        graphs.append(d)
+        for dept in depts:
+            d = {}
+            summary = "Usage for department: %s" % dept
+            dom = "usage@%s" % dept
+            image = "%s-3d.png" % dom
+            path = os.path.join(config.rrd_dir, 'graphs', image)
+            if not os.path.exists(path):
+                url = ""
+                href = ""
+            else:
+                url = "/rlmtools/static/graphs/%s" % image
+                href = "/rlmtools/showGraph?title=%s&domain=%s" % (summary,
+                                                                   dom)
+
+            graphs.append( dict(url=url, href=href, summary=summary) )
+
+        return serialize('templates.usage', dict(graphs=graphs))
+    usage.exposed = True
 
 def main():
     staticDir = os.path.join(os.path.dirname(__file__), "static")

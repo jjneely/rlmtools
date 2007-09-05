@@ -15,6 +15,9 @@ A {
 a:hover {
    text-decoration: underline;
 }
+a img {
+   border: 0;
+}
 div.content {
    font-family: Arial,Helvetica,Sans-Serif;
    padding: 1em;

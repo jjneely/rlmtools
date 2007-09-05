@@ -52,6 +52,11 @@ class WebServer(server.Server):
     
         return result[0]
 
+    def getDeptNames(self):
+        q = "select name from dept order by name asc"
+        self.cursor.execute(q)
+        return [ d['name'] for d in resultSet(self.cursor) ]
+
     def getDepartments(self):
         q1 = """select dept.name, dept.dept_id,
                     count(support = 1 or null) as supported, 
