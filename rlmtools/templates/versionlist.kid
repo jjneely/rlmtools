@@ -19,10 +19,24 @@
   <h2 style="clear:none;">Version List</h2>
 
   <table class="noborder">
-    <tr><td>
-        <img src="/rlmtools/static/graphs/versions-3d.png"/>
-    </td>
-    <td>
+    <tr>
+      <td>
+
+        <table class="noborder">
+        <tr py:for="graph in graphs">
+          <td py:if="graph['url'] != ''">
+            <a href="" py:attrs="'href':graph['href']">
+              <img src="" py:attrs="'src':graph['url']"/>
+            </a>
+          </td>
+          <td py:if="graph['url'] == ''">
+            No graph available for the ${graph['domain']} domain.
+          </td>
+        </tr>
+        </table>
+
+      </td>
+      <td>
 
   <table>
     <tr class="neutral">

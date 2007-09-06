@@ -11,6 +11,17 @@
 </head>
 <body>
 
+  <p>Usage is the time a realm user spent logged into a 
+    Realm Linux machine either locally or remotely.  Usage information
+    is reported asynchronously by each client and therefore may not
+    be accurate for the last 24 to 72 hours.  Click on a graph to
+    see more detail.</p>
+
+  <p>Usage reporting is a feature of Realm Linux 5.  Usage from any
+    previous Realm Linux versions is not included.</p>
+
+  <h2>Usage Statistics</h2>
+
   <table class="noborder">
     <tr class="neutral" py:for="graph in graphs">
       <td py:content="graph['summary']"/>

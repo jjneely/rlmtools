@@ -353,9 +353,25 @@ class Application(object):
 
     def versionList(self):
         versions = self.__server.getVersionList()
+        graphs = []
+        image = "versions-3d.png"
+        path = os.path.join(config.rrd_dir, 'graphs', image)
+
+        if os.path.exists(path):
+            graphs.append( dict(
+                     domain='versions',
+                     url="/rlmtools/static/graphs/%s" % image,
+                     href="/rlmtools/showGraph?title=%s&domain=%s" % \
+                             ("Version Statistics", "versions")))
+        else:
+            graphs.append( dict(
+                     domain='versions',
+                     url="",
+                     href=""))
 
         return serialize('templates.versionlist',
-                         dict( versions=versions ))
+                         dict( versions=versions,
+                               graphs=graphs ))
     versionList.exposed = True
 
     def showGraph(self, title, domain):
@@ -388,10 +404,10 @@ class Application(object):
         depts = self.__server.getDeptNames()
         graphs = []
 
-        image = "usage-3d.png"
+        image = "usage-1w.png"
         path = os.path.join(config.rrd_dir, 'graphs', image)
         if os.path.exists(path):
-            d = dict(summary="Total Usage Statistics",
+            d = dict(summary="Total Usage Statistics:",
                      url="/rlmtools/static/graphs/%s" % image,
                      href="/rlmtools/showGraph?title=%s&domain=%s" % \
                              ("Total Usage Statistics", "usage"))
@@ -403,7 +419,7 @@ class Application(object):
             d = {}
             summary = "Usage for department: %s" % dept
             dom = "usage@%s" % dept
-            image = "%s-3d.png" % dom
+            image = "%s-1w.png" % dom
             path = os.path.join(config.rrd_dir, 'graphs', image)
             if not os.path.exists(path):
                 url = ""
