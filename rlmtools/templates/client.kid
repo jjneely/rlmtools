@@ -33,6 +33,12 @@
       <th class="right">Department:</th>
       <td py:content="client['dept']">The Epoch</td>
     </tr>
+    <tr class="neutral">
+      <th class="right">UUID:</th>
+      <td py:if="client['uuid'] == None">N/A</td>
+      <td py:if="client['uuid'] != None"
+          py:content="client['uuid']">- - - -</td>
+    </tr>
     <tr py:attrs="'class':client['support'] and 'good' or 'bad'">
       <th class="right">Support:</th>
       <td py:content="client['support'] and 'Yes' or 'No'">foobared</td>

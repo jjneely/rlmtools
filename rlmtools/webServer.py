@@ -171,10 +171,10 @@ class WebServer(server.Server):
 
     def getClientDetail(self, host_id, history_days=30):
         # returns a dict of: hostname, installdate, recvdkey, support, 
-        #    dept, version, lastcheck, status
+        #    dept, version, lastcheck, status, uuid
         # status is a list of dicts: service, timestamp, success, data
         q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
-                       d.name as dept, r.dept_id, r.version
+                       d.name as dept, r.dept_id, r.version, r.uuid
                 from realmlinux as r, dept as d
                 where d.dept_id = r.dept_id and r.host_id = %s"""
         q2 = """select `timestamp` as lastcheck from lastheard where
