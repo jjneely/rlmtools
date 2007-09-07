@@ -417,7 +417,7 @@ class Application(object):
         graphs.append(d)
         for dept in depts:
             d = {}
-            summary = "Usage for department: %s" % dept
+            summary = "%s:" % dept
             dom = "usage@%s" % dept
             image = "%s-1w.png" % dom
             path = os.path.join(config.rrd_dir, 'graphs', image)

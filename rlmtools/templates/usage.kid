@@ -22,9 +22,9 @@
 
   <h2>Usage Statistics</h2>
 
-  <table class="noborder">
+  <table>
     <tr class="neutral" py:for="graph in graphs">
-      <td py:content="graph['summary']"/>
+      <th class="right" py:content="graph['summary']"/>
       <td py:if="graph['url'] != ''">
         <a href="" py:attrs="'href':graph['href']">
           <img src="" py:attrs="'src':graph['url']"/>

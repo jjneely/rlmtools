@@ -189,7 +189,8 @@ class APIServer(server.Server):
         self.cursor.execute(q4, (self.uuid,))
         hostinfo = resultSet(self.cursor).dump()[0]
         if hostinfo['hostname'] != self.client:
-            self.changeHostname(hostinfo['host_id'], self.client)
+            self.changeHostname(hostinfo['host_id'], hostinfo['hostname'],
+                                self.client)
 
         return trustedKey
 
@@ -246,11 +247,12 @@ class APIServer(server.Server):
 
         log.warning("Client %s has the host keys for %s. Updating hostname." \
                     % (self.client, hostinfo['hostname']))
-        self.changeHostname(hostinfo['host_id'], self.client)
+        self.changeHostname(hostinfo['host_id'], hostinfo['hostname'], 
+                            self.client)
 
         return hostinfo['publickey']
 
-    def changeHostname(self, hostID, newname):
+    def changeHostname(self, hostID, oldname, newname):
         q1 = """select host_id from realmlinux where hostname = %s"""
         q2 = """update realmlinux set hostname = %s where host_id = %s"""
 
@@ -260,8 +262,12 @@ class APIServer(server.Server):
             hid = self.cursor.fetchone()[0]
             self.cursor.execute(q2, ("unknown - ID: %s" % hid, hid))
 
-        # Now update the registration we found
-        self.cursor.execute(q2, (newname, hostID))
+        # XXX: unknown host names are most likely masquraded hosts and we
+        # don't know how to better handle this right now
+        if not oldname.startswith('unknown - ID'):
+            # Now update the registration we found
+            self.cursor.execute(q2, (newname, hostID))
+        
         self.conn.commit()
     
     def register(self, publicKey, dept, version, rhnid):

@@ -265,7 +265,7 @@ class RRDGraphs(object):
 
         self.graph(os.path.join(self.dir, self.graphs, domain),
                    defs+actions, '-l', '0', '-t', 'Realm Linux Usage',
-                   '-v', 'People')
+                   '-v', 'People', '-e', '-1d')
 
     def graphMasterUsage(self):
         list = self.stats.getRRALocations('usage')
