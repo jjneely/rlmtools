@@ -21,8 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 # XMLRPC Interface
-#URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
-URL = "https://anduril.unity.ncsu.edu/~slack/realmkeys/handler.py"
+URL = "https://secure.linux.ncsu.edu/xmlrpc/handler.py"
 
 # Locally stored keys
 publicKey = "/etc/sysconfig/RLKeys/rkhost.pub"
