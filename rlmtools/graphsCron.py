@@ -98,6 +98,7 @@ class RRDGraphs(object):
             if not os.path.isabs(path):
                 path = os.path.join(self.dir, path)
             if not os.path.exists(path):
+                log.info("Creating version RRD: %s" % path)
                 cli = [path, '-s', '1800'] + versionDef + rraDef
                 rrdtool.create(*cli)
 
@@ -127,6 +128,7 @@ class RRDGraphs(object):
         if not os.path.isabs(master):
             master = os.path.join(self.dir, master)
         if not os.path.exists(master):
+            log.info("Creating master RRD: %s" % master)
             cli = [master, '-s', '1800'] + masterDef + rraDef
             rrdtool.create(*cli)
         
@@ -156,6 +158,7 @@ class RRDGraphs(object):
         if not os.path.exists(abspath):
             # RRDs are created with start time of 03/14/2007 to start
             # before any potential data may have been generated.
+            log.info("Creating host RRD: %s" % abspath)
             cli = [abspath, '-s', '300', '-b', '1173844800'] + usageDef
             rrdtool.create(*cli)
 
@@ -277,6 +280,7 @@ class RRDGraphs(object):
             self.__usageHelper(list, 'usage@%s' % dept)
 
 def main():
+    log.info("Running RRDGraphs cron job...")
     graphs = RRDGraphs()
     graphs.goMaster()
     graphs.goVersions()

@@ -626,13 +626,14 @@ class APIServer(server.Server):
     def convertApi_1(self, publicKey, uuid, rhnid, sig):
         """Find a client via its public key, and attach the UUID to it."""
        
-        q = """update realmlinux set uuid = %s and rhnid = %s
+        q = """update realmlinux set uuid = %s, rhnid = %s
                where host_id = %s"""
 
         if self.apiVersion < 1:
             raise APIFault("Invaild API version %s for convertApi_1()" % \
                            self.apiVersion)
 
+        # This will generate a warning log because we can't find UUID
         if self.getHostID() != None:
             log.debug("client already has its UUID registered: %s" % self.uuid)
             return 0
