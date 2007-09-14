@@ -242,6 +242,7 @@ class WebServer(server.Server):
         """Returns a table of version to number of clients."""
 
         q = """select version, count(*) as count from realmlinux
+               where recvdkey = 1
                group by version order by version asc"""
 
         self.cursor.execute(q)
