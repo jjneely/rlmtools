@@ -30,6 +30,14 @@ import os
 from errors import error
 
 apiVersion = 1
+__serverURL = None
+
+
+def setupServer(URL):
+    global __serverURL
+    __serverURL = URL
+
+    return xmlrpclib.ServerProxy(__serverURL)
 
 def doRPC(method, *params):
     "Return the xmlrpc opject we want."
@@ -61,8 +69,8 @@ def doRPC(method, *params):
         if i < 5:
             time.sleep(i*3)
         
-    error("Giving up trying XMLRPC")
-    print "Realm Linux Management: Error: Could not talk to server at %s" % URL
+    error("Can not initiate XMLRPC protocol to %s" % __serverURL)
+    error("Could not check in with the Realm Linux management server.  Please check your network settings and hardware.")
     sys.exit(1)
 
 def parseSystemID(file):

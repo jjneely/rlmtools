@@ -23,7 +23,6 @@
 import sys
 import os
 import os.path
-import xmlrpclib
 import re
 import socket
 import stat
@@ -238,7 +237,7 @@ def getRealmLinuxKey(server):
         key.importKey(fd.read())
         fd.close()
     else:
-        data = doRPC(server.getServerKey)
+        data = doRPC(server.getServerKey, getUUID())
         key.importKey(data)
 
         # We are at registration.  Save key
@@ -398,7 +397,7 @@ def main():
        called directly via 'ncsubless' to administratively register
        a machine."""
 
-    server = xmlrpclib.ServerProxy(URL)
+    server = xmlrpc.setupServer(URL)
 
     if os.path.basename(sys.argv[0]) == "ncsubless":
         # called via ncsubless script

@@ -65,10 +65,10 @@ def getHostName():
     return addr[0]
 
 
-def getServerKey(apiVersion):
+def getServerKey(apiVersion, uuid=None):
     """Return the Server's public key"""
     
-    srv = server.Server(apiVersion, getHostName())
+    srv = server.Server(apiVersion, getHostName(), uuid)
     ret = srv.getPublicKey()
     return ret
     
