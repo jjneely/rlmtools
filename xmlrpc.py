@@ -25,6 +25,7 @@ import httplib
 import urllib2
 import xmlrpclib
 import time
+import sys
 import os
 
 from errors import error
