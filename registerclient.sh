@@ -23,7 +23,7 @@
 /usr/bin/Wait
 
 FILE=`mktemp /tmp/regXXXXXX`
-/usr/share/rlmtools/client.py > $FILE 2>&1 
+/usr/bin/ncsuclient > $FILE 2>&1 
 
 OUTPUT=`cat $FILE`
 
@@ -32,8 +32,9 @@ if [ "$OUTPUT" != "" ] ; then
     # Send failure message
     cat $FILE | /usr/bin/ncsureport --service client --fail --message -
 
-    # Let root know
-    cat $FILE
+    # If ncsuclient fails it will log messages to syslog.  We don't
+    # generate unneeded emails when the machine is unplugged from the
+    # network. -- 10/04/2007 jjn
 
 else
 

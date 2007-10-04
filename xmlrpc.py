@@ -71,7 +71,8 @@ def doRPC(method, *params):
             time.sleep(i*3)
         
     error("Can not initiate XMLRPC protocol to %s" % __serverURL)
-    error("Could not check in with the Realm Linux management server.  Please check your network settings and hardware.")
+    print "Realm Linux Management: Can not initiate XMLRPC protocol to %s" \
+          % __serverURL
     sys.exit(1)
 
 def parseSystemID(file):
