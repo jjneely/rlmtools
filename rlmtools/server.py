@@ -46,7 +46,7 @@ def logException():
         log.critical(line.strip())
 
 def getDBDict():
-    files = ['./solaris2ks.conf', '/etc/solaris2ks.conf']
+    files = ['./rlmtools.conf', '/etc/rlmtools.conf']
 
     parser = ConfigParser.ConfigParser()
     parser.read(files)

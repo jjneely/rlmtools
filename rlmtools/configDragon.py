@@ -25,7 +25,7 @@ import logging
 import server
 import ConfigParser
 
-config_files = ['./solaris2ks.conf', '/etc/solaris2ks.conf']
+config_files = ['./rlmtools.conf', '/etc/rlmtools.conf']
 config = None
 log = logging.getLogger("xmlrpc")
 init_logging = True
@@ -33,6 +33,7 @@ init_logging = True
 # Format:
 # config option -> (help string, isIntType)
 requiredConfig = {
+        'webks_dir': ["Directory where the Web-Kickstart configs live.", False],
         'privatekey': ["Filename for the private key.", False],
         'publickey': ["Filename for the public key.",   False],
         'key_directory': ["Directory clients public keys appear.", False],
@@ -71,6 +72,21 @@ def initLogging():
     logger.info("Liquid Dragon: logging initialized.")
 
     init_logging = False
+
+# XXX: Configuration crap all needs to be re-worked and this class
+# well help with that.  But not now used.
+class Parser(ConfigParser.ConfigParser):
+
+    def get(self, section, option, default):
+        """
+        Override ConfigParser.get: If the request option is not in the
+        config file then return the value of default rather than raise
+        an exception.  We still raise exceptions on missing sections.
+        """
+        try:
+            return ConfigParser.ConfigParser.get(self, section, option)
+        except ConfigParser.NoOptionError:
+            return default
 
 class ConfigDragon(server.Server):
 
