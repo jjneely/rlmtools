@@ -1,7 +1,7 @@
 
-/* An alternative ITD Navigation bar
+/* An alternative OIT Navigation bar
  * Jack Neely 
- * 06/26/2007
+ * 07/07/2008
  */
 
 body {
@@ -9,7 +9,7 @@ body {
     margin: 0em;
 }
 
-div.itdnavbar {
+div.oitnavbar {
     font-family: Arial,Helvetica,Sans-Serif;
     background-color: #000000;
     color: #FFFFFF;
@@ -17,37 +17,37 @@ div.itdnavbar {
     margin: 0em;
     height: 24px;
 }
-div.itdnavbar a {
+div.oitnavbar a {
     color: #FFFFFF;
     text-decoration: none;
 }
-div.itdnavbar a:hover {
+div.oitnavbar a:hover {
     color: #FFFFFF;
     text-decoration: underline;
 }
-div.itdcontainer {
+div.oitcontainer {
     padding-top: 2px;
 }
-div.itdnavbar ul {
+div.oitnavbar ul {
     display: inline;
     padding: 0px;
     list-style-type: none;
     white-space: nowrap;
 }
-div.itdnavbar li {
+div.oitnavbar li {
     display: inline;
     font-size: 90%;
 }
-div.itd_logo {
+div.oit_logo {
     margin: 0em;
     padding: 0em;
     padding-top: 0px;
     padding-left: 1em;
-    width: 70px;
-    height: 22px;
+    width: 40px;
+    height: 32px; 
     float: left;
 }
-div.itd_logo img {
+div.oit_logo img {
     border: none;
 }
 div.ncsu_brick {

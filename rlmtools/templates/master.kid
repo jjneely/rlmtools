@@ -14,16 +14,16 @@
 </head>
 <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'">
 
-<div class="itdnavbar">
-  <div class="itd_logo">
-      <a href="http://www.itd.ncsu.edu/"><img alt="ITD Homepage"
-          src="/rlmtools/static/itd_logo.gif"/></a></div>
+<div class="oitnavbar">
+  <div class="oit_logo">
+      <a href="http://www.oit.ncsu.edu/"><img alt="OIT Homepage"
+          src="/rlmtools/static/oit-logo-icon.png"/></a></div>
   <div class="ncsu_brick">
       <a href="http://www.ncsu.edu/"><img src="/rlmtools/static/brick_black.gif"
           alt="NC State University"/></a></div>
-  <div class="itdcontainer">
+  <div class="oitcontainer">
     <ul>
-      <li><a href="http://itd.ncsu.edu">Information Technology Division</a>
+      <li><a href="http://oit.ncsu.edu">Office of Information Technology</a>
         &nbsp;|&nbsp;</li>
       <li><a href="http://sysnews.ncsu.edu">SysNews</a>
         &nbsp;|&nbsp;</li>
