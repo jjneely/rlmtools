@@ -175,11 +175,20 @@ class RRDGraphs(object):
             usage = self.stats.getUsageEvents(host_id, maxSafe)
             pdps = {}
             updates = []
+            log.debug("HandleUsage(): Working on host_id %s, maxSafe = %s events = %s" % (host_id, maxSafe, len(usage)))
 
             for event in usage:
                 # Everthing needs to be in seconds sence the epoch now
                 stamp = int(time.mktime(event['timestamp'].timetuple()))
                 start = stamp - event['length']
+                if start <= 1173844800:
+                    # The earlest any login event can be
+                    log.warning("Host ID %s submitted bad usage event." \
+                                % host_id)
+                    log.warning("Time range %s - %s" % \
+                                (time.ctime(start), time.ctime(stamp)))
+                    continue
+
                 i = start + (increment - (start % increment))
                 while i <= stamp:
                     if pdps.has_key(i):
@@ -235,11 +244,18 @@ class RRDGraphs(object):
                 path = os.path.join(self.dir, v['path'])
             else:
                 path = v['path']
+
+            if not os.path.exists(path):
+                # The database knows about versions that no longer exist
+                log.info("Creating version RRD: %s" % path)
+                cli = [path, '-s', '1800'] + versionDef + rraDef
+                rrdtool.create(*cli)
             
             reflist = ['v%s,' % str(i+1) for i in range(c) ]
             rpn = "+," * (c - 1) + "UNKN,IF"
             d = {'c':c, 'file':path, 'reflist':''.join(reflist), 'rpn':rpn,
                  'light':rrdColors[c % 7][0], 'label':v['label']}
+
             defs.append("DEF:v%(c)s=%(file)s:version:AVERAGE" % d)
             defs.append("CDEF:ln%(c)s=v%(c)s,%(reflist)s%(rpn)s" % d)
             actions.append("AREA:v%(c)s%(light)s:%(label)s:STACK" % d)
@@ -261,6 +277,10 @@ class RRDGraphs(object):
                 path = rra['path']
             else:
                 path = os.path.join(self.dir, rra['path'])
+
+            if not os.path.exists(path):
+                log.debug("Request for non-existant RRA: %s" % path)
+                continue
 
             defs.append("DEF:v%s=%s:users:AVERAGE" % (c, path))
             actions.append("AREA:v%s%s::STACK" % (c, rrdColors[3][0]))
