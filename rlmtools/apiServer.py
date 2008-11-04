@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005, 2006, 2007 NC State University
+# Copyright (C) 2003, 2005 - 2008 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -35,14 +35,7 @@ from datetime import datetime, timedelta
 from resultSet import resultSet
 from configDragon import config
 
-try:
-    import debug
-except ImportError:
-    sys.path.append("/afs/unity/web/l/linux/web-kickstart")
-else:
-    sys.path.append("/home/slack/projects/solaris2ks")
-
-import webKickstart
+import webKickstart.libwebks
 
 log = logging.getLogger("xmlrpc")
 
@@ -450,12 +443,11 @@ class APIServer(server.Server):
         log.info("Client %s requests activation key" % self.client)
 
         ks = self.__getWebKs()
-        data = ks.getKeys('enable', 'activationkey')
-        if len(data) == 0:
+        if not ks.has_key['enable.activationkey']:
             # *sigh* no key
             key = config.rhnkey
         else:
-            key = data[0]['options'][0]
+            key = ks['enable.activationkey'].verbatim()
 
         return key
 
@@ -682,53 +674,32 @@ class APIServer(server.Server):
         """Generate the updates.conf file and return a string."""
 
         ks = self.__getWebKs()
-        data = ks.getKeys('users')
-        if len(data) == 0:
+        if not ks.has_key('users'):
             usersdata = "users default %s" % config.defaultkey
         else:
             # a list of the options passed to the 'users' key
-            args = data[0]['options']
-            usersdata = "users " + " ".join(args)
+            usersdata = "users " + ks['users'].verbatim()
         
         # root data
-        data = ks.getKeys('root')
-        if len(data) == 0:
+        if not ks.has_key('root'):
             rootdata = "root default %s" % config.defaultkey
         else:
-            args = data[0]['options']
-            rootdata = "root " + " ".join(args)
+            rootdata = "root " + ks['root'].verbatim()
 
         # clusters
-        data = ks.getKeys('cluster')
         clusterdata = ""
-        if len(data) > 0:
-            for row in data:
+        if ks.has_key('cluster'):
+            for row in ks['cluster']:
                 clusterdata = "%scluster %s\n" % (clusterdata, 
-                              " ".join(row['options']))
+                              row.verbatim())
 
         return "%s\n%s\n%s" % (usersdata, rootdata, clusterdata)
 
     def __getWebKs(self):
         """Find and return the web-kickstart config object"""
-        
-        os.chdir(sys.path[-1])
-        wks = webKickstart.webKickstart("fakeurl", {})
-        scList = wks.findFile(self.client, webKickstart.config.jumpstarts)
-        if len(scList) == 0:
-            raise Exception("No config for %s in %s" % (self.client,
-                                       webKickstart.config.jumpstarts))
-        # Do we care about collisions?
-        # If not, this is the same thing that Web-Kickstart does
-        sc = scList[0]
-        
-        try:
-            ks = wks.cfg.get_obj(sc.getVersion(), {'url': "fakeurl", 'sc': sc})
-        except Exception, e:
-            # KeyError or ConfgError from webkickstart
-            # Unsupported version key in config file
-            ks = wks.cfg.get_obj('default', {'url': "fakeurl", 'sc': sc})
 
-        return ks
+        wks = webKickstart.libwebks.LibWebKickstart(config.webks_dir)
+        return wks.getKeys(self.client)
 
 
 # Make things a little easier for the API module

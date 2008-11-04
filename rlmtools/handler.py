@@ -46,19 +46,17 @@ def handler(req):
 
     log = logging.getLogger("xmlrpc")
 
-    fn = os.path.basename(req.filename)
-    if fn != "handler.py":
-        # We know because of the PythonHandler that the user requested
-        # a python (.py) file.  Find it and give it to them.
-        try:
-            mod = __import__(fn[:-3])
-            return mod.handler(req)
-        except Exception, e:
-            log.warning("Failed to import %s" % fn)
-            apache.log_error("Failed to import %s" % fn)
-            return apache.HTTP_NOT_FOUND
+    # Log the request
+    if req.headers_in.has_key('User-Agent'):
+        userAgent = req.headers_in['User-Agent']
+    else:
+        userAgent = "None"
+
+    log.info("%s - %s - %s" % (req.get_remote_host(apache.REMOTE_NOLOOKUP),
+                              userAgent, req.the_request))
 
     if not req.method == "POST":
+        log.debug("Refusing POST method request.  (Probably a web browser.)")
         return apache.HTTP_BAD_REQUEST
     
     data = req.read(int(req.headers_in['content-length']))
@@ -78,7 +76,7 @@ def handler(req):
         return apache.HTTP_INTERNAL_SERVER_ERROR
 
     req.content_type = 'text/xml'
-    req.headers_out.add('Content-length', str(len(ret)))
+    req.headers_out.add('content-length', str(len(ret)))
     req.send_http_header()
     req.write(ret)
 
