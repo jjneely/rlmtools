@@ -1,36 +1,36 @@
 Configuration of Apache and RLMTools
 ====================================
 
-Right now the XMLRPC client calls URL/handler.py and the URL maps to the
-directory that this tarball/project is in.  The handler.py file is actually
-not in this directory but the rlmtools/ directory.  That's what we want
-for now.  I've included an .htaccess file that looks like this:
+The XMLRPC server is the module rlmtools.handler and is now designed to
+be run fron your Apache configuration via Location diretives.  An example
+config:
 
-AddHandler python-program .py
-PythonHandler rlmtools.handler
-PythonDebug On
-PythonInterpPerDirectory On
+<Location /xmlrpc/handler.py >
+        SetHandler python-program
+        PythonHandler rlmtools.handler
+        PythonPath "sys.path + ['/extra/python/path']"
+        PythonInterpreter rlmtools
+</Location>
 
-<Files solaris2ks.conf>
-    deny from all
-</Files>
+The top level rlmtools/ directory must be in the python path as well as
+the top level webkickstart/ directory.  Hopefully, these are provided
+by handy RPM packages in the site-packages area of your python
+distribution.
 
-That will start the handler.py script via mod_python when and URL is used that
-looks like URL/*.py.  
-
-The code looks in ./solaris2ks.conf or /etc/solaris2ks.conf to find the
-following 4 options in a [db] section: host, user, passwd, db.  Also, [main]
-must include 'logfile' and 'log_level'.
+The code looks in /etc/rlmtools.conf to find the following 4 options in 
+a [db] section: host, user, passwd, db.  Also, [main] must include 'logfile' 
+and 'log_level'.  The log level should be set to 1 for everything, 10 for
+normal operations.
 
 The rest of the configuration RLMTools uses is stored inside the database.  Use
 the CLI in configDragon.py to insert configuration and check the configuration
 for completeness.
 
 The Web-Kickstart code is used to pull client configuration information
-from the client's Web-Kickstart config file.  Web-Kickstart needs its
-full configuration in /etc/solaris2ks.conf.  Yes, there is some duplication
-here but adding additional functionality to RLMTools should not require
-upgrades to Web-Kickstart.
+from the client's Web-Kickstart config file.  The configDragon.py script will
+ask for the location of the Web-Kickstart configration directory.  The 
+default is /etc/webkickstart.  Make sure that directory is set properly.
+
 
 CherryPy Setup
 ==============
@@ -61,5 +61,5 @@ rlmtools module/package is if its not installed in your Python path.
 </Location>
 
 Jack Neely
-December 4th, 2006
+11/05/2008
 
