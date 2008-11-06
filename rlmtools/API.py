@@ -171,7 +171,10 @@ def getActivationKey(apiVersion, publicKey, sig):
         s = server.Server(apiVersion, getHostName(), uuid=publicKey)
 
     ret = s.getActivationKey(publicKey, sig)
-    return ret
+    if ret is None:
+        return ""
+    else:
+        return ret
 
 
 def getEncKeyFile(apiVersion, publicKey, sig):

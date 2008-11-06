@@ -64,7 +64,7 @@ class APIServer(server.Server):
         if self.apiVersion == 0 and self.uuid != None:
             raise APIFault("Client passed in a UUID for invalid API version")
 
-        log.info("API version %s started for client: %s" % (self.apiVersion,
+        log.debug("API version %s started for client: %s" % (self.apiVersion,
                                                             self.client))
 
     def getHostID(self, byFQDN=False):
@@ -139,8 +139,9 @@ class APIServer(server.Server):
                 where realmlinux.host_id = hostkeys.host_id
                 and realmlinux.uuid = %s and realmlinux.recvdkey = 1"""
         
-        log.debug("In isRegistered()")
-        log.debug("client: %s  uuid: %s" % (self.client, self.uuid))
+        #log.debug("In isRegistered()")
+        log.info("Client '%s' identifies with UUID '%s'" % \
+                 (self.client, self.uuid))
 
         if self.apiVersion < 1:
             # Look up the host by its hostname
@@ -442,12 +443,17 @@ class APIServer(server.Server):
 
         log.info("Client %s requests activation key" % self.client)
 
-        ks = self.__getWebKs()
-        if not ks.has_key['enable.activationkey']:
-            # *sigh* no key
-            key = config.rhnkey
+        libks = self.__getWebKs()
+        keys = libks.getKeys(self.client)
+        if keys.has_key('enable') and keys['enable'].hasMember('activationkey'):
+            key = keys['enable'].activationkey.verbatim()
         else:
-            key = ks['enable.activationkey'].verbatim()
+            # *sigh* no key
+            profile = libks.getProfileKeys(self.client)
+            if profile.has_key('defaultActivation'):
+                key = profile['defaultActivation']
+            else:
+                key = None
 
         return key
 
@@ -673,7 +679,8 @@ class APIServer(server.Server):
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
-        ks = self.__getWebKs()
+        libks = self.__getWebKs()
+        ks = libks.getKeys(self.client)
         if not ks.has_key('users'):
             usersdata = "users default %s" % config.defaultkey
         else:
@@ -698,8 +705,7 @@ class APIServer(server.Server):
     def __getWebKs(self):
         """Find and return the web-kickstart config object"""
 
-        wks = webKickstart.libwebks.LibWebKickstart(config.webks_dir)
-        return wks.getKeys(self.client)
+        return webKickstart.libwebks.LibWebKickstart(config.webks_dir)
 
 
 # Make things a little easier for the API module
