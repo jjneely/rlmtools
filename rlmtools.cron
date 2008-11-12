@@ -1,3 +1,7 @@
-0,30 * * * * apache bash /afs/unity/web/l/linux/secure/xmlrpc/rrd-update.sh
-43   2 * * * apache bash /afs/unity/web/l/linux/secure/xmlrpc/dbcron.sh
+
+# Enable on one server only if you are running in a pool of web servers.
+# Or better yet, on a specific cron server.
+
+# 0,30 * * * * apache bash /usr/share/rlmtools/server/rrd-update.sh
+# 43   2 * * * apache bash /usr/share/rlmtools/server/dbcron.sh
 

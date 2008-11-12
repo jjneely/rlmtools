@@ -1,8 +1,6 @@
 #!/bin/bash
 
-RLMTOOLS=/afs/unity/web/l/linux/secure/xmlrpc
-
-export PYTHONPATH=$RLMTOOLS
+RLMTOOLS=`python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"`
 
 python $RLMTOOLS/rlmtools/graphsCron.py
 
