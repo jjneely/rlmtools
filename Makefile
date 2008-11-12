@@ -1,7 +1,7 @@
 NAME=ncsu-rlmtools
 VERSION=1.2.0
 TAG = $(VERSION)
-REPO=https://svn.linux.ncsu.edu/svn/cls
+SPEC=ncsu-rlmtools.spec
 
 EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
 
@@ -66,6 +66,9 @@ release: archive
 	git tag -f -a -m "Tag $(TAG)" $(TAG)
 
 archive:
+	sed -i 's/^Version:.*$$/Version: $(VERSION)/' $(SPEC)
+	git add $(SPEC)
+	git commit -m "Bumb version tag to $(VERSION)"
 	git archive --prefix=$(NAME)-$(VERSION)/ \
 		--format=tar master | bzip2 > $(NAME)-$(VERSION).tar.bz2
 	@echo "The archive is in $(NAME)-$(VERSION).tar.bz2"
