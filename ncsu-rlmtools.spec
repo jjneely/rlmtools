@@ -1,6 +1,6 @@
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: ncsu-rlmtools
-Version: VERSIONSUBST
+Version: 1.2.0
 Release: 1%{?dist:%(echo .%{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
