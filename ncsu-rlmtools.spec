@@ -1,3 +1,9 @@
+# sitelib for noarch packages, sitearch for others (remove the unneeded one)
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysc
+onfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sy
+sconfig import get_python_lib; print get_python_lib(1)")}
+
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: ncsu-rlmtools
 Version: 1.2.0
@@ -5,7 +11,7 @@ Release: 1%{?dist:%(echo .%{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
-BuildRoot: %{_tmppath}/%{name}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: realm-hooks
 Requires: python-ezpycrypto
 Requires: rpm-python >= 4.2
@@ -18,6 +24,14 @@ The Realm Linux Management Tools provide infrastructure to manage certain
 aspects of Realm Linux clients.  The tools are able to deduce if a client
 was officially installed or was manually installed and sends reports of
 specific aspects of the client's behavior to a central location.
+
+%package server
+Requires: mod_python, python-kid, python-cherrypy, rrdtool-python
+Requires: python-ezpycrypto
+
+%description server
+The Realm Linux Management Tools web frontend, database backend, and
+related cron jobs.
 
 %prep
 %setup -q 
@@ -34,12 +48,16 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 %files
 %defattr(-,root,root)
+%doc doc/*
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
 %{_datadir}/rlmtools
 %{_bindir}/*
 /var/spool/rlmqueue
-%doc doc/*
+
+%files server
+%defattr(-,root,root)
+%{python_sitelib}/*
 
 %changelog
 * Tue Nov 14 2006 Jack Neely <jjneely@ncsu.edu>

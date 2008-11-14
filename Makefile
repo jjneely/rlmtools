@@ -1,6 +1,5 @@
 NAME=ncsu-rlmtools
 VERSION=1.2.0
-TAG = $(VERSION)
 SPEC=ncsu-rlmtools.spec
 
 EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
@@ -15,7 +14,7 @@ all:
 	@echo
 	@echo "make clean               -- Clean the source directory"
 	@echo "make archive             -- Build a tar.bz2 ball for release"
-	@echo "make srpm                -- Build a src.rpm for release"
+	@echo "make install             -- Do useful things"
 	@echo
 
 install:
@@ -63,13 +62,14 @@ clean:
 	rm -f $(NAME)-*.tar.bz2
 
 release: archive
-	git tag -f -a -m "Tag $(TAG)" $(TAG)
+	git tag -f -a -m "Tag $(VERSION)" $(VERSION)
 
 archive:
-	sed -i 's/^Version:.*$$/Version: $(VERSION)/' $(SPEC)
-	git add $(SPEC)
-	git commit -m "Bumb version tag to $(VERSION)"
+	if ! grep "Version: $(VERSION)" $(SPEC) > /dev/null ; then \
+		sed -i '/^Version: $(VERSION)/q; s/^Version:.*$$/Version: $(VERSION)/' $(SPEC) ; \
+		git add $(SPEC) ; git commit -m "Bumb version tag to $(VERSION)" ; \
+	fi
 	git archive --prefix=$(NAME)-$(VERSION)/ \
-		--format=tar master | bzip2 > $(NAME)-$(VERSION).tar.bz2
+		--format=tar HEAD | bzip2 > $(NAME)-$(VERSION).tar.bz2
 	@echo "The archive is in $(NAME)-$(VERSION).tar.bz2"
 
