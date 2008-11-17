@@ -62,7 +62,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %doc doc/*
 %attr(0600, apache, apache) %config(noreplace) %{_sysconfdir}/rlmtools.conf
 %{python_sitelib}/*
-%{_sysconfdir}/cron.d/*
+%config(noreplace) %{_sysconfdir}/cron.d/*
 %{_datadir}/rlmtools/server
 
 %changelog

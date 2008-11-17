@@ -63,7 +63,7 @@ def initLogging():
     handler = logging.FileHandler(logfile)
     # Time format: Jun 24 10:16:54
     formatter = logging.Formatter(
-            '%(asctime)s LD %(levelname)s: %(message)s',
+            '%(asctime)s %(levelname)s: %(message)s',
             '%b %2d %H:%M:%S')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
