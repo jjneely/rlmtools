@@ -1,8 +1,6 @@
 # sitelib for noarch packages, sitearch for others (remove the unneeded one)
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysc
-onfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sy
-sconfig import get_python_lib; print get_python_lib(1)")}
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: ncsu-rlmtools
@@ -50,7 +48,6 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 %files
 %defattr(-,root,root)
-%doc doc/*
 %dir %{_datadir}/rlmtools
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
@@ -60,6 +57,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 %files server
 %defattr(-,root,root)
+%doc doc/*
 %attr(0600, apache, apache) %config(noreplace) %{_sysconfdir}/rlmtools.conf
 %{python_sitelib}/*
 %{_sysconfdir}/cron.d/*
