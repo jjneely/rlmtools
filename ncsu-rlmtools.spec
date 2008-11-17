@@ -26,8 +26,10 @@ was officially installed or was manually installed and sends reports of
 specific aspects of the client's behavior to a central location.
 
 %package server
+Summary:  RLMTools Server Web App and Database Backend
+Group: Applications/Internet
 Requires: mod_python, python-kid, python-cherrypy, rrdtool-python
-Requires: python-ezpycrypto
+Requires: python-ezpycrypto, MySQL-python
 
 %description server
 The Realm Linux Management Tools web frontend, database backend, and
@@ -49,17 +51,24 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %files
 %defattr(-,root,root)
 %doc doc/*
+%dir %{_datadir}/rlmtools
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
-%{_datadir}/rlmtools
+%{_datadir}/rlmtools/*.py*
 %{_bindir}/*
 /var/spool/rlmqueue
 
 %files server
 %defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/rlmtools.conf
 %{python_sitelib}/*
+%{_sysconfdir}/cron.d/*
+%{_datadir}/rlmtools/server
 
 %changelog
+* Mon Nov 17 2008 Jack Neely <jjneely@ncsu.edu>
+- Restructure into client / server packages with python module
+
 * Tue Nov 14 2006 Jack Neely <jjneely@ncsu.edu>
 - Initial build
 

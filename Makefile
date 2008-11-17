@@ -47,7 +47,6 @@ install:
 	install -m 644 rlmtools/static/*.gif  $(DESTDIR)$(SITELIB)/rlmtools/static/
 	install -m 644 rlmtools/templates/*.kid  $(DESTDIR)$(SITELIB)/rlmtools/templates/
 	install -m 644 rlmtools/templates/*.py  $(DESTDIR)$(SITELIB)/rlmtools/templates/
-	install -m 644 modpython_gateway.py $(DESTDIR)$(SITELIB)/rlmtools
 	install -m 644 rlmtools/*.py $(DESTDIR)$(SITELIB)/rlmtools
 	
 	install -m 644 schema.sql $(DESTDIR)/usr/share/rlmtools/server/
@@ -55,6 +54,7 @@ install:
 	install -m 644 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 rlmtools.cron $(DESTDIR)/etc/cron.d/
+	install -m 600 -o apache rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 
 
 clean:

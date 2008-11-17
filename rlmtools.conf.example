@@ -1,0 +1,10 @@
+[main]
+logfile = /tmp/rlmtools.log
+log_level = 1 
+
+[db]
+host = localhost
+user = realmlinux
+db = realmlinux
+passwd =
+
