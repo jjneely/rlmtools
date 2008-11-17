@@ -51,9 +51,9 @@ install:
 	
 	install -m 644 schema.sql $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 dbcron.py $(DESTDIR)/usr/share/rlmtools/server/
-	install -m 644 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
-	install -m 644 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
-	install -m 755 rlmtools.cron $(DESTDIR)/etc/cron.d/
+	install -m 755 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
+	install -m 755 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
+	install -m 644 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	
 	kidc $(DESTDIR)$(SITELIB)/rlmtools/templates/
