@@ -54,7 +54,7 @@ install:
 	install -m 644 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 rlmtools.cron $(DESTDIR)/etc/cron.d/
-	install -m 600 -o apache rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
+	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 
 
 clean:
