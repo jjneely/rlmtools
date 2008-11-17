@@ -17,6 +17,8 @@ Requires: rpm-python >= 4.2
 Requires: e2fsprogs 
 BuildArch: noarch
 
+BuildRequires: python-kid
+
 %description
 The Realm Linux Management Tools provide infrastructure to manage certain
 aspects of Realm Linux clients.  The tools are able to deduce if a client

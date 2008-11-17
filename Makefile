@@ -56,8 +56,7 @@ install:
 	install -m 755 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	
-	python -c "import py_compile; py_compile.main()" \
-		$(DESTDIR)$(SITELIB)/rlmtools/templates/*.kid
+	kidc $(DESTDIR)$(SITELIB)/rlmtools/templates/
 
 
 clean:
