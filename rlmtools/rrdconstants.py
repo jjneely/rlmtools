@@ -107,10 +107,8 @@ def problemsGraph(d):
     src = [
         "DEF:noupdates=%(file)s:noupdates:AVERAGE",
         "DEF:problems=%(file)s:problems:AVERAGE",
-        "DEF:total=%(file)s:total:AVERAGE",
         "LINE2:noupdates#CC3118:Clients Not Updating",
         "LINE2:problems#C9B215:Clients With Problems",
-        "LINE2:total#24BC14:Total Clients",
         ]
 
     return __subs(src, d)
