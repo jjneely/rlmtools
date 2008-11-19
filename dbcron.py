@@ -21,6 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 from rlmtools import miscServer
+from rlmtools import configDragon  # This will init the logging
 
 def main():
     s = miscServer.MiscServer()

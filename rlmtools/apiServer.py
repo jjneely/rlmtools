@@ -345,6 +345,7 @@ class APIServer(server.Server):
         # Log history information
         if ret == 0:
             self.storeHistoryEvent('blessing', hid, self.client)
+            log.info("Blessing of %s successful." % self.client)
         
         try:
             os.unlink(file)
