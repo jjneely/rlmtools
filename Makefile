@@ -23,6 +23,7 @@ install:
 	install -d -m 755 $(DESTDIR)/etc/cron.update
 	install -d -m 755 $(DESTDIR)/etc/cron.weekly
 	install -d -m 755 $(DESTDIR)/etc/cron.d
+	install -d -m 755 $(DESTDIR)/etc/logrotate.d
 	install -d -m 1777 $(DESTDIR)/var/spool/rlmqueue
 	
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools
@@ -55,6 +56,7 @@ install:
 	install -m 755 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
+	install -m 644 rlmlogs $(DESTDIR)/etc/logrotate.d/
 	
 	kidc $(DESTDIR)$(SITELIB)/rlmtools/templates/
 

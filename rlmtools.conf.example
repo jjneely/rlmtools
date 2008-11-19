@@ -1,5 +1,5 @@
 [main]
-logfile = /tmp/rlmtools.log
+logfile = /var/log/rlmtools.log
 log_level = 1 
 
 [db]

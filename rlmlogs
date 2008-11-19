@@ -1,0 +1,10 @@
+/var/log/rlmtools*.log /var/log/webkickstart*.log {
+    rotate 12
+    missingok
+    notifempty
+    sharedscripts
+    compress
+    postrotate
+        /sbin/service httpd restart > /dev/null 2>/dev/null || true
+    endscript
+}

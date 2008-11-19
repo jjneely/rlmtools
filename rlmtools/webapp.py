@@ -460,7 +460,7 @@ def wsgi(start_responce):
     cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.config.update({"server.environment": "production",
                             "server.protocolVersion": "HTTP/1.1",
-                            "server.log_file": "/tmp/rlmtools.log"})
+                            "server.log_file": "/var/log/rlmtools-cherrypy.log"})
     cherrypy.config.update({"/rlmtools/static": {
                                'static_filter.on': True,
                                'static_filter.dir': staticDir },

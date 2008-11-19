@@ -30,6 +30,7 @@ Summary:  RLMTools Server Web App and Database Backend
 Group: Applications/Internet
 Requires: mod_python, python-kid, python-cherrypy, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python
+Requires(post): httpd
 
 %description server
 The Realm Linux Management Tools web frontend, database backend, and
@@ -48,6 +49,19 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
+%post server
+
+# Log files
+if [ ! -e /var/log/rlmtools-cherrypy.log ] ; then
+    touch /var/log/rlmtools-cherrypy.log
+    chown apache:apache /var/log/rlmtools-cherrypy.log
+fi
+
+if [ ! -e /var/log/rlmtools.log ] ; then
+    touch /var/log/rlmtools.log
+    chown apache:apache /var/log/rlmtools.log
+fi
+
 %files
 %defattr(-,root,root)
 %dir %{_datadir}/rlmtools
@@ -61,9 +75,10 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %defattr(-,root,root)
 %doc doc/*
 %attr(0600, apache, apache) %config(noreplace) %{_sysconfdir}/rlmtools.conf
-%{python_sitelib}/*
 %config(noreplace) %{_sysconfdir}/cron.d/*
+%config(noreplace) %{_sysconfdir}/logrotate.d/*
 %{_datadir}/rlmtools/server
+%{python_sitelib}/*
 
 %changelog
 * Mon Nov 17 2008 Jack Neely <jjneely@ncsu.edu>
