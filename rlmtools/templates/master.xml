@@ -1,7 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:py="http://purl.org/kid/ns#">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
 
-<head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'">
+<head py:match="head" py:attrs="select('@*')">
   <title>Realm Linux Management Tools</title>
 
   <link rel="stylesheet" type="text/css" 
@@ -9,10 +12,10 @@
   <link rel="stylesheet" type="text/css" 
     href="/rlmtools/static/css/common.css" /> 
 
-  <meta py:replace="item[:]" />
+  <meta py:replace="select('*|text()')" />
 
 </head>
-<body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'">
+<body py:match="body" py:attrs="select('@*')">
 
 <div class="oitnavbar">
   <div class="oit_logo">
@@ -43,7 +46,7 @@
     <li><a href="/rlmtools/usage">Usage Statistics</a></li>
     <li><a href="/rlmtools/noupdates">Not Running Updates</a></li>
     <li py:for="name, href in value_of('backlinks', [])">
-      <a href="" py:attrs="'href':href" py:content="name">Backwards</a>
+      <a href="" py:attrs="{'href':href}" py:content="name">Backwards</a>
     </li>
   </ul>
 
@@ -51,7 +54,7 @@
 
   <h1>Realm Linux Management - Project Liquid Dragon</h1>
 
-  <div py:content="item[:]" />
+  <div py:replace="select('*|text()')" />
 
   </div>
 

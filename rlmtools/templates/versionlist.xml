@@ -1,6 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:py="http://purl.org/kid/ns#"
-  py:extends="'master.kid'">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
 
 <head>
   <title>Realm Linux Management Tools</title>
@@ -25,8 +29,8 @@
         <table class="noborder">
         <tr py:for="graph in graphs">
           <td py:if="graph['url'] != ''">
-            <a href="" py:attrs="'href':graph['href']">
-              <img src="" py:attrs="'src':graph['url']"/>
+            <a href="" py:attrs="{'href':graph['href']}">
+              <img src="" py:attrs="{'src':graph['url']}"/>
             </a>
           </td>
           <td py:if="graph['url'] == ''">

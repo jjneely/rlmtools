@@ -1,6 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:py="http://purl.org/kid/ns#"
-  py:extends="'master.kid'">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
 
 <head>
   <title>Realm Linux Management Tools</title>
@@ -23,7 +27,7 @@
   <div class="category">
     <div py:for="client in support"
       class="${client['status'] and 'good' or 'bad'}">
-      <a py:attrs="'href':client['url']"
+      <a py:attrs="{'href':client['url']}"
         py:content="client['hostname']">Your Client</a>
     </div>
   </div>
@@ -37,7 +41,7 @@
   <div class="category">
     <div py:for="client in nosupport"
       class="${client['status'] and 'good' or 'bad'}">
-      <a py:attrs="'href':client['url']"
+      <a py:attrs="{'href':client['url']}"
         py:content="client['hostname']">Your Client</a>
     </div>
   </div>

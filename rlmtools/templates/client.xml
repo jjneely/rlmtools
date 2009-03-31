@@ -1,6 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:py="http://purl.org/kid/ns#"
-  py:extends="'master.kid'">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
 
 <head>
   <title>Realm Linux Management Tools</title>
@@ -73,7 +77,7 @@
       <td py:content="stat['timestamp']">Time Stamp</td>
       <td py:content="stat['received']">Reviced Stamp</td>
       <td>
-        <a href="" py:attrs="'href':stat['url']" py:content="stat['summary']">
+        <a href="" py:attrs="{'href':stat['url']}" py:content="stat['summary']">
         </a>
       </td>
     </tr>

@@ -1,6 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:py="http://purl.org/kid/ns#"
-  py:extends="'master.kid'">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
 
 <head>
   <title>Realm Linux Management Tools</title>
@@ -34,7 +38,7 @@
       <th class="right">Received Time Stamp:</th>
       <td py:content="status['received']">The Epoch</td>
     </tr>
-    <tr py:attrs="'class':status['success'] and 'good' or 'bad'">
+    <tr py:attrs="{'class':status['success'] and 'good' or 'bad'}">
       <th class="right">Success:</th>
       <td py:content="status['success'] and 'Good' or 'Bad'">foobared</td>
     </tr>
