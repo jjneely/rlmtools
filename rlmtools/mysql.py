@@ -45,13 +45,18 @@ class Cursor(object):
 
     def __getattr__(self, name):
         if self.sdb.cursor == None:
-            self.sdb.getCursor()
+            self.__reset()
 
         if name == "execute":
             self.__method = name
             return self.__wrapper
         else:
             return getattr(self.sdb.cursor, name)
+
+    def __reset(self):
+        self.sdb.conn = None
+        self.sdb.cursor = None
+        self.sdb.getCursor()
 
     def __wrapper(self, *args, **kwargs):
         try:
@@ -63,16 +68,19 @@ class Cursor(object):
         try:
             return func(*args, **kwargs)
         except MySQLdb.OperationalError, e:
-            log.debug("OperationalError: e.args = %s" % str(e.args))
-            if e.args[0] in (2006, 2013):
-                log.warning("Forcing reconnect to MySQL database")
-                self.sdb.conn = None
-                self.sdb.cursor = None
-                self.sdb.getCursor()
-                func = getattr(self.sdb.cursor, self.__method)
-                return func(*args, **kwargs)
-            else:
+            log.debug("MySQLdb OperationalError: e.args = %s" % str(e.args))
+            # The server dropped the connection...timeout
+            if e.args[0] not in (2006, 2013):
                 raise
+        except MySQLdb.InterfaceError, e:
+            log.debug("MySQLdb InterfaceError: e.args = %s" % str(e.args))
+            # The database connection has closed and I still want it
+            # reopen it and fake real hard
+
+        log.info("Reconnecting to MySQL database")
+        self.__reset()
+        func = getattr(self.sdb.cursor, self.__method)
+        return func(*args, **kwargs)
 
 class MysqlDB(object):
     
