@@ -66,8 +66,8 @@
   <table class="noborder">
     <tr py:for="graph in graphs">
       <td py:if="graph['url'] != ''">
-        <a href="" py:attrs="'href':graph['href']">
-          <img src="" py:attrs="'src':graph['url']"/>
+        <a href="" py:attrs="{'href':graph['href']}">
+          <img src="" py:attrs="{'src':graph['url']}"/>
         </a>
       </td>
       <td py:if="graph['url'] == ''">
@@ -87,13 +87,13 @@
       <th>Unsupported RL Clients</th>
     </tr>
     <tr class="neutral" py:for="dept in departments">
-      <td><a href="dept" py:attrs="'href':dept['url']"
+      <td><a href="dept" py:attrs="{'href':dept['url']}"
                          py:content="dept['name']">Your Department Here</a>
       </td>
-      <td><a href="dept" py:attrs="'href':dept['url']"
+      <td><a href="dept" py:attrs="{'href':dept['url']}"
                          py:content="dept['supported']" />
       </td>
-      <td><a href="dept" py:attrs="'href':dept['url']"
+      <td><a href="dept" py:attrs="{'href':dept['url']}"
                          py:content="dept['unsupported']" />
       </td>
     </tr>

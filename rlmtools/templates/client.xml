@@ -43,11 +43,11 @@
       <td py:if="client['uuid'] != None"
           py:content="client['uuid']">- - - -</td>
     </tr>
-    <tr py:attrs="'class':client['support'] and 'good' or 'bad'">
+    <tr py:attrs="{'class':client['support'] and 'good' or 'bad'}">
       <th class="right">Support:</th>
       <td py:content="client['support'] and 'Yes' or 'No'">foobared</td>
     </tr>
-    <tr py:attrs="'class':client['recvdkey'] and 'good' or 'bad'">
+    <tr py:attrs="{'class':client['recvdkey'] and 'good' or 'bad'}">
       <th class="right">Received RSA Key:</th>
       <td py:content="client['recvdkey'] and 'Yes' or 'No'">foobared</td>
     </tr>
@@ -55,7 +55,7 @@
       <th class="right">Install Date:</th>
       <td py:content="client['installdate']">The Epoch</td>
     </tr>
-    <tr py:attrs="'class':client['lastcheck_good'] and 'good' or 'bad'">
+    <tr py:attrs="{'class':client['lastcheck_good'] and 'good' or 'bad'}">
       <th class="right">Last Heard From:</th>
       <td py:content="client['lastcheck']">The Epoch</td>
     </tr>
@@ -71,7 +71,7 @@
       <th>Message Received Stamp</th>
       <th>Message</th>
     </tr>
-    <tr py:for="stat in status" py:attrs="'class':stat['class']">
+    <tr py:for="stat in status" py:attrs="{'class':stat['class']}">
       <td py:content="stat['service']">Bob</td>
       <td py:content="stat['success'] and 'Good' or 'Bad'">Schwank</td>
       <td py:content="stat['timestamp']">Time Stamp</td>

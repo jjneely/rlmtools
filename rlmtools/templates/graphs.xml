@@ -21,7 +21,7 @@
     <tr class="neutral" py:for="graph in graphs">
       <td py:content="graph['summary']">Summary text</td>
       <td py:if="graph['url'] != ''">
-        <img src="" py:attrs="'src':graph['url']"/>
+        <img src="" py:attrs="{'src':graph['url']}"/>
       </td>
       <td py:if="graph['url'] == ''">
         No graph data available.

@@ -25,37 +25,14 @@ import os
 import os.path
 import pwd
 import datetime
-import kid
-kid.enable_import()
+
+from genshi.template import TemplateLoader
 
 import cherrypy
 import webServer
 import rrdconstants
 
 from configDragon import config
-
-def importer(module):
-    tree = module.split('.')
-    for path in sys.path:
-        basepath = apply(os.path.join, [path] + tree[:-1])
-        file = os.path.join(basepath, tree[-1]+'.kid')
-        if os.path.exists(file):
-            return kid.Template(file=file)
-
-    return None
-
-def serialize(mod, dict):
-    template = importer(mod)
-    if template == None:
-        template = importer('rlmtools.%s' % mod)
-
-    if template == None:
-        raise Exception("No kid module %s" % mod)
-
-    for key, value in dict.items():
-        setattr(template, key, value)
-
-    return template.serialize(encoding='utf-8', output='xhtml')
 
 def url():
     base = cherrypy.request.base + cherrypy.tree.mount_point()
@@ -103,6 +80,13 @@ class Application(object):
 
     def __init__(self):
         self.__server = webServer.WebServer()
+        self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
+                                                   'templates')])
+
+    def render(self, tmpl, dict):
+        compiled = self.loader.load('%s.xml' % tmpl)
+        stream = compiled.generate(**dict)
+        return stream.render('xhtml')
 
     def index(self):
         totals = self.__server.getTotalClients()
@@ -129,7 +113,7 @@ class Application(object):
         for dept in departments:
             dept['url'] = "%s/dept?dept_id=%s" % (url(),
                                                   dept['dept_id'])
-        return serialize('templates.index', 
+        return self.render('index', 
                          dict(departments=departments,
                               graphs=graphs,
                               active=active,
@@ -172,7 +156,7 @@ class Application(object):
         departments = pile.keys()
         departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
 
-        return serialize('templates.versionindex', 
+        return self.render('versionindex', 
                     dict(departments=departments,
                          clients=pile,
                          count=len(clients),
@@ -211,7 +195,7 @@ class Application(object):
             else:
                 nosupport.append(client)
 
-        return serialize('templates.dept', dict(support=support, 
+        return self.render('dept', dict(support=support, 
                          nosupport=nosupport, 
                          department=self.__server.getDeptName(int(dept_id))  ))
     dept.exposed = True
@@ -265,7 +249,7 @@ class Application(object):
            detail['installdate'] < today - days7:
             detail['warnUpdate'] = True
 
-        return serialize('templates.client',
+        return self.render('client',
                          dict(client=detail, status=detail['status'],
                               backlinks=backlinks))
     client.exposed = True
@@ -287,7 +271,7 @@ class Application(object):
         else:
             status['data_class'] = "bad"
 
-        return serialize('templates.status', 
+        return self.render('status', 
                          dict(status=status, backlinks=backlinks))
     status.exposed = True
 
@@ -305,7 +289,7 @@ class Application(object):
             else:
                 nosupport.append(client)
 
-        return serialize('templates.notregistered',
+        return self.render('notregistered',
                          dict(support=support,
                               nosupport=nosupport,
                               department="Not Registered")
@@ -325,7 +309,7 @@ class Application(object):
             else:
                 data[client['deptname']] = [host]
         
-        return serialize('templates.problems',
+        return self.render('problems',
                          dict( clients=data )
                         )
     problems.exposed = True
@@ -345,7 +329,7 @@ class Application(object):
         
         departments = data.keys()
         departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
-        return serialize('templates.noupdates',
+        return self.render('noupdates',
                          dict( clients=data,
                                departments=departments )
                         )
@@ -369,7 +353,7 @@ class Application(object):
                      url="",
                      href=""))
 
-        return serialize('templates.versionlist',
+        return self.render('versionlist',
                          dict( versions=versions,
                                graphs=graphs ))
     versionList.exposed = True
@@ -395,7 +379,7 @@ class Application(object):
             d['url'] = url
             graphs.append(d)
 
-        return serialize('templates.graphs',
+        return self.render('graphs',
                          dict( title=title, graphs=graphs )
                         )
     showGraph.exposed = True
@@ -431,7 +415,7 @@ class Application(object):
 
             graphs.append( dict(url=url, href=href, summary=summary) )
 
-        return serialize('templates.usage', dict(graphs=graphs))
+        return self.render('usage', dict(graphs=graphs))
     usage.exposed = True
 
 def main():
