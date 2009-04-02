@@ -1,6 +1,6 @@
-NAME=ncsu-rlmtools
-VERSION=1.2.0
-SPEC=ncsu-rlmtools.spec
+NAME=rlmtools
+VERSION=1.3.0
+SPEC=rlmtools.spec
 
 EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
 
@@ -46,8 +46,7 @@ install:
 	install -m 644 rlmtools/static/css/*.css $(DESTDIR)$(SITELIB)/rlmtools/static/css/
 	install -m 644 rlmtools/static/*.png  $(DESTDIR)$(SITELIB)/rlmtools/static/
 	install -m 644 rlmtools/static/*.gif  $(DESTDIR)$(SITELIB)/rlmtools/static/
-	install -m 644 rlmtools/templates/*.kid  $(DESTDIR)$(SITELIB)/rlmtools/templates/
-	install -m 644 rlmtools/templates/*.py  $(DESTDIR)$(SITELIB)/rlmtools/templates/
+	install -m 644 rlmtools/templates/*.xml  $(DESTDIR)$(SITELIB)/rlmtools/templates/
 	install -m 644 rlmtools/*.py $(DESTDIR)$(SITELIB)/rlmtools
 	
 	install -m 644 schema.sql $(DESTDIR)/usr/share/rlmtools/server/
@@ -57,9 +56,6 @@ install:
 	install -m 644 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	install -m 644 rlmlogs $(DESTDIR)/etc/logrotate.d/
-	
-	kidc $(DESTDIR)$(SITELIB)/rlmtools/templates/
-
 
 clean:
 	rm -f `find . -name \*.pyc -o -name \*~`

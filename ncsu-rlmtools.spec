@@ -3,8 +3,8 @@
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Summary: Realm Linux Management Tools for Realm Linux clients
-Name: ncsu-rlmtools
-Version: 1.2.0
+Name: rlmtools
+Version: 1.3.0
 Release: 1%{?dist:%(echo .%{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -16,8 +16,8 @@ Requires: rpm-python >= 4.2
 # For uuidgen we require e2fsprogs
 Requires: e2fsprogs 
 BuildArch: noarch
-
-BuildRequires: python-kid
+BuildRequires: python-devel
+Obsoletes: ncsu-rlmtools
 
 %description
 The Realm Linux Management Tools provide infrastructure to manage certain
@@ -28,9 +28,10 @@ specific aspects of the client's behavior to a central location.
 %package server
 Summary:  RLMTools Server Web App and Database Backend
 Group: Applications/Internet
-Requires: mod_python, python-kid, python-cherrypy, rrdtool-python
+Requires: mod_python, python-genshi, python-cherrypy, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python
 Requires(post): httpd
+Obsoletes: ncsu-rlmtools-server
 
 %description server
 The Realm Linux Management Tools web frontend, database backend, and
