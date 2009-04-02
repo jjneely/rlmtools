@@ -18,6 +18,8 @@ Requires: e2fsprogs
 BuildArch: noarch
 BuildRequires: python-devel
 Obsoletes: ncsu-rlmtools
+# provides for realmconfig
+Provides: ncsu-rlmtools
 
 %description
 The Realm Linux Management Tools provide infrastructure to manage certain

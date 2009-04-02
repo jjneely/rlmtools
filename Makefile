@@ -65,7 +65,7 @@ release: archive
 	git tag -f -a -m "Tag $(VERSION)" $(VERSION)
 
 srpm: archive
-	rpmbuild -ts $(NAME)-$(VERSION).tar.bz2
+	rpmbuild -ts --define "_srcrpmdir ." $(NAME)-$(VERSION).tar.bz2
 
 archive:
 	if ! grep "Version: $(VERSION)" $(SPEC) > /dev/null ; then \
