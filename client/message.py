@@ -75,7 +75,12 @@ class Message(object):
         fd = open(filename)
         blob = fd.read()
         fd.close()
-        self.data = pickle.loads(blob)
+        try:
+            self.data = pickle.loads(blob)
+        except EOFError, e:
+            # Pickle object is corrupt
+            # message will return none for timestamp
+            self.data = {}
         self._setCheckSum()
         if self.sum != os.path.basename(filename):
             print "ERROR: Checksum does not equal filename."

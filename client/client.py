@@ -376,8 +376,10 @@ def runQueue(server):
         m = Message()
         m.load(os.path.join(mqueue, file))
 
-        if m.getTimeStamp() < expire:
+        tStamp = m.getTimeStamp()
+        if tStamp is None or tStamp < expire:
             # If the message is 30 days told we aren't interested
+            # This also removes corrupt messages
             m.remove()
         else:
             queue.append(m)
