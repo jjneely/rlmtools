@@ -197,14 +197,22 @@ class RRDGraphs(object):
                         pdps[i] = 1
                     i = i + increment
 
+            path = self.getHostRRA(host_id)
+            lastUpdate = rrdtool.last(path)
             keys = pdps.keys()
             keys.sort()
             for i in keys:
                 # Build the RRDTool update command
-                updates.append("%s:%s" % (i, pdps[i]))
+                if i <= lastUpdate:
+                    # DATA LOSS!!!
+                    # We cannot force data into the rrdb because we have
+                    # data already in it that's newer
+                    log.warning("Dropping PDP %s:%s for host id %s" % \
+                                (i, pdps[i], host_id))
+                else:
+                    updates.append("%s:%s" % (i, pdps[i]))
 
             if len(updates) > 0:
-                path = self.getHostRRA(host_id)
                 updates.insert(0, path)
                 rrdtool.update(*updates)
 
