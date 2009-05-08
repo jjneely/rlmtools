@@ -697,7 +697,7 @@ class APIServer(server.Server):
         # clusters
         clusterdata = ""
         if ks.has_key('cluster'):
-            for row in ks['cluster']:
+            for row in ks['cluster'].allRows():
                 clusterdata = "%scluster %s\n" % (clusterdata, 
                               row.verbatim())
 
