@@ -1,5 +1,5 @@
 NAME=rlmtools
-VERSION=1.3.3
+VERSION=1.3.4
 SPEC=rlmtools.spec
 
 EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
