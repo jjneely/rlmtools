@@ -576,6 +576,12 @@ class APIServer(server.Server):
             # Enpty message -- we can't marshal None
             data = None
 
+        if data is not None and len(data) > 5242880:
+            # Ugh...more than 5MiB?  Snip this...
+            log.info("Greater than 5MiB status message from %s" % \
+                     self.client)
+            data = data[0:5242880] + "\n\n< SNIP!  More than 5MiB >\n"
+
         if service == "usagelog":
             return self.storeUsage(id, date, clientstamp, data)
         if service == "boot":
