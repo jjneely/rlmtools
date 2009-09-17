@@ -1,0 +1,59 @@
+Realm Linux Management Tools AKA Project Liquid Dragon
+======================================================
+
+These are tools to manage NCSU's deployment of Realm Linux and integrate
+it with our environment secrets, configuration management tools, and
+generall be the One Ring to bind them all together.
+
+This code is licensed under the GNU General Public License version 2 or,
+at your option, and greater version.  You are welcome to use this code
+elsewhere and send in patches and suggestions.
+
+Requirements
+------------
+
+Web-Kickstart, an NCSU tool to generate dynamic Red Hat Kickstarts.
+
+    https://secure.linux.ncsu.edu/moin/WebKickstart
+
+Also: python-cherrypy, python-genshi, python-ezpycrypto, MySQL-python
+      rrdtool-python, mod_python
+
+Basic Installation
+------------------
+
+* You'll need a MySQL server running someplace.
+
+* Import the initial schema found in schema/schema.sql to your new DB
+
+* Create /etc/rlmtools.conf with the details of the database.  Example:
+
+[main]
+logfile = /var/log/rlmtools.log
+log_level = 1 
+
+[db]
+host = localhost
+user = realmlinux
+db = realmlinux
+passwd = foobarbaz
+
+* Run python rlmtools/configDrago.py
+
+This will prompt you for the rest of the configuration needed that is
+stored in the database.  It will ask where your Web-Kickstart configs
+directory lives (/etc/webkickstart if you have that installed in the normal
+place), your master Public/Private keys (which I don't think I have a tool
+to generate), a secret (any random string), and some other NCSU specific stuff.
+
+* Read doc/config.txt to learn about setting up Apache to use the
+  cherrypy/genshi/xmlrpc based web app.
+
+* Take the client/ directory and change constants.py to include the
+  URL to the XMLRPC interface and see if the client can communicate.
+
+* Test out the web site.
+
+Jack Neely
+09/17/2009
+
