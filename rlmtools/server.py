@@ -139,6 +139,10 @@ class Server(object):
         q1 = "select dept_id from dept where name = %s"
         q2 = "insert into dept (name) values (%s)"
 
+        # Normallize the department strings
+        dept = dept.replace(' ', '-').lower()
+        dept = self.conn.escape_string(dept)
+
         self.cursor.execute(q1, (dept,))
         if self.cursor.rowcount > 0:
             return self.cursor.fetchone()[0]
