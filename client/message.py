@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- client code
-# Copyright (C) 2004 - 2007 NC State University
+# Copyright (C) 2004 - 2009 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -20,8 +20,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+# If hashlib is present, use it.
+try:
+    import hashlib
+except ImportError:
+    hashlib = None
+    import sha
+
 import os
-import sha
 import time
 import pickle
 import base64
@@ -43,7 +49,10 @@ class Message(object):
         s = ""
         for key in keys:
             s = "%s%s:%s\n" % (s, key, self.data[key])
-        self.sum = sha.new(s).hexdigest()
+        if hashlib is not None:
+            self.sum = hashlib.sha1(s).hexdigest()
+        else:
+            self.sum = sha.new(s).hexdigest()
 
     def save(self):
         # Possibly raises IOError
