@@ -60,7 +60,14 @@ def initLogging():
         raise StandardError("Database config file missing sections/options.")
 
     logger = logging.getLogger("xmlrpc")
-    handler = logging.FileHandler(logfile)
+
+    try:
+        handler = logging.FileHandler(logfile)
+        fileError = None
+    except IOError, e:
+        # XXX: cannot open file, deal with it
+        handler = logging.StreamHandler()
+        fileError = str(e)
     # Time format: Jun 24 10:16:54
     formatter = logging.Formatter(
             '%(asctime)s %(levelname)s: %(message)s',
@@ -70,6 +77,8 @@ def initLogging():
     logger.setLevel(level)
 
     logger.info("Liquid Dragon: logging initialized.")
+    if fileError is not None:
+        logger.warning("IOError accessing logfile: %s" % fileError)
 
     init_logging = False
 
