@@ -40,6 +40,7 @@
   <ul class="makemenu">
     <li class="title">Liquid Dragon Menu</li>
     <li><a href="/rlmtools">Front Page</a></li>
+    <li><a href="/rlmtools/search">Search</a></li>
     <li><a href="/rlmtools/notregistered">Web-Kickstarting</a></li>
     <li><a href="/rlmtools/problems">Problem Clients</a></li>
     <li><a href="/rlmtools/versionList">Version List</a></li>

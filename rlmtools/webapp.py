@@ -81,9 +81,14 @@ class Application(object):
     def __init__(self):
         self.__server = webServer.WebServer()
         self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
-                                                   'templates')])
+                                                   'templates')], 
+                                     auto_reload=True)
 
     def render(self, tmpl, dict):
+        # Add some default variables
+        dict['name'] = Auth().getName()
+        dict['baseURL'] = url()
+
         compiled = self.loader.load('%s.xml' % tmpl)
         stream = compiled.generate(**dict)
         return stream.render('xhtml')
@@ -117,8 +122,7 @@ class Application(object):
                          dict(departments=departments,
                               graphs=graphs,
                               active=active,
-                              totals=totals,
-                              name=Auth().getName()))
+                              totals=totals))
     index.exposed = True
 
     def versionIndex(self, version):
@@ -163,32 +167,49 @@ class Application(object):
                          version=version))
     versionIndex.exposed = True
 
-    def dept(self, dept_id):
+    def _checkClient(self, client):
+        # Figure out if the client is RED or GREEN by setting
+        # cDict['status'] to False or True respectively
         services = ['updates', 'client'] # Services that affect client status
+
+        if client['lastcheck'] is None:
+            client['status'] = False
+            return client
+
+        client['status'] = True
+
+        if client['lastcheck'] < self.today - self.days7:
+            client['status'] = False
+
+        if client['lastcheck'] < client['installdate']:
+            client['status'] = False
+
+        for service in services:
+            key = "%s_time" % service
+            if not client.has_key(service) or \
+               client[key] < self.today - self.days7:
+                client['status'] = False
+                break
+            if not client[service]:
+                client['status'] = False
+
+        return client
+
+    def dept(self, dept_id):
+        # set some globals to speed helper fucntions
+        self.days7 = datetime.timedelta(7)
+        self.today = datetime.datetime.today()
+
         clients = self.__server.getClientList(int(dept_id))
-        days7 = datetime.timedelta(7)
-        today = datetime.datetime.today()
         support = []
         nosupport = []
 
         for client in clients:
-            client['status'] = True
             client['url'] = "%s/client?host_id=%s" % (url(),
                                                       client['host_id'])
  
-            if client['lastcheck'] < today - days7:
-                client['status'] = False
-
-            if client['lastcheck'] < client['installdate']:
-                client['status'] = False
-
-            for service in services:
-                key = "%s_time" % service
-                if not client.has_key(service) or client[key] < today - days7:
-                    client['status'] = False
-                    break
-                if not client[service]:
-                    client['status'] = False
+            # Calculate status
+            self._checkClient(client)
 
             if client['support']:
                 support.append(client)
@@ -417,6 +438,43 @@ class Application(object):
 
         return self.render('usage', dict(graphs=graphs))
     usage.exposed = True
+
+    def search(self, searchBox=None):
+        # This works a lot like the dept() method above
+        # set some globals to speed helper fucntions
+        self.days7 = datetime.timedelta(7)
+        self.today = datetime.datetime.today()
+        
+        if searchBox is None:
+            # Just show an empty search and allow user to start typing
+            clients = []
+        else:
+            clients = self.__server.getSearchResult(searchBox)
+
+        if type(clients) == type(-1) and clients == -1:
+            error = "Search returns more than 100 clients.  Liquid Dragon has "\
+                    "set these on fire instead.  Perhaps you should ask for a "\
+                    "smaller subset of clients."
+        elif type(clients) == type(-1) and clients == -2:
+            error = "Smoke appears and the tempurature rises.  You have "\
+                    "angered Liguid Dragon with an empty search string."
+        else:
+            error = ""
+
+        if error == "":
+            for client in clients:
+                client['url'] = "client?host_id=%s" % client['host_id']
+ 
+                # Calculate status
+                self._checkClient(client)
+
+        return self.render('search', dict(
+                                          clients=clients,
+                                          error=error,
+                                          initial=(searchBox is None)
+                                          ))
+    search.exposed = True
+
 
 def main():
     staticDir = os.path.join(os.path.dirname(__file__), "static")

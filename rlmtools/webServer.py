@@ -294,3 +294,59 @@ class WebServer(server.Server):
 
         return result
 
+    def getSearchResult(self, r):
+        "Return clients who's hostnames match the regex in R."
+
+        q1 = """select r.hostname, r.host_id, r.support, r.installdate,
+                l.timestamp as lastcheck
+                from realmlinux as r, lastheard as l
+                where r.hostname regexp %s and
+                r.host_id = l.host_id
+                order by r.hostname
+                limit 101"""
+
+        q2 = """select status.host_id, service.name, 
+                   status.success, status.timestamp
+                from service, status,
+                ( select status.host_id, 
+                         status.service_id as sid, 
+                         max(status.timestamp) as maxdate 
+                  from status, realmlinux
+                  where realmlinux.host_id = status.host_id
+                     and realmlinux.hostname regexp %s
+                  group by status.host_id, status.service_id
+                ) as current
+                where current.sid = status.service_id and
+                service.service_id = status.service_id and
+                status.timestamp = current.maxdate and
+                status.host_id = current.host_id"""
+
+        r = self.conn.escape_string(r.strip())
+
+        if r == "":
+            return -2  # Empty search
+
+        self.cursor.execute(q1, (r,))
+        result = resultSet(self.cursor).dump()
+
+        if len(result) > 100:
+            # Don't return more than 100.  Don't run the slow query
+            return -1 
+
+        # I'm going to reference the data in result via a hash
+        hash = {}
+
+        for row in result:
+            hash[row['host_id']] = row
+
+        self.cursor.execute(q2, (r,))
+        status = resultSet(self.cursor).dump()
+
+        for row in status:
+            service = row['name']
+            stime = "%s_time" % service
+            hash[row['host_id']][service] = row['success']
+            hash[row['host_id']][stime] = row['timestamp']
+
+        return result
+

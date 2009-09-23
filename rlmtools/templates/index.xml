@@ -15,10 +15,13 @@
 </head>
 <body>
 
-  <p>Within this tool you will find all Realm Linux clients from RL 3 and
+  <p>
+    This tool you will find all Realm Linux clients from RL 3 and
     above that are at least quasi-functional.  These pages are to help you
-    identify clients that may not be functioning correctly and to tell you
-    what may be wrong.  Clients are divided up into Departments.</p>
+    identify and track your Realm Linux clients and manipulate thier
+    configuration.  Clients are divided up into Departments.  You may
+    also search for clients using a regular expression.
+  </p>
 
   <p>Welcome <span py:replace="name"/>.</p>
 
@@ -27,6 +30,21 @@
   <table class="noborder">
     <tr><td>
 
+  <table class="noborder">
+    <tr><td>
+        <table>
+          <tr class="neutral"><th>
+              <form method="post" action="${baseURL}/search">
+              <p>Search:</p>
+              <input type="text" name="searchBox" value="" size="15" />
+              <input type="submit" value="Search" />
+            </form>
+          </th></tr>
+        </table>
+    </td></tr>
+
+    <tr><td>
+  
   <table>
     <tr class="neutral">
       <th class="right">Clients Currently Checking In:</th>
@@ -46,21 +64,25 @@
     </tr>
     <tr class="neutral">
       <th class="right">Web-Kickstarting:</th>
-      <td><a href="notregistered" 
+      <td><a href="${baseURL}/notregistered" 
              py:content="totals['webkickstarting']">-1</a></td>
     </tr>
     <tr class="neutral">
       <th class="right">Clients Reporting Problems:</th>
-      <td><a href="problems" 
+      <td><a href="${baseURL}/problems" 
           py:content="totals['problems']">-1</a></td>
     </tr>
     <tr class="neutral">
       <th class="right">Not Receiving Updates:</th>
-      <td><a href="noupdates" 
+      <td><a href="${baseURL}/noupdates" 
           py:content="totals['noupdates']">-1</a></td>
     </tr>
+
   </table>
-  
+
+  </td></tr>
+  </table>
+
   </td><td>
 
   <table class="noborder">
@@ -83,8 +105,9 @@
 
   <table>
     <tr class="neutral">
-      <th>Department Name</th><th>Supported RL Clients</th>
-      <th>Unsupported RL Clients</th>
+      <th class="bottom">Department Name</th>
+      <th class="bottom">Supported RL Clients</th>
+      <th class="bottom">Unsupported RL Clients</th>
     </tr>
     <tr class="neutral" py:for="dept in departments">
       <td><a href="dept" py:attrs="{'href':dept['url']}"

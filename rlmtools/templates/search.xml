@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Search for clients using a regular expression.  Try searching for
+    part of the hostname, or "Unknown" for clients where the hostname
+    is unknown to Liquid Dragon.
+  </p>
+
+  <form method="post" action="${baseURL}/search">
+    <!--<p>Search:</p>-->
+    <input type="text" name="searchBox" value="" size="15" />
+    <input type="submit" value="Search" />
+  </form>
+
+  <div py:if="error != ''">
+    <h2>Error</h2>
+
+    <p py:content="error">Liquid Dragon set your clients on fire.</p>
+  </div>
+
+  <div py:if="not initial and error == ''">
+    <h2>Found: <span py:replace="len(clients)"/> Clients</h2>
+
+    <div class="category">
+      <div py:for="client in clients"
+        class="${client['status'] and 'good' or 'bad'}">
+        <a py:attrs="{'href':baseURL + '/' + client['url']}"
+          py:content="client['hostname']">Your Client</a>
+      </div>
+    </div>
+
+    <p py:if="len(clients) == 0">
+      No matching clients were found.
+    </p>
+  </div>
+
+</body>
+
+</html>
+
