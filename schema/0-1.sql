@@ -1,10 +1,36 @@
--- Fix up dept table
+-- Attributes
+DROP TABLE IF EXISTS attributes;
+create table attributes (
+    `attr_id`       INTEGER PRIMARY KEY auto_increment,
+    `atype`         INTEGER NOT NULL default 0,
+    `data`          TEXT
+) ENGINE=InnoDB;
+
+DROP TABLE IF EXISTS attrgroups;
+create table attrgroups (
+    attrg_id        INTEGER PRIMARY KEY auto_increment,
+    attr_ptr        INTEGER NOT NULL default 0,
+    attr_id         INTEGER NOT NULL default 0,
+
+    index(attr_ptr)
+) ENGINE=InnoDB;
+
+DROP TABLE IF EXISTS attrpointer;
+create table attrpointer (
+    attr_ptr        INTEGER PRIMARY KEY auto_increment
+);
+
+alter table realmlinux add column attr_ptr integer default NULL;
+
+-- Fix up dept table to enforce rules on names
+-- add attribute pointer here too
 alter table dept rename to olddept;
 
 CREATE TABLE `dept` (
       `dept_id` int(11) NOT NULL auto_increment,
       `name` varchar(255) NOT NULL default '',
       `parent` int(11),
+      `attr_ptr` integer default NULL,
       PRIMARY KEY  (`dept_id`),
       UNIQUE KEY `name` (`name`),
       KEY `name_2` (`name`)
@@ -14,4 +40,31 @@ insert into dept (dept_id, name) select dept_id, LOWER(REPLACE(name, ' ', '-')) 
 
 drop table olddept;
 
+-- ACLs
+DROP TABLE IF EXISTS aclgroups;
+create table aclgroups (
+    aclg_id     INTEGER PRIMARY KEY auto_increment,
+    dept_id     INTEGER not NULL,
+    acl_id      INTEGER not NULL,
+    perms       INTEGER not NULL,
+
+    index(dept_id)
+);
+
+DROP TABLE IF EXISTS acls;
+create table acls (
+    acl_id      INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(255) NOT NULL,
+    pts         VARCHAR(255) default NULL,
+    cell        VARCHAR(255) default NULL
+);
+
+DROP TABLE IF EXISTS sysadmins;
+create table sysadmins (
+    sysadmin_id INTEGER PRIMARY KEY auto_increment,
+    acl_id      INTEGER NOT NULL,
+    userid      VARCHAR(16),
+
+    index(acl_id)
+);
 

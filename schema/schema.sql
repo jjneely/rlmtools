@@ -9,6 +9,7 @@ create table realmlinux (
     dept_id     INTEGER not null,
     version     VARCHAR(32) not null,
     support     TINYINT not null,
+    attr_ptr    integer default NULL,
 
     index(hostname),
     index(uuid),
@@ -49,6 +50,8 @@ create table status (
 create table dept (
     dept_id     INTEGER PRIMARY KEY auto_increment,
     name        VARCHAR(256) not null unique,
+    parent      integer default NULL,
+    attr_ptr    integer default NULL,
 
     index(name)
 );
@@ -117,6 +120,50 @@ create table history (
     foreign key (htype_id) references htype(htype_id)
 );
 
+-- Attributes 
+create table attributes (
+    `attr_id`       INTEGER PRIMARY KEY auto_increment,
+    `atype`         INTEGER NOT NULL default 0,
+    `data`          TEXT
+) ENGINE=InnoDB;
+
+create table attrgroups (
+    attrg_id        INTEGER PRIMARY KEY auto_increment,
+    attr_ptr        INTEGER NOT NULL default 0,
+    attr_id         INTEGER NOT NULL default 0,
+
+    index(attr_ptr)
+) ENGINE=InnoDB;
+
+create table attrpointer (
+    attr_ptr        INTEGER PRIMARY KEY auto_increment
+);
+
+-- ACLs
+create table aclgroups (
+    aclg_id     INTEGER PRIMARY KEY auto_increment,
+    dept_id     INTEGER not NULL,
+    acl_id      INTEGER not NULL,
+    perms       INTEGER not NULL,
+
+    index(dept_id)
+);
+
+create table acls (
+    acl_id      INTEGER PRIMARY KEY auto_increment,
+    name        VARCHAR(255) NOT NULL,
+    pts         VARCHAR(255) default NULL,
+    cell        VARCHAR(255) default NULL
+);
+
+create table sysadmins (
+    sysadmin_id INTEGER PRIMARY KEY auto_increment,
+    acl_id      INTEGER NOT NULL,
+    userid      VARCHAR(16),
+
+    index(acl_id)
+);
+
 
 -- The following are service types and RRD data source types to collect.
 -- The server will record status information of these types.  Adding rows
@@ -127,6 +174,7 @@ insert into service (name) values ('client');
 insert into service (name) values ('sysinfo');
 insert into service (name) values ('boot');
 insert into service (name) values ('usagelog');
+insert into service (name) values ('fixit');
 
 -- For the RRDTool Queue Handler
 insert into dstype (name) values ('master');
