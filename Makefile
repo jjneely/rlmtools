@@ -43,7 +43,7 @@ install:
 	install -m 755 scripts/sysinfo.sh $(DESTDIR)/etc/cron.weekly
 	install -m 755 scripts/bcfg2.cron.sh $(DESTDIR)/etc/cron.update
 	install -m 755 scripts/autoupdate.cron.sh $(DESTDIR)/etc/cron.daily
-	install -m 755 scripts/autoupdate.init $(DESTDIR)/etc/rc.d/init.d
+	install -m 755 scripts/autoupdate.init $(DESTDIR)/etc/rc.d/init.d/autoupdate
 	
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsuclient
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsubless
