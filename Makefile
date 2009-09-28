@@ -21,6 +21,7 @@ all:
 install:
 	install -d -m 755 $(DESTDIR)/usr/share/rlmtools
 	install -d -m 755 $(DESTDIR)/usr/bin
+	install -d -m 755 $(DESTDIR)/etc/cron.daily
 	install -d -m 755 $(DESTDIR)/etc/cron.update
 	install -d -m 755 $(DESTDIR)/etc/cron.weekly
 	install -d -m 755 $(DESTDIR)/etc/cron.d
