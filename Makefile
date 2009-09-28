@@ -54,7 +54,7 @@ install:
 	install -m 644 rlmtools/templates/*.xml  $(DESTDIR)$(SITELIB)/rlmtools/templates/
 	install -m 644 rlmtools/*.py $(DESTDIR)$(SITELIB)/rlmtools
 	
-	install -m 644 schema.sql $(DESTDIR)/usr/share/rlmtools/server/
+	install -m 644 schema/*.sql $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 dbcron.py $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
