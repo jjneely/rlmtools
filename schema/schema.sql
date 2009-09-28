@@ -175,6 +175,7 @@ insert into service (name) values ('sysinfo');
 insert into service (name) values ('boot');
 insert into service (name) values ('usagelog');
 insert into service (name) values ('fixit');
+insert into service (name) values ('bcfg2');
 
 -- For the RRDTool Queue Handler
 insert into dstype (name) values ('master');

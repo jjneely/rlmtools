@@ -1,6 +1,7 @@
 NAME=rlmtools
-VERSION=1.3.4
-SPEC=rlmtools.spec
+SPECFILE=rlmtools.spec
+VERSION := $(shell rpm -q --qf "%{VERSION}\n" --specfile $(SPECFILE) \
+	         --define "_sourcedir $(shell pwd)" | head -1)
 
 EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
 
@@ -24,6 +25,7 @@ install:
 	install -d -m 755 $(DESTDIR)/etc/cron.weekly
 	install -d -m 755 $(DESTDIR)/etc/cron.d
 	install -d -m 755 $(DESTDIR)/etc/logrotate.d
+	install -d -m 755 $(DESTDIR)/etc/rc.d/init.d
 	install -d -m 1777 $(DESTDIR)/var/spool/rlmqueue
 	
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools
@@ -31,13 +33,16 @@ install:
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools/templates
 	install -d -m 755 $(DESTDIR)/usr/share/rlmtools/server
 	
-	for FILE in `ls client/*.py` ; do \
+	for FILE in client/*.py ; do \
 		install -m 644 $$FILE $(DESTDIR)/usr/share/rlmtools ; \
 	done
 	cd $(DESTDIR)/usr/share/rlmtools ; chmod +x $(EXEFILES)
 	
 	install -m 755 scripts/registerclient.sh $(DESTDIR)/etc/cron.update
 	install -m 755 scripts/sysinfo.sh $(DESTDIR)/etc/cron.weekly
+	install -m 755 scripts/bcfg2.cron.sh $(DESTDIR)/etc/cron.update
+	install -m 755 scripts/autoupdate.cron.sh $(DESTDIR)/etc/cron.daily
+	install -m 755 scripts/autoupdate.init $(DESTDIR)/etc/rc.d/init.d
 	
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsuclient
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsubless
@@ -62,16 +67,12 @@ clean:
 	rm -f $(NAME)-*.tar.bz2
 
 release: archive
-	git tag -f -a -m "Tag $(VERSION)" $(VERSION)
+	git tag -a -m "Tag $(VERSION)" $(VERSION)
 
 srpm: archive
 	rpmbuild -ts --define "_srcrpmdir ." $(NAME)-$(VERSION).tar.bz2
 
 archive:
-	if ! grep "Version: $(VERSION)" $(SPEC) > /dev/null ; then \
-		sed -i '/^Version: $(VERSION)/q; s/^Version:.*$$/Version: $(VERSION)/' $(SPEC) ; \
-		git add $(SPEC) ; git commit -m "Bumb version tag to $(VERSION)" ; \
-	fi
 	git archive --prefix=$(NAME)-$(VERSION)/ \
 		--format=tar HEAD | bzip2 > $(NAME)-$(VERSION).tar.bz2
 	@echo "The archive is in $(NAME)-$(VERSION).tar.bz2"

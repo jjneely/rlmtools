@@ -68,3 +68,6 @@ create table sysadmins (
     index(acl_id)
 );
 
+insert into service (name) values ('bcfg2');
+
+

@@ -1,0 +1,6 @@
+*~
+*.pyc
+*.pyo
+*.tar.bz2
+*.rpm
+rrds/

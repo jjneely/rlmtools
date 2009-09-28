@@ -1,10 +1,8 @@
-# sitelib for noarch packages, sitearch for others (remove the unneeded one)
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 1.3.4
+Version: 1.9.0
 Release: 1%{?dist:%(echo .%{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -52,6 +50,14 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
+%preun
+if [ $1 = 0 ]; then
+    chkconfig --del autoupdate
+fi
+
+%post
+chkconfig --add autoupdate
+
 %post server
 
 # Log files
@@ -68,8 +74,10 @@ fi
 %files
 %defattr(-,root,root)
 %dir %{_datadir}/rlmtools
+%{_sysconfdir}/cron.daily/*
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
+%{_sysconfdir}/rc.d/init.d/*
 %{_datadir}/rlmtools/*.py*
 %{_bindir}/*
 /var/spool/rlmqueue
@@ -84,6 +92,10 @@ fi
 %{python_sitelib}/*
 
 %changelog
+* Mon Sep 28 2009 Jack Neely <jjneely@ncsu.edu>
+- Replace realmconfig on the client end
+- add Bcfg2 and autoupdate cron jobs
+
 * Mon Nov 17 2008 Jack Neely <jjneely@ncsu.edu>
 - Restructure into client / server packages with python module
 
