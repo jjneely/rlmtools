@@ -29,14 +29,17 @@ import stat
 import time
 import optparse
 import rpm
+import logging
 
 from message   import Message
 from xmlrpc    import doRPC
-from errors    import *
 from constants import *
 
+import clientconf
 import ezPyCrypto
 import xmlrpc
+
+logger = logging.getLogger("rlmclient")
 
 def isSupportOn():
     file = "/etc/sysconfig/support"
@@ -150,7 +153,7 @@ def getLocalKey():
     "Return an ezPyCrypto keypair for this local host."
     
     if not os.access(privateKey, os.R_OK):
-        error("Creating public/private keypair.")
+        logger.error("Creating public/private keypair.")
         key = ezPyCrypto.key(1024)
         saveKey(key)
     else: 
@@ -186,17 +189,18 @@ def doRegister(server):
     if ret == 0:
         return ret
     elif ret == 1:
-        error("Registration failed: Client already registered in database")
+        logger.error("Registration failed: Client already registered in database")
     elif ret == 2:
-        error("Registration failed: Client not in support database")
+        logger.error("Registration failed: Client not in support database")
     elif ret == 3:
-        error("Registration failed: Client did not register within 24 hours")
+        logger.error(
+                "Registration failed: Client did not register within 24 hours")
     elif ret == 4:
-        error("Registration failed: Client sent a malformed public key")
+        logger.error("Registration failed: Client sent a malformed public key")
     elif ret == 99:
-        error("Registration failed: Server blew up -- Bad day.")
+        logger.error("Registration failed: Server blew up -- Bad day.")
     else:
-        error("Registration failed with return code %s" % ret)
+        logger.error("Registration failed with return code %s" % ret)
         
     return ret
 
@@ -211,13 +215,13 @@ def getUpdateConf(server):
     update = doRPC(server.getEncKeyFile, uuid, sig)
         
     if update == []:
-        error("Error receiving update.conf file")
+        logger.error("Error receiving update.conf file")
         return
     
     # check sig
     serverKey = getRealmLinuxKey(server)
     if not serverKey.verifyString(update[0], update[1]):
-        error("ERROR: Encrypted update.conf did not verify.")
+        logger.error("ERROR: Encrypted update.conf did not verify.")
         return
     
     dec = keypair.decStringFromAscii(update[0])
@@ -291,11 +295,11 @@ def doCheckIn(server):
     if ret == 0:
         pass
     elif ret == 1:
-        error("Checkin failed: Server could not verify our public key and sig.")
+        logger.error("Checkin failed: Server could not verify our public key and sig.")
     elif ret == 2:
-        error("Checkin failed: Server did not find our database entry.")
+        logger.error("Checkin failed: Server did not find our database entry.")
     else:
-        error("Checkin failed with return code %s" % ret)
+        logger.error("Checkin failed with return code %s" % ret)
 
 
 def doBlessing(server):
@@ -320,7 +324,7 @@ def doBlessing(server):
         fd = open(publicKey)
         key.importKey(fd.read())
     except Exception, e:
-        error("Blessing failed reading public key.  Error: %s" % str(e))
+        logger.error("Blessing failed reading public key.  Error: %s" % str(e))
         print "Error reading public key file.  Cannot bless."
         print "Error was: %s" % str(e)
         sys.exit(12)
@@ -335,7 +339,7 @@ def doBlessing(server):
         fd.write(pubKeyText)
         fd.close()
     except Exception, e:
-        error("Blessing failed writing key file with error: %s" % str(e))
+        logger.error("Blessing failed writing key file with error: %s" % str(e))
         print "An error occured: %s" % str(e)
         print "You must have permission to create Web-Kickstart configs to"
         print "administratively bless machines."
@@ -345,9 +349,9 @@ def doBlessing(server):
     ret = doRPC(server.bless, getDepartment(), getVersion(), uuid, rhnid)
 
     if ret != 0:
-        error("Blessing failed with return code %s" % ret, True)
+        logger.error("Blessing failed with return code %s" % ret, True)
     else:
-        error("Blessing successful")
+        logger.error("Blessing successful")
         print "Blessing successful.  This machine is now a trusted machine"
         print "on NCSU's network."
 
@@ -390,7 +394,7 @@ def runQueue(server):
             m.remove()
         else:
             # This could log...a lot...if client is not verified.
-            error("Failed to send message, return code %s" % code)
+            logger.error("Failed to send message, return code %s" % code)
 
 
 def main():
@@ -399,6 +403,7 @@ def main():
        called directly via 'ncsubless' to administratively register
        a machine."""
 
+    URL = clientconf.initConfig()
     server = xmlrpc.setupServer(URL)
 
     if os.path.basename(sys.argv[0]) == "ncsubless":

@@ -25,7 +25,7 @@ import logging
 import server
 import ConfigParser
 
-config_files = ['./rlmtools.conf', '/etc/rlmtools.conf']
+config_files = ['/etc/rlmtools.conf', './rlmtools.conf']
 config = None
 log = logging.getLogger("xmlrpc")
 init_logging = True
