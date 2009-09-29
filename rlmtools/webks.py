@@ -24,31 +24,18 @@ import sys
 import os
 import os.path
 
-from genshi.template import TemplateLoader
-
 from webKickstart import webKickstart
 from webKickstart import configtools
 
 # How to better handle web authentication?
 from webKickstart.plugins import webauth
 
-class Application(object):
+from webcommon import *
 
-    def __init__(self):
-        self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
-                                                   'webtmpl')])
-
-        # Create a webKickstart instance to pre-cache the configs
-        w = webKickstart('url', {})
-        w.buildCache()
-
-    def render(self, tmpl, dict):
-        compiled = self.loader.load('%s.xml' % tmpl)
-        stream = compiled.generate(**dict)
-        return stream.render('xhtml')
+class Application(AppHelpers):
 
     def index(self):
-        auth = webauth.Auth()
+        auth = Auth()
         name = auth.getName()
 
         if not auth.isAuthorized():
@@ -58,7 +45,7 @@ class Application(object):
     index.exposed = True
 
     def rawKickstart(self, host):
-        auth = webauth.Auth()
+        auth = Auth()
         if not auth.isAuthorized():
             return self.render('notauth', dict(name=auth.getName()))
 
@@ -73,7 +60,7 @@ class Application(object):
     rawKickstart.exposed = True
 
     def debugtool(self, host):
-        auth = webauth.Auth()
+        auth = Auth()
         if not auth.isAuthorized():
             return self.render('notauth', dict(name=auth.getName()))
         
@@ -91,7 +78,7 @@ class Application(object):
     debugtool.exposed = True
 
     def collision(self, host):
-        auth = webauth.Auth()
+        auth = Auth()
         if not auth.isAuthorized():
             return self.render('notauth', dict(name=auth.getName()))
         
@@ -106,7 +93,7 @@ class Application(object):
     collision.exposed = True
 
     def checkconfigs(self):
-        auth = webauth.Auth()
+        auth = Auth()
         if not auth.isAuthorized():
             return self.render('notauth', dict(name=auth.getName()))
         

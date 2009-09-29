@@ -30,7 +30,12 @@ import rrdconstants
 from configDragon import config
 from webcommon import *
 
+import webks
+
 class Application(AppHelpers):
+
+    webKickstart = webks.Application()
+    webKickstart.exposed = True
 
     def index(self):
         totals = self._server.getTotalClients()

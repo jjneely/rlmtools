@@ -39,6 +39,10 @@ class Auth(object):
     def isAuthenticated(self):
         return self.userid != None
 
+    def isAuthorized(self):
+        # STUB!!!
+        return True
+
     def getName(self):
         # Note that the users that authenticate will also be in the system's
         # password db (hesiod/ldap)
