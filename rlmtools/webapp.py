@@ -21,82 +21,21 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import sys
-import os
 import os.path
-import pwd
 import datetime
 
-from genshi.template import TemplateLoader
-
 import cherrypy
-import webServer
 import rrdconstants
 
 from configDragon import config
+from webcommon import *
 
-def url():
-    base = cherrypy.request.base + cherrypy.tree.mount_point()
-    if base.endswith('/'):
-        return base[:-1]
-    else:
-        return base
-
-def short(fqdn):
-    return fqdn.split('.')[0]
-
-class Auth(object):
-    
-    def __init__(self):
-        try:
-            env = cherrypy.request.wsgi_environ
-        except AttributeError:
-            self.null()
-
-        try:
-            self.userid = env['WRAP_USERID']
-            self.affiliation = env['WRAP_AFFIL']
-            self.expire = env['WRAP_EXPDATE']
-            self.ipaddress = env['WRAP_ADDRESS']
-        except KeyError:
-            self.null()
-
-    def null(self):
-        self.userid = None
-        self.affiliation = None
-        self.expire = None
-        self.ipaddress = None
-
-    def isAuthenticated(self):
-        return self.userid != None
-
-    def getName(self):
-        # Note that the users that authenticate will also be in the system's
-        # password db (hesiod/ldap)
-        if not self.isAuthenticated():
-            return "Guest User"
-        return pwd.getpwnam(self.userid)[4]        
-    
-class Application(object):
-
-    def __init__(self):
-        self.__server = webServer.WebServer()
-        self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
-                                                   'templates')], 
-                                     auto_reload=True)
-
-    def render(self, tmpl, dict):
-        # Add some default variables
-        dict['name'] = Auth().getName()
-        dict['baseURL'] = url()
-
-        compiled = self.loader.load('%s.xml' % tmpl)
-        stream = compiled.generate(**dict)
-        return stream.render('xhtml')
+class Application(AppHelpers):
 
     def index(self):
-        totals = self.__server.getTotalClients()
-        active = self.__server.getActiveClients()
-        departments = self.__server.getDepartments()
+        totals = self._server.getTotalClients()
+        active = self._server.getActiveClients()
+        departments = self._server.getDepartments()
         graphs = []
         domainTable = [('master', 'Liquid Dragon Totals'),
                        ('problems', 'Liquid Dragon Problem Clients'),
@@ -128,7 +67,7 @@ class Application(object):
     def versionIndex(self, version):
         # See also dept()
         services = ['updates', 'client'] # Services that affect client status
-        clients = self.__server.getVersionPile(version)
+        clients = self._server.getVersionPile(version)
         days7 = datetime.timedelta(7)
         today = datetime.datetime.today()
         pile = {}
@@ -200,7 +139,7 @@ class Application(object):
         self.days7 = datetime.timedelta(7)
         self.today = datetime.datetime.today()
 
-        clients = self.__server.getClientList(int(dept_id))
+        clients = self._server.getClientList(int(dept_id))
         support = []
         nosupport = []
 
@@ -218,13 +157,13 @@ class Application(object):
 
         return self.render('dept', dict(support=support, 
                          nosupport=nosupport, 
-                         department=self.__server.getDeptName(int(dept_id))  ))
+                         department=self._server.getDeptName(int(dept_id))  ))
     dept.exposed = True
 
     def client(self, host_id):
         days7 = datetime.timedelta(7)
         today = datetime.datetime.today()
-        detail = self.__server.getClientDetail(int(host_id))
+        detail = self._server.getClientDetail(int(host_id))
         detail['warnUpdate'] = False
         detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                    detail['lastcheck'] > today - days7 and \
@@ -276,7 +215,7 @@ class Application(object):
     client.exposed = True
 
     def status(self, status_id):
-        status = self.__server.getStatusDetail(int(status_id))
+        status = self._server.getStatusDetail(int(status_id))
         backlinks = [
                      ('Dept: %s' % status['dept'],
                       "%s/dept?dept_id=%s" % (url(), status['dept_id'])),
@@ -297,7 +236,7 @@ class Application(object):
     status.exposed = True
 
     def notregistered(self):
-        clients = self.__server.getNotRegistered()
+        clients = self._server.getNotRegistered()
         support = []
         nosupport = []
 
@@ -318,7 +257,7 @@ class Application(object):
     notregistered.exposed = True
 
     def problems(self):
-        clients = self.__server.getProblemList()
+        clients = self._server.getProblemList()
         data = {}
 
         for client in clients:
@@ -336,7 +275,7 @@ class Application(object):
     problems.exposed = True
 
     def noupdates(self):
-        clients = self.__server.getNoUpdates()
+        clients = self._server.getNoUpdates()
         data = {}
 
         for client in clients:
@@ -357,7 +296,7 @@ class Application(object):
     noupdates.exposed = True
 
     def versionList(self):
-        versions = self.__server.getVersionList()
+        versions = self._server.getVersionList()
         graphs = []
         image = "versions-3d.png"
         path = os.path.join(config.rrd_dir, 'graphs', image)
@@ -406,7 +345,7 @@ class Application(object):
     showGraph.exposed = True
 
     def usage(self):
-        depts = self.__server.getDeptNames()
+        depts = self._server.getDeptNames()
         graphs = []
 
         image = "usage-1w.png"
@@ -449,7 +388,7 @@ class Application(object):
             # Just show an empty search and allow user to start typing
             clients = []
         else:
-            clients = self.__server.getSearchResult(searchBox)
+            clients = self._server.getSearchResult(searchBox)
 
         if type(clients) == type(-1) and clients == -1:
             error = "Search returns more than 100 clients.  Liquid Dragon has "\
