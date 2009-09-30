@@ -39,15 +39,15 @@ class Application(AppHelpers):
         name = auth.getName()
 
         if not auth.isAuthorized():
-            return self.render('notauth', dict(name=name))
+            return self.render('wk.notauth', dict(name=name))
         
-        return self.render('index', dict(name=name))
+        return self.render('wk.index', dict(title="Web-Kickstart Tools"))
     index.exposed = True
 
     def rawKickstart(self, host):
         auth = Auth()
         if not auth.isAuthorized():
-            return self.render('notauth', dict(name=auth.getName()))
+            return self.render('wk.notauth', dict(name=auth.getName()))
 
         host = host.strip()
         w = webKickstart('url', {})
@@ -62,11 +62,11 @@ class Application(AppHelpers):
     def debugtool(self, host):
         auth = Auth()
         if not auth.isAuthorized():
-            return self.render('notauth', dict(name=auth.getName()))
+            return self.render('wk.notauth', dict(name=auth.getName()))
         
         host = host.strip()
         if host == "":
-            return self.render('debugtool', dict(host="None",
+            return self.render('wk.debugtool', dict(host="None",
                   kickstart="# You failed to provide a host to check."))
 
         w = webKickstart('url', {})
@@ -74,33 +74,33 @@ class Application(AppHelpers):
                                    # for preview mode
         tuple = w.getKS(host)
 
-        return self.render('debugtool', dict(host=host, kickstart=tuple[1]))
+        return self.render('wk.debugtool', dict(host=host, kickstart=tuple[1]))
     debugtool.exposed = True
 
     def collision(self, host):
         auth = Auth()
         if not auth.isAuthorized():
-            return self.render('notauth', dict(name=auth.getName()))
+            return self.render('wk.notauth', dict(name=auth.getName()))
         
         host = host.strip()
         if host == "":
-            return self.render('debugtool', dict(host="None",
+            return self.render('wk.debugtool', dict(host="None",
                   kickstart="# You failed to provide a host to check."))
         
         w = webKickstart('url', {})
         tuple = w.collisionDetection(host)
-        return self.render('collision', dict(host=host, output=tuple[1]))
+        return self.render('wk.collision', dict(host=host, output=tuple[1]))
     collision.exposed = True
 
     def checkconfigs(self):
         auth = Auth()
         if not auth.isAuthorized():
-            return self.render('notauth', dict(name=auth.getName()))
+            return self.render('wk.notauth', dict(name=auth.getName()))
         
         w = webKickstart('url', {})
         tuple = w.checkConfigHostnames()
 
-        return self.render('checkconfigs', dict(output=tuple[1]))
+        return self.render('wk.checkconfigs', dict(output=tuple[1]))
     checkconfigs.exposed = True
 
 
