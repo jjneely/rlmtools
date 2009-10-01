@@ -30,9 +30,14 @@ from webKickstart import configtools
 # How to better handle web authentication?
 from webKickstart.plugins import webauth
 
+from configDragon import config
 from webcommon import *
 
 class Application(AppHelpers):
+
+    def _getWebKs(self):
+        # Helper function to return a WebKickstart object
+        return webKickstart('url', {}, config.webks_dir)
 
     def index(self):
         auth = Auth()
@@ -50,7 +55,7 @@ class Application(AppHelpers):
             return self.render('wk.notauth', dict(name=auth.getName()))
 
         host = host.strip()
-        w = webKickstart('url', {})
+        w = self._getWebKs()
         w.setDebug(True)           # Previent running of things that shouldn't
                                    # for preview mode
         tuple = w.getKS(host)
@@ -69,7 +74,7 @@ class Application(AppHelpers):
             return self.render('wk.debugtool', dict(host="None",
                   kickstart="# You failed to provide a host to check."))
 
-        w = webKickstart('url', {})
+        w = self._getWebKs()
         w.setDebug(True)           # Previent running of things that shouldn't
                                    # for preview mode
         tuple = w.getKS(host)
@@ -87,7 +92,7 @@ class Application(AppHelpers):
             return self.render('wk.debugtool', dict(host="None",
                   kickstart="# You failed to provide a host to check."))
         
-        w = webKickstart('url', {})
+        w = self._getWebKs()
         tuple = w.collisionDetection(host)
         return self.render('wk.collision', dict(host=host, output=tuple[1]))
     collision.exposed = True
@@ -97,77 +102,10 @@ class Application(AppHelpers):
         if not auth.isAuthorized():
             return self.render('wk.notauth', dict(name=auth.getName()))
         
-        w = webKickstart('url', {})
+        w = self._getWebKs()
         tuple = w.checkConfigHostnames()
 
         return self.render('wk.checkconfigs', dict(output=tuple[1]))
     checkconfigs.exposed = True
 
-
-def main():
-    parser = optparse.OptionParser("%%prog %s [options]" % \
-                                   sys.argv[0])
-    parser.add_option("-C", "--configdir", action="store", type="string",
-           dest="configdir", default=None,
-           help="Configuration directory. [/etc/webkickstart]")
-    
-    (opts, args) = parser.parse_args(sys.argv)
-    
-    if len(args) > 1:
-        parser.print_help()
-        sys.exit(1)
-
-    cfg = configtools.Configuration(opts.configdir)
-    # XXX: We know that security checks wont work for the webapp
-    cfg.security = "0"
-    configtools.config = cfg
-
-    # XXX: Static directory.  Hopefully relative...
-    staticDir = os.path.join(os.path.dirname(__file__), "static")
-    cherrypy.config.update({"/static": {
-                            'static_filter.on': True,
-                            'static_filter.dir': os.path.abspath(staticDir) }})
-
-    cherrypy.root = Application()
-    cherrypy.server.start()
-
-def wsgi(req):
-    if req.get_options().has_key('webKickstart.config'):
-        configDir = req.get_options()['webKickstart.config']
-    else:
-        configDir = None
-
-    if req.get_options().has_key('webKickstart.appMount'):
-        appMount = req.get_options()['webKickstart.appMount']
-    else:
-        appMount = None
-
-    cfg = configtools.Configuration(configDir)
-    # XXX: We know that security checks wont work for the webapp
-    cfg.security = "0"
-    configtools.config = cfg
-
-    staticDir = os.path.join(os.path.dirname(__file__), "static")
-    if appMount is None:
-        staticMount = "/static"
-    else:
-        staticMount = os.path.join('/', appMount, 'static')
-
-    cherrypy.config.update({staticMount: {
-                            'static_filter.on': True,
-                            'static_filter.dir': os.path.abspath(staticDir) }})
-
-    cherrypy.config.update({"server.environment": "production",
-                            "server.protocolVersion": "HTTP/1.1",
-                            "server.log_file": "/var/log/webkickstart-cherrypy.log"})
-
-    if appMount is None:
-        cherrypy.root = Application()
-    else:
-        cherrypy.tree.mount(Application(), appMount)
-
-    cherrypy.server.start(initOnly=True, serverClass=None)
-
-if __name__ == "__main__":
-    main()
 
