@@ -26,6 +26,7 @@ import traceback
 import mysql
 import ConfigParser
 
+from resultSet import resultSet
 from datetime import datetime
 
 log = logging.getLogger("xmlrpc")
@@ -152,6 +153,50 @@ class Server(object):
 
         self.cursor.execute(q1, (dept,))
         return self.cursor.fetchone()[0]
+
+    def _setupParents(self):
+        """Set all departments to link to their parent."""
+
+        q1 = "select name, dept_id from dept"
+        q2 = "update dept set parent = %s where dept_id = %s"
+
+        root = self.getDeptID('root')
+        self.cursor.execute(q1)
+        result = resultSet(self.cursor).dump()
+
+        for row in result:
+            if row['name'] == 'root': continue
+            parent_name = '-'.join(row['name'].split('-')[:-1])
+            if parent_name == '':
+                self.cursor.execute(q2, (root, row['dept_id']))
+            else:
+                id = self.getDeptID(parent_name)
+                self.cursor.execute(q2, (id, row['dept_id']))
+
+        self.conn.commit()
+
+    def getDeptParentID(self, dept):
+        """Return the Dept ID of this department's parent.  
+           Rreturn None if dept is the root of the tree."""
+
+        q1 = "select parent from dept where dept_id = %s"
+
+        if type(dept) == type(""):
+            id = self.getDeptID(dept)
+        else:
+            # Better be an int
+            id = dept
+
+        root = self.getDeptID('root')
+        if id == root: return None
+
+        self.cursor.execute(q1, (id,))
+        result = self.cursor.fetchone()[0]
+        if result is None:
+            self._setupParents()
+            return self.getDeptParentID(id)
+        else:
+            return result
 
     def getHostName(self, host_id):
         q = """select hostname from realmlinux where host_id = %s"""
