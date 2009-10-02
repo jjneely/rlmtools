@@ -68,6 +68,7 @@ class AppHelpers(object):
         # Add some default variables
         dict['name'] = Auth().getName()
         dict['baseURL'] = url()
+        dict['templateName'] = tmpl
 
         compiled = self.loader.load('%s.xml' % tmpl)
         stream = compiled.generate(**dict)

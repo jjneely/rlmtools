@@ -216,7 +216,7 @@ class Application(AppHelpers):
 
         return self.render('client',
                          dict(client=detail, status=detail['status'],
-                              backlinks=backlinks))
+                              subMenu=backlinks))
     client.exposed = True
 
     def status(self, status_id):
@@ -237,7 +237,7 @@ class Application(AppHelpers):
             status['data_class'] = "bad"
 
         return self.render('status', 
-                         dict(status=status, backlinks=backlinks))
+                         dict(status=status, subMenu=backlinks))
     status.exposed = True
 
     def notregistered(self):

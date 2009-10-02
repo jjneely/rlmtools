@@ -216,4 +216,32 @@ ul.makemenu a {
 ul.makemenu a:hover {
     text-decoration: underline;
 }
+ul.submenu {
+    font-family: Arial,Helvetica,Sans-Serif;
+    font-size: 85%;
+    /*width: 12em;*/
+    background-color: #000000;
+    padding: 0px;
+    margin: 0px;
+    margin-left: 0;
+}
+ul.submenu li {
+    list-style-type: none;
+    background-color: #000088;
+    margin: 1px;
+    padding: 0.3em;
+    position: relative;
+    color: #ffffff;
+    padding-left: 1em;
+}
+ul.submenu li:hover {
+    background-color: #000055;
+}
+ul.submenu a {
+    color: #ffffff;
+    text-decoration: none;
+}
+ul.submenu a:hover {
+    text-decoration: underline;
+}
 
