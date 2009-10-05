@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Gah!!
+  </p>
+
+  <table>
+    <tr class="neutral">
+      <th class="bottom">ACL Name</th>
+      <th class="bottom">PTS Group</th>
+      <th class="bottom">AFS Cell</th>
+      <th class="bottom">Users</th>
+    </tr>
+    <tr class="neutral" py:for="g in ptsgroups">
+      <td py:content="g['name']" />
+      <td py:content="g['pts']" />
+      <td py:content="g['cell']" />
+      <td>
+        <span py:for="id in g['ids']">
+          <span py:content="id" /><br/>
+        </span>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

@@ -31,11 +31,15 @@ from configDragon import config
 from webcommon import *
 
 import webks
+import webadmin
 
 class Application(AppHelpers):
 
     webKickstart = webks.Application()
     webKickstart.exposed = True
+
+    admin = webadmin.Application()
+    admin.exposed = True
 
     def index(self):
         totals = self._server.getTotalClients()
