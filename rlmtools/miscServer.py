@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005, 2006, 2007 NC State University
+# Copyright (C) 2003 - 2009 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -20,6 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import os
 import sys
 import logging
 import server
@@ -69,5 +70,61 @@ class MiscServer(server.Server):
         for client in result: self.deleteClient(client['host_id'])
 
         self.cursor.execute(q2, (date,))
+        self.conn.commit()
+
+    def getSysAdmins(self, acl_id):
+        q = """select distinct userid, sysadmin_id from sysadmins 
+               where acl_id = %s"""
+
+        self.cursor.execute(q, (acl_id,))
+        result = resultSet(self.cursor)
+        ret = {}
+        for row in result:
+            ret[row['userid']] = row['sysadmin_id']
+        return ret
+
+    def getPTS(self, pts, cell):
+        cmd = "/usr/bin/pts mem %s -c %s" % (pts, cell)
+        fd = os.popen(cmd, 'r')
+        blob = fd.readlines()
+        ret = fd.close()
+
+        if ret is not None:
+            # Some sort of OS Error
+            log.error("'%s' failed with return code %s" % (cmd, ret))
+            return None
+
+        ids = [ line.strip() for line in blob[1:] ] # throw away first line
+        ids.sort()
+        return ids
+
+    def watchPTS(self):
+        """Sync database with AFS PTS groups that we watch."""
+
+        q1 = "select acl_id, pts, cell from acls"
+        q2 = "delete from sysadmins where sysadmin_id = %s"
+        q3 = "insert into sysadmins (acl_id, userid) values(%s, %s)"
+        self.cursor.execute(q1)
+        result = resultSet(self.cursor).dump()
+
+        for row in result:
+            current = self.getSysAdmins(row['acl_id'])
+            cKeys = current.keys()
+            cKeys.sort()
+            pts = self.getPTS(row['pts'], row['cell'])
+
+            i = 0
+            while i < len(pts):
+                if len(cKeys) <= i or cKeys[i] > pts[i]:
+                    self.cursor.execute(q3, (row['acl_id'], pts[i]))
+                    cKeys.insert(i, pts[i]) # Keep our index numbers intact
+                elif cKeys[i] < pts[i]:
+                    self.cursor.execute(q2, (current[cKeys],))
+                    del cKeys[i]            # Keep our index numbers intact
+                i = i + 1
+            while len(cKeys) > len(pts):
+                self.cursor.execute(q3, (current[cKeys],))
+                del cKeys[i]                # Keep our index numbers intact
+
         self.conn.commit()
 
