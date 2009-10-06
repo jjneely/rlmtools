@@ -84,7 +84,7 @@ class MiscServer(server.Server):
         return ret
 
     def getPTS(self, pts, cell):
-        cmd = "/usr/bin/pts mem %s -c %s" % (pts, cell)
+        cmd = "/usr/bin/pts mem %s -c %s -noauth" % (pts, cell)
         fd = os.popen(cmd, 'r')
         blob = fd.readlines()
         ret = fd.close()
