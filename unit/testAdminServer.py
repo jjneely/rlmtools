@@ -1,0 +1,41 @@
+import pprint
+from rlmtools.adminServer import AdminServer
+
+from webKickstart.libwebks import LibWebKickstart
+p = pprint.PrettyPrinter()
+
+admin = AdminServer()
+webks = LibWebKickstart()
+host = 'linux10tst.unity.ncsu.edu'
+attributes = {1:'test test test',
+              2:'luggage'}
+
+p.pprint(webks.getEverything(host))
+
+######################
+
+host_id = admin.getHostID(host)
+print "Host ID for %s is %s" % (host, host_id)
+
+dept_id = admin.getDeptID('oit')
+print "Dept ID for %s is %s" % ('oit', dept_id)
+
+host_ptr = admin.getHostAttrPtr(host_id)
+dept_ptr = admin.getDeptAttrPtr(dept_id)
+print "Host attribute pointer: %s" % host_ptr
+print "Dept attribute pointer: %s" % dept_ptr
+
+##################################
+
+for ptr in [host_ptr, dept_ptr]:
+    for a in attributes.keys():
+        print
+        t = admin.getAttributes(ptr, a)
+        print "Current attributes for ptr %s, type %s: %s" % (ptr, a, t)
+        print "Adding: %s" % attributes[a]
+        admin.setAttribute(ptr, a, attributes[a])
+        t = admin.getAttributes(ptr, a)
+        print "Current attributes for ptr %s, type %s: %s" % (ptr, a, t)
+        print "Removing attribute type %s from ptr %s" % (a, ptr)
+        admin.removeAttribute(ptr, t[0]['attr_id'])
+
