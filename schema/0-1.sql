@@ -3,7 +3,10 @@ DROP TABLE IF EXISTS attributes;
 create table attributes (
     `attr_id`       INTEGER PRIMARY KEY auto_increment,
     `atype`         INTEGER NOT NULL default 0,
-    `data`          TEXT
+    `akey`          VARCHAR(255),
+    `data`          TEXT,
+
+    KEY `akey_k` (`akey`)
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS attrgroups;

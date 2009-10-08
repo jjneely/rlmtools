@@ -40,7 +40,7 @@
   <ul class="makemenu">
     <li class="title">Liquid Dragon Menu</li>
     <li><a href="/rlmtools">Front Page</a></li>
-      <ul py:if="defined('subMenu') and templateName in ['index', 'status', 'client']" class="submenu">
+      <ul py:if="defined('subMenu') and templateName in ['index', 'status', 'client', 'dept']" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
@@ -51,7 +51,7 @@
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/search">Administration</a></li>
+    <li><a href="/rlmtools/admin">Administration</a></li>
       <ul py:if="defined('subMenu') and templateName[0:5] == 'admin'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>

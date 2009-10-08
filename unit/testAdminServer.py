@@ -7,8 +7,8 @@ p = pprint.PrettyPrinter()
 admin = AdminServer()
 webks = LibWebKickstart()
 host = 'linux10tst.unity.ncsu.edu'
-attributes = {1:'test test test',
-              2:'luggage'}
+attributes = {'foo':'test test test',
+              'bar':'luggage'}
 
 p.pprint(webks.getEverything(host))
 
@@ -31,11 +31,12 @@ for ptr in [host_ptr, dept_ptr]:
     for a in attributes.keys():
         print
         t = admin.getAttributes(ptr, a)
-        print "Current attributes for ptr %s, type %s: %s" % (ptr, a, t)
-        print "Adding: %s" % attributes[a]
-        admin.setAttribute(ptr, a, attributes[a])
+        print "Current attributes for ptr %s, key %s: %s" % (ptr, a, t)
+        print "Adding: %s:%s" % (a, attributes[a])
+        admin.setAttribute(ptr, a, 666, attributes[a])
         t = admin.getAttributes(ptr, a)
-        print "Current attributes for ptr %s, type %s: %s" % (ptr, a, t)
-        print "Removing attribute type %s from ptr %s" % (a, ptr)
+        print "Current attributes for ptr %s, key %s: %s" % (ptr, a, t)
+        print "Keys for ptr %s: %s" % (ptr, admin.getAttrKeys(ptr))
+        print "Removing attribute key %s from ptr %s" % (a, ptr)
         admin.removeAttribute(ptr, t[0]['attr_id'])
 

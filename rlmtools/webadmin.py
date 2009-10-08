@@ -43,5 +43,8 @@ class Application(AppHelpers):
                            dict(ptsgroups=ptsgroups))
     index.exposed = True
 
+    def host(self, host_id):
+        pass
 
-
+    def dept(self, dept_id):
+        pass

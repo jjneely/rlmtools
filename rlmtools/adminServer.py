@@ -51,17 +51,18 @@ class AdminServer(server.Server):
         ptr = self.cursor.fetchone()[0]
         return ptr
 
-    def storeAttrBlob(self, typeblob, blob):
+    def storeAttrBlob(self, key, typeblob, blob):
         "Store and return the ID for this data"
 
-        q1 = "insert into attributes (atype, data) values (%s, %s)"
+        q1 = "insert into attributes (akey, atype, data) values (%s, %s, %s)"
         q2 = "select LAST_INSERT_ID()"
 
         if type(blob) != type(""):
             blob = str(blob)
         blob = self.conn.escape_string(blob)
+        key = self.conn.escape_string(key)
         
-        self.cursor.execute(q1, (typeblob, blob))
+        self.cursor.execute(q1, (key, typeblob, blob))
         self.cursor.execute(q2)
         id = self.cursor.fetchone()[0]
         return id
@@ -100,23 +101,23 @@ class AdminServer(server.Server):
 
         return ptr
 
-    def setAttribute(self, attr_ptr, atype, blob):
+    def setAttribute(self, attr_ptr, akey, atype, blob):
         "Store an attribute linked to an attribute group"
 
-        id = self.storeAttrBlob(atype, blob)
+        id = self.storeAttrBlob(akey, atype, blob)
         self.associateAttribute(attr_ptr, id)
         self.conn.commit()
 
-    def getAttributes(self, attr_ptr, atype):
-        "Return a list of attributes for the pointer group  matching atype type."
+    def getAttributes(self, attr_ptr, key):
+        "Return a list of attributes for the pointer group matching key"
 
-        q = """select a.attr_id, a.data from 
+        q = """select a.attr_id, a.data, a.atype, a.akey from 
                    attributes as a, attrgroups as b where
                b.attr_id = a.attr_id and
-               a.atype = %s and
+               a.akey = %s and
                b.attr_ptr = %s"""
 
-        self.cursor.execute(q, (atype, attr_ptr))
+        self.cursor.execute(q, (key, attr_ptr))
         return resultSet(self.cursor).dump()
 
     def removeAttribute(self, attr_ptr, attr_id):
@@ -127,6 +128,17 @@ class AdminServer(server.Server):
         self.cursor.execute(q1, (attr_ptr, attr_id))
         self.cursor.execute(q2, (attr_id,))
         self.conn.commit()
+
+    def getAttrKeys(self, attr_ptr):
+        "Return a list of the keys an attr pointer references."
+
+        q = """select distinct a.akey from attributes as a, attrgroups as b where
+               a.attr_id = b.attr_id and
+               b.attr_ptr = %s"""
+
+        self.cursor.execute(q, (attr_ptr,))
+        result = resultSet(self.cursor)
+        return [ r['akey'] for r in result ]
 
     def getPTSGroups(self):
         """Returns a list of dicts"""

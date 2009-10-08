@@ -148,6 +148,10 @@ class Application(AppHelpers):
         self.days7 = datetime.timedelta(7)
         self.today = datetime.datetime.today()
 
+        subMenu = [ ('Department Admin Panel',
+                     '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
+                  ]
+
         clients = self._server.getClientList(int(dept_id))
         support = []
         nosupport = []
@@ -166,7 +170,9 @@ class Application(AppHelpers):
 
         return self.render('dept', dict(support=support, 
                          nosupport=nosupport, 
-                         department=self._server.getDeptName(int(dept_id))  ))
+                         department=self._server.getDeptName(int(dept_id)),
+                         subMenu=subMenu,
+                         title="Department Listing"))
     dept.exposed = True
 
     def client(self, host_id):
@@ -180,6 +186,8 @@ class Application(AppHelpers):
         status = {}
         if detail['recvdkey'] == 1:
             backlinks = [
+                         ('Host Admin Panel',
+                          '%s/admin/host?host_id=%s' % (url(), host_id)),
                          ('Version: %s' % detail['version'],
                           '%s/versionIndex?version=%s' % (url(), 
                                                           detail['version'])),
@@ -220,7 +228,8 @@ class Application(AppHelpers):
 
         return self.render('client',
                          dict(client=detail, status=detail['status'],
-                              subMenu=backlinks))
+                              subMenu=backlinks,
+                              title="Host Detail"))
     client.exposed = True
 
     def status(self, status_id):
