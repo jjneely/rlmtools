@@ -64,6 +64,12 @@ class AppHelpers(object):
         else:
             self.loader = loader
 
+        if cherrypy.config.configs['global']['server.protocol_version'] \
+                == "HTTP/1.1":
+            self.outEncoding = 'utf-8'
+        else:
+            self.outEncoding = 'latin-1'
+
     def render(self, tmpl, dict):
         # Add some default variables
         dict['name'] = Auth().getName()
@@ -72,5 +78,5 @@ class AppHelpers(object):
 
         compiled = self.loader.load('%s.xml' % tmpl)
         stream = compiled.generate(**dict)
-        return stream.render('xhtml')
+        return stream.render('xhtml', encoding=self.outEncoding)
 

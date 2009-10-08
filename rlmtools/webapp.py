@@ -430,7 +430,6 @@ def main():
 
     graphDir = os.path.join(config.rrd_dir, 'graphs')
 
-    cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.config.update({"/rlmtools/static": {
                                'static_filter.on': True,
                                'static_filter.dir': staticDir },
@@ -439,6 +438,7 @@ def main():
                                'static_filter.dir': graphDir }
                            })
 
+    cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.server.start()
 
 def wsgi(start_responce):
@@ -447,7 +447,6 @@ def wsgi(start_responce):
 
     graphDir = os.path.join(config.rrd_dir, 'graphs')
 
-    cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.config.update({"server.environment": "production",
                             "server.protocolVersion": "HTTP/1.1",
                             "server.log_file": "/var/log/rlmtools-cherrypy.log"})
@@ -459,6 +458,7 @@ def wsgi(start_responce):
                                'static_filter.dir': graphDir }
                            })
 
+    cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.server.start(initOnly=True, serverClass=None)
 
 if __name__ == "__main__":
