@@ -26,6 +26,13 @@ div.content {
    font-family: Arial,Helvetica,Sans-Serif;
    padding: 1em;
 }
+div.message {
+    float: left;
+    width: 30em;
+    background-color: #55cc55;
+    padding: 0.5em;
+    border: 4px solid #006600;
+}
 div.alert {
    float: left;
    width: 20em;

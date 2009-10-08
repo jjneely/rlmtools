@@ -23,10 +23,15 @@ import cherrypy
 import sys
 import os
 import os.path
+import time
+import cPickle as pickle
 
 from configDragon import config
 from webcommon import *
 from adminServer import AdminServer
+
+PicType = 0
+StrType = 1
 
 class Application(AppHelpers):
 
@@ -43,8 +48,29 @@ class Application(AppHelpers):
                            dict(ptsgroups=ptsgroups))
     index.exposed = True
 
-    def host(self, host_id):
-        pass
+    def host(self, host_id, importWebKS=False):
+        message = ''
+        aptr = self._admin.getHostAttrPtr(host_id)
+        attrs = self._admin.getAllAttributes(aptr)
+
+        attributes = {}
+        for row in attrs:
+            if row['atype'] == PicType:
+                blob = pickle.dumps(row['data'])
+            else:
+                blob = row['data']
+            attributes[row['akey']] = blob
+
+        if 'meta.imported' not in attributes:
+            message = "The Web-Kickstart data for this host needs to be imported."
+    
+        return self.render('admin.host', dict(
+                             host_id=host_id,
+                             title=self._admin.getHostName(host_id),
+                             message=message,
+                             attributes=attributes,
+                             ))
+    host.exposed = True
 
     def dept(self, dept_id):
         pass

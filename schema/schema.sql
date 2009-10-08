@@ -167,6 +167,13 @@ create table sysadmins (
     index(acl_id)
 );
 
+create table webkickstartkeys (
+    wkk_id      INTEGER PRIMARY KEY auto_increment,
+    keyword     VARCHAR(255),
+
+    index(keyword)
+) ENGINE=InnoDB;
+
 
 -- The following are service types and RRD data source types to collect.
 -- The server will record status information of these types.  Adding rows

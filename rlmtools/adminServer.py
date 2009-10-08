@@ -108,6 +108,15 @@ class AdminServer(server.Server):
         self.associateAttribute(attr_ptr, id)
         self.conn.commit()
 
+    def getAllAttributes(self, attr_ptr):
+        q = """select a.attr_id, a.data, a.atype, a.akey from
+               attributes as a, attrgroups as b where
+               b.attr_id = a.attr_id and
+               b.attr_ptr = %s"""
+
+        self.cursor.execute(q, (attr_ptr,))
+        return resultSet(self.cursor).dump()
+
     def getAttributes(self, attr_ptr, key):
         "Return a list of attributes for the pointer group matching key"
 
@@ -154,3 +163,10 @@ class AdminServer(server.Server):
         self.cursor.execute(q, (acl_id,))
         result = resultSet(self.cursor)
         return [ row['userid'] for row in result ]
+
+    def getImportantKeys(self):
+        q = "select keyword from webkickstartkeys"
+        self.cursor.execute(q)
+        result = resultSet(self.cursor)
+
+        return [ row['keyword'] for row in result ]

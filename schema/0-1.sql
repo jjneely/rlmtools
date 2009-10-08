@@ -21,7 +21,7 @@ create table attrgroups (
 DROP TABLE IF EXISTS attrpointer;
 create table attrpointer (
     attr_ptr        INTEGER PRIMARY KEY auto_increment
-);
+) ENGINE=InnoDB;
 
 alter table realmlinux add column attr_ptr integer default NULL;
 
@@ -52,7 +52,7 @@ create table aclgroups (
     perms       INTEGER not NULL,
 
     index(dept_id)
-);
+) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS acls;
 create table acls (
@@ -60,7 +60,7 @@ create table acls (
     name        VARCHAR(255) NOT NULL,
     pts         VARCHAR(255) default NULL,
     cell        VARCHAR(255) default NULL
-);
+) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS sysadmins;
 create table sysadmins (
@@ -69,7 +69,15 @@ create table sysadmins (
     userid      VARCHAR(16),
 
     index(acl_id)
-);
+) ENGINE=InnoDB;
+
+DROP TABLE IF EXISTS webkickstartkeys;
+create table webkickstartkeys (
+    wkk_id      INTEGER PRIMARY KEY auto_increment,
+    keyword     VARCHAR(255),
+
+    index(keyword)
+) ENGINE=InnoDB;
 
 insert into service (name) values ('bcfg2');
 
@@ -77,3 +85,15 @@ insert into service (name) values ('bcfg2');
 insert into acls (name, pts, cell) values ('installer:common', 'installer:common', 'bp');
 insert into acls (name, pts, cell) values ('installer:itd-unix', 'installer:itd-unix', 'bp');
 
+
+insert into webkickstartkeys (keyword) values ('enable.totempclean');
+insert into webkickstartkeys (keyword) values ('enable.consolelogin');
+insert into webkickstartkeys (keyword) values ('enable.recivemail');
+insert into webkickstartkeys (keyword) values ('enable.remotecluster');
+insert into webkickstartkeys (keyword) values ('enable.localcluster');
+insert into webkickstartkeys (keyword) values ('enable.mailmasq');
+insert into webkickstartkeys (keyword) values ('printer');
+insert into webkickstartkeys (keyword) values ('cluster');
+insert into webkickstartkeys (keyword) values ('dept');
+insert into webkickstartkeys (keyword) values ('users');
+insert into webkickstartkeys (keyword) values ('root');
