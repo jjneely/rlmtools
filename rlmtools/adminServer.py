@@ -73,6 +73,12 @@ class AdminServer(server.Server):
 
         self.cursor.execute(q, (attr_ptr, attr_id))
 
+    def isHostAttrPtr(self, ptr):
+        q = "select host_id from realmlinux where attr_ptr = %s"
+        self.cursor.execute(q, (ptr,))
+        r = resultSet(self.cursor)
+        return r.rowcount() > 0
+
     def getHostAttrPtr(self, host_id):
         q1 = "select attr_ptr from realmlinux where host_id = %s"
         q2 = "update realmlinux set attr_ptr = %s where host_id = %s"

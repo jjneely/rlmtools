@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+
+<body>
+
+  <p>
+    This form allows you to add or modify an attribute.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Add or Modify Attributes for: <span py:replace="title"/></h2>
+
+  <table>
+    <tr class="neutral" py:if="replaceValue is not None">
+      <th>You are modifying an existing attribute.</th>
+    </tr>
+    <tr class="neutral">
+      <th class="right">${key}</th>
+      <td>
+        <form method="post" action="${baseURL}/admin/modifyAttr"
+              style="margin-bottom: 0">
+          <input type="hidden" name="name" value="${title}"/>
+          <input type="hidden" name="attr_ptr" value="${attr_ptr}"/>
+          <input type="text" name="textbox" value="${replaceValue or ''}" 
+                 size="15" />
+          <input type="submit" name="setAttribute" value="Submit"/>
+        </form>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

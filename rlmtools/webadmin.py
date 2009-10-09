@@ -81,11 +81,10 @@ class Application(AppHelpers):
     def stringifyWebKS(self, table):
         return '\n'.join([ ' '.join(i) for i in table ])
 
-    def parseAttrs(self, aptr):
-        attrs = self._admin.getAllAttributes(aptr)
+    def parseAttrs(self, dbattrs):
         attributes = {}
         meta = {}
-        for row in attrs:
+        for row in dbattrs:
             if row['atype'] == PicType:
                 try:
                     blob = self.stringifyWebKS(pickle.loads(row['data']))
@@ -109,11 +108,12 @@ class Application(AppHelpers):
         ikeys = self._admin.getImportantKeys()
         message = ''
         aptr = self._admin.getHostAttrPtr(host_id)
+        attrs = self._admin.getAllAttributes(aptr)
 
         if importWebKS is not None:
             self.importWebKickstart(host_id)
 
-        meta, attributes = self.parseAttrs(aptr)
+        meta, attributes = self.parseAttrs(attrs)
 
         if 'meta.imported' not in meta:
             message = "The Web-Kickstart data for this host needs to be imported."
@@ -125,6 +125,7 @@ class Application(AppHelpers):
 
         return self.render('admin.host', dict(
                              host_id=host_id,
+                             attr_ptr=aptr,
                              subMenu=subMenu,
                              title=hostname,
                              message=message,
@@ -135,3 +136,26 @@ class Application(AppHelpers):
 
     def dept(self, dept_id):
         pass
+
+    def modifyAttr(self, attr_ptr, textbox, name):
+        attrs = self._admin.getAttributes(attr_ptr, textbox)
+        meta, attributes = self.parseAttrs(attrs)
+
+        attributes.update(meta)
+        if len(attributes) > 1:
+            logger.warning("DB Issues: multiple identical keys for attr_ptr %s" \
+                           % attr_ptr)
+        if textbox in attributes:
+            replaceValue = attributes[textbox]
+        else:
+            replaceValue = None
+
+        return self.render('admin.modifyattr', dict(
+                           message='',
+                           attr_ptr=attr_ptr,
+                           title=name,
+                           key=textbox,
+                           replaceValue=replaceValue,
+                           ))
+    modifyAttr.exposed = True
+
