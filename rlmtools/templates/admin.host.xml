@@ -14,35 +14,64 @@
 
   <p>
     This page allows you to set certain attributes for this host and only
-    this host.  Thes attributes override what is set in the Web-Kickstart
-    configuration file.
+    this host.  These attributes replace RealmConfig and can be used to
+    configure this host via Bcfg2.  Attributes that are inherited are 
+    marked.
   </p>
 
   <div py:if="message != ''" class="message">
     <p py:content="message"/>
   </div>
 
-  <table>
-    <tr class="neutral">
-      <th>
-        <form method="post" action="${baseURL}/admin/host">
-          <p>Re-import Web-Kickstart Data:</p>
-          <input type="hidden" name="host_id" value="${host_id}"/>
-          <input type="hidden" name="importWebKS" value="True"/>
-          <input type="submit" value="Import"/>
-        </form>
-      </th>
-    </tr>
-  </table>
+  <table style="clear: left" class="noboarder">
+    <tr>
+      <td width="60%">
+        <p>
+Each host is initalized with part of its Web-Kickstart configuration.
+These attributes replace much of the functionality of RealmConfig.  The
+attributes imported are listed below.  By clicking the button on the
+right, you will restore them to the values listed in the Web-Kickstart
+configuration file.
+        </p>
+        <ul>
+          <li py:for="key in webKickstartKeys"
+              py:content="key.replace('.', ' ')"/>
+          </ul>
+      </td>
 
-  <table py:if="len(attributes) > 0">
-    <tr py:for="attr in attributes" class="neutral">
-      <td class="right" py:content="attr"/>
       <td>
-        <pre py:content="attributes[attr]" />
+        <table>
+          <tr class="neutral">
+            <th>
+              <form method="post" action="${baseURL}/admin/host">
+                <p>Re-import Web-Kickstart Data:</p>
+                <input type="hidden" name="host_id" value="${host_id}"/>
+                <input type="hidden" name="importWebKS" value="True"/>
+                <input type="submit" value="Import"/>
+              </form>
+            </th>
+          </tr>
+        </table>
       </td>
     </tr>
   </table>
+
+  <h2>Current Attributes</h2>
+
+  <table py:if="len(attributes) > 0">
+    <tr py:for="attr in attributes" class="neutral">
+      <th class="right" py:content="attr"/>
+      <td>
+        <i py:if="attributes[attr] is None">(Not Set)</i>
+        <pre py:if="attributes[attr] is not None"
+             py:content="str(attributes[attr])" />
+      </td>
+    </tr>
+  </table>
+
+  <p py:if="len(attributes) == 0">
+    No attributes set.
+  </p>
 
 </body>
 

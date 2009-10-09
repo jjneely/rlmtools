@@ -59,8 +59,6 @@ class AdminServer(server.Server):
 
         if type(blob) != type(""):
             blob = str(blob)
-        blob = self.conn.escape_string(blob)
-        key = self.conn.escape_string(key)
         
         self.cursor.execute(q1, (key, typeblob, blob))
         self.cursor.execute(q2)
@@ -128,6 +126,17 @@ class AdminServer(server.Server):
 
         self.cursor.execute(q, (key, attr_ptr))
         return resultSet(self.cursor).dump()
+
+    def removeAttributeByKey(self, attr_ptr, key):
+        q = """select a.attr_id from attributes as a, attrgroups as b where
+               b.attr_id = a.attr_id and
+               a.akey = %s and
+               b.attr_ptr = %s"""
+
+        self.cursor.execute(q, (key, attr_ptr))
+        result = resultSet(self.cursor).dump()
+        for row in result:
+            self.removeAttribute(attr_ptr, row['attr_id'])
 
     def removeAttribute(self, attr_ptr, attr_id):
         "Remove the association of an attribute from a attr_ptr group"

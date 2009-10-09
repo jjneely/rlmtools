@@ -86,7 +86,7 @@ insert into acls (name, pts, cell) values ('installer:common', 'installer:common
 insert into acls (name, pts, cell) values ('installer:itd-unix', 'installer:itd-unix', 'bp');
 
 
-insert into webkickstartkeys (keyword) values ('enable.totempclean');
+insert into webkickstartkeys (keyword) values ('enable.notempclean');
 insert into webkickstartkeys (keyword) values ('enable.consolelogin');
 insert into webkickstartkeys (keyword) values ('enable.recivemail');
 insert into webkickstartkeys (keyword) values ('enable.remotecluster');

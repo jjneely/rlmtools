@@ -25,6 +25,7 @@ import os
 import os.path
 import time
 import cPickle as pickle
+import logging
 
 from configDragon import config
 from webcommon import *
@@ -32,6 +33,9 @@ from adminServer import AdminServer
 
 PicType = 0
 StrType = 1
+NoneType = 2
+
+logger = logging.getLogger('xmlrpc')
 
 class Application(AppHelpers):
 
@@ -48,27 +52,84 @@ class Application(AppHelpers):
                            dict(ptsgroups=ptsgroups))
     index.exposed = True
 
-    def host(self, host_id, importWebKS=False):
-        message = ''
-        aptr = self._admin.getHostAttrPtr(host_id)
-        attrs = self._admin.getAllAttributes(aptr)
+    def importWebKickstart(self, host_id):
+        "Store the WebKickstart and important attributes in the database."
+        from webKickstart.libwebks import LibWebKickstart
 
+        aptr = self._admin.getHostAttrPtr(host_id)
+        akeys = self._admin.getAttrKeys(aptr)
+        ikeys = self._admin.getImportantKeys()
+        webks = LibWebKickstart()
+        data = webks.getEverything(self._admin.getHostName(host_id))
+
+        # Store the entire parsed contents for future reference and a timestamp
+        self._admin.removeAttributeByKey(aptr, 'meta.parsed')
+        self._admin.removeAttributeByKey(aptr, 'meta.imported')
+        blob = pickle.dumps(data)
+        self._admin.setAttribute(aptr, 'meta.parsed', PicType, blob)
+        self._admin.setAttribute(aptr, 'meta.imported', StrType, str(time.time()))
+
+        for key in ikeys:
+            if key in akeys:
+                self._admin.removeAttributeByKey(aptr, key)
+            if key in data:
+                blob = pickle.dumps(data[key])
+                self._admin.setAttribute(aptr, key, PicType, blob)
+            else:
+                self._admin.setAttribute(aptr, key, NoneType, None)
+
+    def stringifyWebKS(self, table):
+        return '\n'.join([ ' '.join(i) for i in table ])
+
+    def parseAttrs(self, aptr):
+        attrs = self._admin.getAllAttributes(aptr)
         attributes = {}
+        meta = {}
         for row in attrs:
             if row['atype'] == PicType:
-                blob = pickle.dumps(row['data'])
+                try:
+                    blob = self.stringifyWebKS(pickle.loads(row['data']))
+                except EOFError:
+                    logger.warning("EOFError reading pickle for host_id %s key %s"\
+                                   % (host_id, row['akey']))
+                    blob = "Error reading database."
+            elif row['atype'] == NoneType:
+                blob = None
             else:
                 blob = row['data']
-            attributes[row['akey']] = blob
 
-        if 'meta.imported' not in attributes:
+            if row['akey'].startswith('meta.'):
+                meta[row['akey']] = blob
+            else:
+                attributes[row['akey']] = blob
+
+        return meta, attributes
+
+    def host(self, host_id, importWebKS=None):
+        ikeys = self._admin.getImportantKeys()
+        message = ''
+        aptr = self._admin.getHostAttrPtr(host_id)
+
+        if importWebKS is not None:
+            self.importWebKickstart(host_id)
+
+        meta, attributes = self.parseAttrs(aptr)
+
+        if 'meta.imported' not in meta:
             message = "The Web-Kickstart data for this host needs to be imported."
-    
+        
+        hostname = self._admin.getHostName(host_id)
+        subMenu = [ ('Host: %s' % short(hostname),
+                     '%s/client?host_id=%s' % (url(), host_id))
+                  ]
+
         return self.render('admin.host', dict(
                              host_id=host_id,
-                             title=self._admin.getHostName(host_id),
+                             subMenu=subMenu,
+                             title=hostname,
                              message=message,
                              attributes=attributes,
+                             webKickstartKeys=ikeys,
                              ))
     host.exposed = True
 
