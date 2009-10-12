@@ -79,7 +79,12 @@ class Application(AppHelpers):
                 self._admin.setAttribute(aptr, key, NoneType, None)
 
     def stringifyWebKS(self, table):
-        return '\n'.join([ ' '.join(i) for i in table ])
+        # If this looks like webKickstart data, morph it into normal data
+        if type(table) == type([]) and len(table) > 0 and \
+                type(table[0]) == type([]):
+            return '\n'.join([ ' '.join(i) for i in table ])
+        else:
+            return table
 
     def parseAttrs(self, dbattrs):
         attributes = {}
@@ -104,16 +109,56 @@ class Application(AppHelpers):
 
         return meta, attributes
 
+    def inhairitedAttrs(self, host_id):
+        """Return a dict of attributes inhairited from departments."""
+
+        def rHelper(dept_id, meta, attrs):
+            ptr = self._admin.getDeptAttrPtr(dept_id)
+            dbattrs = self._admin.getAllAttributes(ptr)
+            m, a = self.parseAttrs(dbattrs)
+            newKeys = a.keys() + m.keys()
+            m.update(meta)
+            a.update(attrs)
+
+            # Track keys that are inhairited
+            if 'meta.inhairited' in m:
+                inhairited = m['meta.inhairited']
+            else:
+                inhairited = []
+
+            for k in newKeys:
+                if k in inhairited: continue
+                inhairited.append(k)
+            m['meta.inhairited'] = inhairited
+
+            parent = self._admin.getDeptParentID(dept_id)
+            if parent is not None:
+                return rHelper(parent, m, a)
+            else:
+                return m, a
+
+        dept_id = self._admin.getHostDept(host_id)
+        return rHelper(dept_id, {}, {})
+
+    def hostAttrs(self, host_id):
+        ptr = self._admin.getHostAttrPtr(host_id)
+        dbattrs = self._admin.getAllAttributes(ptr)
+
+        meta, attributes = self.inhairitedAttrs(host_id)
+        m, a = self.parseAttrs(dbattrs)
+        meta.update(m)
+        attributes.update(a)
+        return meta, attributes
+
     def host(self, host_id, importWebKS=None):
+        aptr = self._admin.getHostAttrPtr(host_id)
         ikeys = self._admin.getImportantKeys()
         message = ''
-        aptr = self._admin.getHostAttrPtr(host_id)
-        attrs = self._admin.getAllAttributes(aptr)
 
         if importWebKS is not None:
             self.importWebKickstart(host_id)
 
-        meta, attributes = self.parseAttrs(attrs)
+        meta, attributes = self.hostAttrs(host_id)
 
         if 'meta.imported' not in meta:
             message = "The Web-Kickstart data for this host needs to be imported."
@@ -130,6 +175,7 @@ class Application(AppHelpers):
                              title=hostname,
                              message=message,
                              attributes=attributes,
+                             meta=meta,
                              webKickstartKeys=ikeys,
                              ))
     host.exposed = True

@@ -40,3 +40,16 @@ for ptr in [host_ptr, dept_ptr]:
         print "Removing attribute key %s from ptr %s" % (a, ptr)
         admin.removeAttribute(ptr, t[0]['attr_id'])
 
+# Okay, now create a dept attribute and leave it there
+dept_id = admin.getDeptID('itd-cls')
+dept_ptr = admin.getDeptAttrPtr(dept_id)
+t = admin.getAttributes(dept_ptr, 'testKey')
+if len(t) == 0:
+    admin.setAttribute(dept_ptr, 'testKey', 1, "test value")
+
+dept_id = admin.getDeptID('itd')
+dept_ptr = admin.getDeptAttrPtr(dept_id)
+t = admin.getAttributes(dept_ptr, 'testITD')
+if len(t) == 0:
+    admin.setAttribute(dept_ptr, 'testITD', 1, "Oh YEAH!")
+

@@ -198,6 +198,14 @@ class Server(object):
         else:
             return result
 
+    def getHostDept(self, host_id):
+        q = """select dept_id from realmlinux where host_id = %s"""
+        self.cursor.execute(q, (host_id,))
+        if self.cursor.rowcount < 1:
+            return None
+        else:
+            return self.cursor.fetchone()[0]
+
     def getHostName(self, host_id):
         q = """select hostname from realmlinux where host_id = %s"""
         self.cursor.execute(q, (host_id,))

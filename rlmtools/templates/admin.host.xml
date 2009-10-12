@@ -23,7 +23,7 @@
     <p py:content="message"/>
   </div>
 
-  <h2>Attributes and Web-Kickstart</h2>
+  <h2 style="clear: left;">Attributes and Web-Kickstart</h2>
 
   <table style="clear: left" class="noborder">
     <tr>
@@ -74,6 +74,7 @@ configuration file.
       </th>
       <td>
         <i py:if="attributes[attr] is None">(Not Set)</i>
+        <i py:if="attr in meta['meta.inhairited']">(Inhairited)</i>
         <span py:if="attributes[attr] is not None"
               py:content="str(attributes[attr])" />
       </td>
