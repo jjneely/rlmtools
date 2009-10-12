@@ -42,7 +42,17 @@ configuration file.
       </td>
 
       <td>
-        <table>
+        <p><table>
+          <tr class="neutral">
+            <th class="right">
+              Web-Kickstart Successfully Imported:
+            </th>
+            <td>
+              ${importTime}
+            </td>
+          </tr>
+      </table></p>
+      <p><table>
           <tr class="neutral">
             <th>
               <form method="post" action="${baseURL}/admin/host">
@@ -53,7 +63,7 @@ configuration file.
               </form>
             </th>
           </tr>
-        </table>
+      </table></p>
       </td>
     </tr>
   </table>
@@ -74,6 +84,7 @@ configuration file.
       </th>
       <td>
         <i py:if="attributes[attr] is None">(Not Set)</i>
+        <i py:if="attributes[attr] == ''">(Set)</i>
         <i py:if="attr in meta['meta.inhairited']">(Inhairited)</i>
         <span py:if="attributes[attr] is not None"
               py:content="str(attributes[attr])" />

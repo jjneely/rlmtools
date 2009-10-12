@@ -34,6 +34,7 @@ from adminServer import AdminServer
 PicType = 0
 StrType = 1
 NoneType = 2
+FloatType = 3
 
 logger = logging.getLogger('xmlrpc')
 
@@ -67,7 +68,8 @@ class Application(AppHelpers):
         self._admin.removeAttributeByKey(aptr, 'meta.imported')
         blob = pickle.dumps(data)
         self._admin.setAttribute(aptr, 'meta.parsed', PicType, blob)
-        self._admin.setAttribute(aptr, 'meta.imported', StrType, str(time.time()))
+        self._admin.setAttribute(aptr, 'meta.imported', FloatType, 
+                                 str(time.time()))
 
         for key in ikeys:
             if key in akeys:
@@ -99,6 +101,8 @@ class Application(AppHelpers):
                     blob = "Error reading database."
             elif row['atype'] == NoneType:
                 blob = None
+            elif row['atype'] == FloatType:
+                blob = float(row['data'])
             else:
                 blob = row['data']
 
@@ -162,6 +166,10 @@ class Application(AppHelpers):
 
         if 'meta.imported' not in meta:
             message = "The Web-Kickstart data for this host needs to be imported."
+            importTime = "Never"
+        else:
+            importTime = time.strftime("%a, %d %b %Y %H:%M:%S %Z", \
+                                       time.localtime(meta['meta.imported']))
         
         hostname = self._admin.getHostName(host_id)
         subMenu = [ ('Host: %s' % short(hostname),
@@ -176,6 +184,7 @@ class Application(AppHelpers):
                              message=message,
                              attributes=attributes,
                              meta=meta,
+                             importTime=importTime,
                              webKickstartKeys=ikeys,
                              ))
     host.exposed = True
