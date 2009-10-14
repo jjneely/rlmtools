@@ -108,12 +108,12 @@ configuration file.
     <tr class="neutral">
       <th class="right">Attribute Key:</th>
       <td>
-        <form method="post" action="${baseURL}/admin/modifyAttr"
+        <form method="post" action="${baseURL}/admin/modifyHost"
               style="margin-bottom: 0">
           <input type="hidden" name="name" value="${title}"/>
-          <input type="hidden" name="attr_ptr" value="${attr_ptr}"/>
-          <input type="text" name="textbox" value="" size="15" />
-          <input type="submit" value="Add Attribute"/>
+          <input type="hidden" name="host_id" value="${host_id}"/>
+          <input type="text" name="modifyKey" value="" size="15" />
+          <input type="submit" value="Add/Modify Attribute"/>
         </form>
       </td>
     </tr>

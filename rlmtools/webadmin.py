@@ -154,6 +154,30 @@ class Application(AppHelpers):
         attributes.update(a)
         return meta, attributes
 
+    def setAttribute(self, attr_ptr, key, value):
+        attrs = self._admin.getAttributes(attr_ptr, textbox)
+        for row in attrs:
+            if row['akey'] == key:
+                self._admin.removeAttributeByKey(attr_ptr, key)
+        
+        if type(value) == type(0.1):
+            t = FloatType
+            blob = str(value)
+        elif type(value) == type(1):
+            t = IntType
+            blob = str(value)
+        elif value is None:
+            t = NoneType
+            blob = ""
+        elif type(value) == type(""):
+            t = StrType
+            blob = value
+        else:
+            t = PicType
+            blob = pickle.dumps(value)
+
+        self._admin.setAttribute(attr_ptr, key, t, blob)
+
     def host(self, host_id, importWebKS=None):
         aptr = self._admin.getHostAttrPtr(host_id)
         ikeys = self._admin.getImportantKeys()
@@ -192,25 +216,27 @@ class Application(AppHelpers):
     def dept(self, dept_id):
         pass
 
-    def modifyAttr(self, attr_ptr, textbox, name):
-        attrs = self._admin.getAttributes(attr_ptr, textbox)
-        meta, attributes = self.parseAttrs(attrs)
+    def modifyHost(self, host_id, name, modifyKey, setAttribute=None):
+        if setAttribute == "Submit":
+            pass
+            # setAttribute(self, attr_ptr, key, value):
+        meta, attributes = self.hostAttrs(host_id)
 
         attributes.update(meta)
         if len(attributes) > 1:
-            logger.warning("DB Issues: multiple identical keys for attr_ptr %s" \
-                           % attr_ptr)
-        if textbox in attributes:
-            replaceValue = attributes[textbox]
+            logger.warning("DB Issues: multiple identical keys for host %s" \
+                           % host_id)
+        if modifyKey in attributes:
+            replaceValue = attributes[modifyKey]
         else:
             replaceValue = None
 
-        return self.render('admin.modifyattr', dict(
+        return self.render('admin.modifyHost', dict(
                            message='',
-                           attr_ptr=attr_ptr,
                            title=name,
-                           key=textbox,
+                           host_id=host_id,
+                           key=modifyKey,
                            replaceValue=replaceValue,
                            ))
-    modifyAttr.exposed = True
+    modifyHost.exposed = True
 

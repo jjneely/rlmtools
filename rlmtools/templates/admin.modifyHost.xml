@@ -24,7 +24,7 @@
 
   <table>
     <tr class="neutral" py:if="replaceValue is not None">
-      <th>You are modifying an existing attribute.</th>
+      <th colspan="2">You are modifying an existing attribute.</th>
     </tr>
     <tr class="neutral">
       <th class="right">${key}</th>
@@ -32,7 +32,7 @@
         <form method="post" action="${baseURL}/admin/modifyAttr"
               style="margin-bottom: 0">
           <input type="hidden" name="name" value="${title}"/>
-          <input type="hidden" name="attr_ptr" value="${attr_ptr}"/>
+          <input type="hidden" name="host_id" value="${host_id}"/>
           <input type="text" name="textbox" value="${replaceValue or ''}" 
                  size="15" />
           <input type="submit" name="setAttribute" value="Submit"/>
