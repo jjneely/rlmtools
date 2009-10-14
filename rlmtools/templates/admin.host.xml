@@ -74,10 +74,10 @@ configuration file.
     <tr py:for="attr in attributes" class="neutral">
       <th class="right" py:content="attr"/>
       <th class="right">
-        <form method="post" action="${baseURL}/admin/host" 
+        <form method="post" action="${baseURL}/admin/modifyHost"
               style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${host_id}"/>
-          <input type="hidden" name="editVar" value="${attr}"/>
+          <input type="hidden" name="modifyKey" value="${attr}"/>
           <input type="submit" name="reset" value="Reset"/>
           <input type="submit" name="modify" value="Modify"/>
         </form>
@@ -110,7 +110,6 @@ configuration file.
       <td>
         <form method="post" action="${baseURL}/admin/modifyHost"
               style="margin-bottom: 0">
-          <input type="hidden" name="name" value="${title}"/>
           <input type="hidden" name="host_id" value="${host_id}"/>
           <input type="text" name="modifyKey" value="" size="15" />
           <input type="submit" value="Add/Modify Attribute"/>

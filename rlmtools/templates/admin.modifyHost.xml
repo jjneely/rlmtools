@@ -29,10 +29,10 @@
     <tr class="neutral">
       <th class="right">${key}</th>
       <td>
-        <form method="post" action="${baseURL}/admin/modifyAttr"
+        <form method="post" action="${baseURL}/admin/modifyHost"
               style="margin-bottom: 0">
-          <input type="hidden" name="name" value="${title}"/>
           <input type="hidden" name="host_id" value="${host_id}"/>
+          <input type="hidden" name="modifyKey" value="${key}"/>
           <input type="text" name="textbox" value="${replaceValue or ''}" 
                  size="15" />
           <input type="submit" name="setAttribute" value="Submit"/>

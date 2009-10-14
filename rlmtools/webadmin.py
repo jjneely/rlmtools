@@ -155,7 +155,7 @@ class Application(AppHelpers):
         return meta, attributes
 
     def setAttribute(self, attr_ptr, key, value):
-        attrs = self._admin.getAttributes(attr_ptr, textbox)
+        attrs = self._admin.getAttributes(attr_ptr, key)
         for row in attrs:
             if row['akey'] == key:
                 self._admin.removeAttributeByKey(attr_ptr, key)
@@ -196,7 +196,7 @@ class Application(AppHelpers):
                                        time.localtime(meta['meta.imported']))
         
         hostname = self._admin.getHostName(host_id)
-        subMenu = [ ('Host: %s' % short(hostname),
+        subMenu = [ ('%s Status Panel' % short(hostname),
                      '%s/client?host_id=%s' % (url(), host_id))
                   ]
 
@@ -216,13 +216,17 @@ class Application(AppHelpers):
     def dept(self, dept_id):
         pass
 
-    def modifyHost(self, host_id, name, modifyKey, setAttribute=None):
+    def modifyHost(self, host_id, modifyKey, textbox=None,
+                   setAttribute=None, reset=None, modify=None):
         if setAttribute == "Submit":
-            pass
-            # setAttribute(self, attr_ptr, key, value):
+            aptr = self._admin.getHostAttrPtr(host_id)
+            self.setAttribute(aptr, modifyKey, textbox)
+            # Set the value and redirect to the Host Admin Panel
+            return self.host(host_id)
         meta, attributes = self.hostAttrs(host_id)
-
         attributes.update(meta)
+        hostname = self._admin.getHostName(host_id)
+
         if len(attributes) > 1:
             logger.warning("DB Issues: multiple identical keys for host %s" \
                            % host_id)
@@ -231,9 +235,14 @@ class Application(AppHelpers):
         else:
             replaceValue = None
 
+        subMenu = [ ('%s Admin Panel' % short(hostname),
+                     '%s/admin/host?host_id=%s' % (url(), host_id))
+                  ]
+
         return self.render('admin.modifyHost', dict(
+                           subMenu=subMenu,
                            message='',
-                           title=name,
+                           title=hostname,
                            host_id=host_id,
                            key=modifyKey,
                            replaceValue=replaceValue,
