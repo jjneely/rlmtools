@@ -234,6 +234,38 @@ class Server(object):
 
         return self.cursor.fetchone()[0]
 
+    def getAllUUIDs(self):
+        q = "select uuid from realmlinux where uuid is not NULL"
+        self.cursor.execute(q)
+        result = resultSet(self.cursor)
+        return [ r['uuid'] for r in result ]
+
+    def getHostByUUID(self, uuid):
+        q = "select hostname from realmlinux where uuid = %s"
+        self.cursor.execute(q, (uuid,))
+        if self.cursor.rowcount == 0:
+            return None
+        return self.cursor.fetchone()[0]
+
+    def getHostVersion(self, host_id):
+        # XXX: Implemented but not used in bcfg2 connector
+        q = "select version from realmlinux where host_id = %s"
+        self.cursor.execute(q, (host_id,))
+        if self.cursor.rowcount == 0:
+            return None
+        return self.cursor.fetchone()[0]
+
+    def getAllHosts(self):
+        q = "select hostname, host_id from realmlinux"
+        self.cursor.execute(q)
+        result = resultSet(self.cursor)
+
+        d = {}
+        for r in result:
+            d[r['hostname']] = r['host_id']
+
+        return d
+
     def getHistTypeID(self, htype):
         q = "select htype_id from htype where name = %s"
 

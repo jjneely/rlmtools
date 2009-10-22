@@ -60,7 +60,7 @@ class RLAttributes(object):
         for key in ikeys:
             if key in akeys:
                 self._admin.removeAttributeByKey(aptr, key)
-            if key in data:
+            if data is not None and key in data:
                 blob = pickle.dumps(data[key])
                 self._admin.setAttribute(aptr, key, PicType, blob)
             else:
@@ -139,6 +139,15 @@ class RLAttributes(object):
         meta.update(m)
         attributes.update(a)
         return meta, attributes
+
+    def getHostAttr(self, host_id, key):
+        m, a = self.hostAttrs(host_id)
+        if key in m:
+            return m[ke]
+        elif key in a:
+            return a[key]
+        else:
+            return None
 
     def setAttribute(self, attr_ptr, key, value):
         attrs = self._admin.getAttributes(attr_ptr, key)
