@@ -89,6 +89,7 @@ class Application(AppHelpers, RLAttributes):
 
     def modifyHost(self, host_id, modifyKey, textbox=None,
                    setAttribute=None, reset=None, modify=None):
+        # XXX: check for altering meta. keys??
         if setAttribute == "Submit":
             aptr = self._admin.getHostAttrPtr(host_id)
             self.setAttribute(aptr, modifyKey, textbox)
@@ -101,10 +102,21 @@ class Application(AppHelpers, RLAttributes):
         if len(attributes) > 1:
             logger.warning("DB Issues: multiple identical keys for host %s" \
                            % host_id)
-        if modifyKey in attributes:
+
+        replaceValue = None
+        if reset == "Reset":
+            if 'meta.parsed' in attributes and \
+                    modifyKey in attributes['meta.parsed']:
+                replaceValue = \
+                    self.stringifyWebKS(attributes['meta.parsed'][modifyKey])
+            else:
+                m, a = self.inhairitedAttrs(host_id)
+                a.update(m)
+                if modifyKey in a:
+                    replaceValue = a[modifyKey]
+
+        elif modifyKey in attributes:
             replaceValue = attributes[modifyKey]
-        else:
-            replaceValue = None
 
         subMenu = [ ('%s Admin Panel' % short(hostname),
                      '%s/admin/host?host_id=%s' % (url(), host_id))
