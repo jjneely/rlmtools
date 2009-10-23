@@ -19,6 +19,8 @@
     marked.
   </p>
 
+  <h1>Host ${hostname} in Department ${deptname}</h1>
+
   <div py:if="message != ''" class="message">
     <p py:content="message"/>
   </div>

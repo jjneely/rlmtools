@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+
+<body>
+
+  <p>
+    This page allows you to set certain attributes for a department.  These
+    attributes replace RealmConfig and can be used in your Bcfg2
+    configurations.  Departments can inherit from higher order departments
+    and those values are shown as well.  However, departments obtain no
+    information from Web-Kickstart.
+  </p>
+
+  <h1>Department ${deptname}</h1>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Current Department Attributes</h2>
+
+  <table py:if="len(attributes) > 0">
+    <tr py:for="attr in attributes" class="neutral">
+      <th class="right" py:content="attr"/>
+      <th class="right">
+        <form method="post" action="${baseURL}/admin/modifyDept"
+              style="margin-bottom: 0">
+          <input type="hidden" name="dept_id" value="${dept_id}"/>
+          <input type="hidden" name="modifyKey" value="${attr}"/>
+          <input type="submit" name="reset" value="Reset"/>
+          <input type="submit" name="modify" value="Modify"/>
+        </form>
+      </th>
+      <td>
+        <i py:if="attributes[attr] is None">(Not Set)</i>
+        <i py:if="attributes[attr] == ''">(Set)</i>
+        <i py:if="attr in meta['meta.inhairited']">(Inhairited)</i>
+        <span py:if="attributes[attr] is not None"
+              py:content="str(attributes[attr])" />
+      </td>
+    </tr>
+  </table>
+
+  <p py:if="len(attributes) == 0">
+    No attributes set.
+  </p>
+
+  <h2>Add Attribute</h2>
+
+  <p>
+    Adding additional attributes is possible.  These can be referenced in
+    your Bcfg2 configuration templates.  The "attribute key" is the key
+    that references this variable, such as "root" or "users" above.
+  </p>
+
+  <table>
+    <tr class="neutral">
+      <th class="right">Attribute Key:</th>
+      <td>
+        <form method="post" action="${baseURL}/admin/modifyDept"
+              style="margin-bottom: 0">
+          <input type="hidden" name="dept_id" value="${dept_id}"/>
+          <input type="text" name="modifyKey" value="" size="15" />
+          <input type="submit" value="Add/Modify Attribute"/>
+        </form>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

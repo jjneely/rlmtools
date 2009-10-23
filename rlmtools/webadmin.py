@@ -50,7 +50,7 @@ class Application(AppHelpers, RLAttributes):
     index.exposed = True
 
     def host(self, host_id, importWebKS=None):
-        aptr = self._admin.getHostAttrPtr(host_id)
+        #aptr = self._admin.getHostAttrPtr(host_id)
         ikeys = self._admin.getImportantKeys()
         message = ''
 
@@ -67,15 +67,22 @@ class Application(AppHelpers, RLAttributes):
                                        time.localtime(meta['meta.imported']))
         
         hostname = self._admin.getHostName(host_id)
+        dept_id = self._admin.getHostDept(host_id)
+        deptname = self._admin.getDeptName(dept_id)
         subMenu = [ ('%s Status Panel' % short(hostname),
-                     '%s/client?host_id=%s' % (url(), host_id))
+                     '%s/client?host_id=%s' % (url(), host_id)),
+                    ('%s Status Panel' % deptname,
+                     '%s/dept?dept_id=%s' % (url(), dept_id)),
+                    ('%s Admin Panel' % deptname,
+                     '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
                   ]
 
         return self.render('admin.host', dict(
                              host_id=host_id,
-                             attr_ptr=aptr,
                              subMenu=subMenu,
-                             title=hostname,
+                             title='Host Admin Panel',
+                             hostname=hostname,
+                             deptname=deptname,
                              message=message,
                              attributes=attributes,
                              meta=meta,
@@ -85,7 +92,25 @@ class Application(AppHelpers, RLAttributes):
     host.exposed = True
 
     def dept(self, dept_id):
-        pass
+        message = ''
+
+        meta, attributes = self.deptAttrs(dept_id)
+
+        deptname = self._admin.getDeptName(dept_id)
+        subMenu = [ ('%s Status Panel' % deptname,
+                     '%s/dept?dept_id=%s' % (url(), dept_id))
+                  ]
+
+        return self.render('admin.dept', dict(
+                             dept_id=dept_id,
+                             deptname=deptname,
+                             subMenu=subMenu,
+                             title='Department Admin Panel',
+                             message=message,
+                             attributes=attributes,
+                             meta=meta,
+                             ))
+    dept.exposed = True
 
     def modifyHost(self, host_id, modifyKey, textbox=None,
                    setAttribute=None, reset=None, modify=None):
@@ -131,4 +156,47 @@ class Application(AppHelpers, RLAttributes):
                            replaceValue=replaceValue,
                            ))
     modifyHost.exposed = True
+
+    def modifyDept(self, dept_id, modifyKey, textbox=None,
+                   setAttribute=None, reset=None, modify=None):
+        # XXX: check for altering meta. keys??
+        if setAttribute == "Submit":
+            aptr = self._admin.getDeptAttrPtr(dept_id)
+            self.setAttribute(aptr, modifyKey, textbox)
+            # Set the value and redirect to the Dept Admin Panel
+            return self.dept(dept_id)
+        meta, attributes = self.deptAttrs(dept_id)
+        attributes.update(meta)
+        deptname = self._admin.getDeptName(dept_id)
+
+        if len(attributes) > 1:
+            logger.warning("DB Issues: multiple identical keys for dept %s" \
+                           % dept_id)
+
+        replaceValue = None
+        if reset == "Reset":
+            parent = self._admin.getDeptParentID(int(dept_id))
+            if parent is not None:
+                m, a = self.deptAttrs(parent)
+                a.update(m)
+                if modifyKey in a:
+                    replaceValue = a[modifyKey]
+
+        elif modifyKey in attributes:
+            replaceValue = attributes[modifyKey]
+
+        subMenu = [ ('%s Admin Panel' % deptname,
+                     '%s/admin/dept?dept_id=%s' % (url(), dept_id))
+                  ]
+
+        return self.render('admin.modifyDept', dict(
+                           subMenu=subMenu,
+                           message='',
+                           title='Modify Attribute',
+                           deptname=deptname,
+                           dept_id=dept_id,
+                           key=modifyKey,
+                           replaceValue=replaceValue,
+                           ))
+    modifyDept.exposed = True
 

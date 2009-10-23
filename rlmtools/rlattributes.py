@@ -99,17 +99,15 @@ class RLAttributes(object):
 
         return meta, attributes
 
-    def inhairitedAttrs(self, host_id):
-        """Return a dict of attributes inhairited from departments."""
+    def deptAttrs(self, dept_id, meta={}, attrs={}, markInhairited=False):
+        ptr = self._admin.getDeptAttrPtr(dept_id)
+        dbattrs = self._admin.getAllAttributes(ptr)
+        m, a = self.parseAttrs(dbattrs)
+        newKeys = a.keys() + m.keys()
+        m.update(meta)
+        a.update(attrs)
 
-        def rHelper(dept_id, meta, attrs):
-            ptr = self._admin.getDeptAttrPtr(dept_id)
-            dbattrs = self._admin.getAllAttributes(ptr)
-            m, a = self.parseAttrs(dbattrs)
-            newKeys = a.keys() + m.keys()
-            m.update(meta)
-            a.update(attrs)
-
+        if markInhairited:
             # Track keys that are inhairited
             if 'meta.inhairited' in m:
                 inhairited = m['meta.inhairited']
@@ -120,15 +118,20 @@ class RLAttributes(object):
                 if k in inhairited: continue
                 inhairited.append(k)
             m['meta.inhairited'] = inhairited
+        else:
+            m['meta.inhairited'] = []
 
-            parent = self._admin.getDeptParentID(dept_id)
-            if parent is not None:
-                return rHelper(parent, m, a)
-            else:
-                return m, a
+        parent = self._admin.getDeptParentID(int(dept_id))
+        if parent is not None:
+            return self.deptAttrs(parent, m, a, markInhairited=True)
+        else:
+            return m, a
+
+    def inhairitedAttrs(self, host_id):
+        """Return a dict of attributes inhairited from departments."""
 
         dept_id = self._admin.getHostDept(host_id)
-        return rHelper(dept_id, {}, {})
+        return self.deptAttrs(dept_id, {}, {}, markInhairited=True)
 
     def hostAttrs(self, host_id):
         ptr = self._admin.getHostAttrPtr(host_id)
