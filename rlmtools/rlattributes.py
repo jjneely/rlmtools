@@ -139,6 +139,12 @@ class RLAttributes(object):
 
         meta, attributes = self.inhairitedAttrs(host_id)
         m, a = self.parseAttrs(dbattrs)
+
+        for key in meta['meta.inhairited']:
+            if key in a:
+                # We have a local version of this key that overrides the inharited
+                meta['meta.inhairited'].remove(key)
+
         meta.update(m)
         attributes.update(a)
         return meta, attributes
