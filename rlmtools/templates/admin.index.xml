@@ -12,27 +12,70 @@
 <body>
 
   <p>
-    Gah!!
+    You may search directly for Realm Linux clients here and be taken
+    directly to their Host Admin Panel.  You may create or modify departments
+    here and go directly to their Department Admin Panel.
   </p>
 
-  <table>
-    <tr class="neutral">
-      <th class="bottom">ACL Name</th>
-      <th class="bottom">PTS Group</th>
-      <th class="bottom">AFS Cell</th>
-      <th class="bottom">Users</th>
-    </tr>
-    <tr class="neutral" py:for="g in ptsgroups">
-      <td py:content="g['name']" />
-      <td py:content="g['pts']" />
-      <td py:content="g['cell']" />
-      <td>
-        <span py:for="id in g['ids']">
-          <span py:content="id" /><br/>
-        </span>
-      </td>
-    </tr>
-  </table>
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Search For Client Admin Panels</h2>
+  <form method="post" action="${baseURL}/search">
+    <input type="hidden" name="dest" value="admin"/>
+    <input type="text" name="searchBox" value="" size="15" />
+    <input type="submit" value="Search" />
+  </form>
+
+  <h2>Create or Modify Department</h2>
+
+  <p>
+    Departments will inhairit elements from their parent.  The 'root'
+    department is the parent (or granparent) of all departments.  A child
+    of the 'foo' department is 'foo-bar'.  A grandchild is 'foo-bar-baz'.
+  </p>
+
+  <p>You have the option of creating some AFS structures as well.</p>
+
+  <form method="post" action="${baseURL}/admin/createDept">
+    <table>
+      <tr>
+        <td class="right">
+          New Department Name:
+        </td>
+        <td>
+          <input type="text" name="textBox" value="" size="15" />
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create AFS cron directories in /afs/bp/system/@sys/athena/adm.DEPT
+        </td>
+        <td>
+          <input type="checkbox" name="afscron"/>
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create Web-Kickstart directory
+          /afs/bp/system/config/linux-kickstart/configs/DEPT
+        </td>
+        <td>
+          <input type="checkbox" name="webks"/>
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create Bcfg2 directory
+          /afs/bp/system/config/linux-kickstart/configs/DEPT
+        </td>
+        <td>
+          <input type="checkbox" name="webks"/>
+        </td>
+      </tr>
+    </table>
+  </form>
 
 </body>
 

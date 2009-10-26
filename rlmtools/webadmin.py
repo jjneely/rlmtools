@@ -41,13 +41,18 @@ class Application(AppHelpers, RLAttributes):
         self._admin = AdminServer()
 
     def index(self):
+        return self.render('admin.index', 
+                           dict(message=''))
+    index.exposed = True
+
+    def aclGroups(self):
         ptsgroups = self._admin.getPTSGroups()
         for pts in ptsgroups:
             pts['ids'] = self._admin.getSysAdmins(pts['acl_id'])
 
-        return self.render('admin.index', 
+        return self.render('admin.aclgroups', 
                            dict(ptsgroups=ptsgroups))
-    index.exposed = True
+    aclGroups.exposed = True
 
     def host(self, host_id, importWebKS=None):
         #aptr = self._admin.getHostAttrPtr(host_id)

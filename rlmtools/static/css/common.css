@@ -152,6 +152,13 @@ th.right {
    border-right-color: gray;
    border-right-style: solid;
 }
+td.right {
+    text-align: right;
+    border-bottom-style: none;
+    border-right-width: 1px;
+    border-right-color: gray;
+    border-right-style: solid;
+}
 tr.good {
    background-color: #99ff99;
 }
