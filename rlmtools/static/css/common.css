@@ -27,11 +27,12 @@ div.content {
    padding: 1em;
 }
 div.message {
-    float: left;
+    margin-left: auto;
+    margin-right: auto;
     width: 30em;
-    background-color: #55cc55;
+    background-color: #DAA520;
     padding: 0.5em;
-    border: 4px solid #006600;
+    border: 4px solid #B8860B;
 }
 div.alert {
    float: left;
@@ -58,7 +59,7 @@ div.field {
    text-align: center;
    font-weight: bold;
    float: left;
-   width: 6em;
+   width: 10em;
    height: 1.5em;
    background-color: #ececec;
 }

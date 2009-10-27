@@ -396,7 +396,7 @@ class Application(AppHelpers):
         return self.render('usage', dict(graphs=graphs))
     usage.exposed = True
 
-    def search(self, searchBox=None):
+    def search(self, searchBox=None, dest=None):
         # This works a lot like the dept() method above
         # set some globals to speed helper fucntions
         self.days7 = datetime.timedelta(7)
@@ -419,8 +419,13 @@ class Application(AppHelpers):
             error = ""
 
         if error == "":
+            if dest == "admin":
+                target = "admin/host?host_id=%s"
+            else:
+                target = "client?host_id=%s"
+
             for client in clients:
-                client['url'] = "client?host_id=%s" % client['host_id']
+                client['url'] = target % client['host_id']
  
                 # Calculate status
                 self._checkClient(client)

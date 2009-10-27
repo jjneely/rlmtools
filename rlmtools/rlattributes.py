@@ -49,6 +49,9 @@ class RLAttributes(object):
         webks = LibWebKickstart()
         data = webks.getEverything(self._admin.getHostName(host_id))
 
+        if data is None:
+            return False
+
         # Store the entire parsed contents for future reference and a timestamp
         self._admin.removeAttributeByKey(aptr, 'meta.parsed')
         self._admin.removeAttributeByKey(aptr, 'meta.imported')
@@ -65,6 +68,8 @@ class RLAttributes(object):
                 self._admin.setAttribute(aptr, key, PicType, blob)
             else:
                 self._admin.setAttribute(aptr, key, NoneType, None)
+
+        return True
 
     def stringifyWebKS(self, table):
         # If this looks like webKickstart data, morph it into normal data

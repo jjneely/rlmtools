@@ -26,10 +26,12 @@ import os.path
 import time
 import cPickle as pickle
 import logging
+import re
 
 from configDragon import config
 from webcommon import *
 from adminServer import AdminServer
+from webServer import WebServer
 from rlattributes import RLAttributes
 
 logger = logging.getLogger('xmlrpc')
@@ -40,9 +42,12 @@ class Application(AppHelpers, RLAttributes):
         AppHelpers.__init__(self)
         self._admin = AdminServer()
 
-    def index(self):
+    def index(self, message=""):
+        depts = WebServer().getDepartments()
         return self.render('admin.index', 
-                           dict(message=''))
+                           dict(message=message,
+                                depts=depts,
+                               ))
     index.exposed = True
 
     def aclGroups(self):
@@ -60,12 +65,14 @@ class Application(AppHelpers, RLAttributes):
         message = ''
 
         if importWebKS is not None:
-            self.importWebKickstart(host_id)
+            if not self.importWebKickstart(host_id):
+                message="Error Importing Web-Kickstart Configuration"
 
         meta, attributes = self.hostAttrs(host_id)
 
         if 'meta.imported' not in meta:
-            message = "The Web-Kickstart data for this host needs to be imported."
+            if message == "":
+                message = "The Web-Kickstart data for this host needs to be imported."
             importTime = "Never"
         else:
             importTime = time.strftime("%a, %d %b %Y %H:%M:%S %Z", \
@@ -205,3 +212,39 @@ class Application(AppHelpers, RLAttributes):
                            ))
     modifyDept.exposed = True
 
+    def createDept(self, textBox, options=[]):
+        # Create a remedy request and return some goodness
+        regex = "^[-a-z0-9]+$"
+        print textBox
+        print re.search(regex, textBox)
+
+        if textBox.strip() == "" or re.search(regex, textBox) is None:
+            return self.index("Illegal department name.  Must match %s" % regex)
+        else:
+            # this creates the dept in the DB
+            id = self._admin.getDeptID(textBox)
+
+        o = {}
+        for i in ['afscron', 'webks', 'bcfg2', 'admins']:
+            if i in options:
+                o[i] = True
+            else:
+                o[i] = False
+
+        fd = os.popen("/usr/sbin/sendmail -t", 'w')
+        fd.write("From: nobody@ncsu.edu\n")  # XXX: Needs to be the auth'd user
+        fd.write("To: linux@help.ncsu.edu\n")  
+        fd.write("Subject: Create LD Department\n\n")
+        
+        fd.write("User %s has requested the creation of RLMT Department %s.\n" \
+                 % ('nobody', textBox))
+        fd.write("This department has been given ID %s\n\n" % id)
+        fd.write("Create AFS Cron directories:\t%s\n" % o['afscron'])
+        fd.write("Create Web-Kickstart Directory:\t%s\n" % o['webks'])
+        fd.write("Create Bcfg2 repository:\t%s\n" % o['bcfg2'])
+        fd.write("Create Root password / admin list:\t%s\n\n" % o['admins'])
+        fd.close()
+
+        return self.index("You department %s has been requested." % textBox)
+    createDept.exposed = True
+    

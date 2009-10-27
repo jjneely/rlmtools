@@ -28,7 +28,16 @@
     <input type="submit" value="Search" />
   </form>
 
-  <h2>Create or Modify Department</h2>
+  <h2>Department Admin Panels</h2>
+
+  <div class="category">
+    <div py:for="d in depts" class="field">
+      <a href="${baseURL}/admin/dept?dept_id=${d['dept_id']}"
+        py:content="d['name']">Department of Liquid Dragon Eat You</a>
+    </div>
+  </div>
+
+  <h2 class="space">Create or Modify Department</h2>
 
   <p>
     Departments will inhairit elements from their parent.  The 'root'
@@ -36,9 +45,22 @@
     of the 'foo' department is 'foo-bar'.  A grandchild is 'foo-bar-baz'.
   </p>
 
-  <p>You have the option of creating some AFS structures as well.</p>
+  <p>
+    You have the option of creating some AFS structures as well.  The following
+    maps AFS directories to the function provided.
+  </p>
+  <ul>
+    <li><strong>Departmental Cron Scripts:</strong>
+      /afs/bp/system/@sys/athena/adm.DEPT</li>
+    <li><strong>Web-Kickstart Config Directory:</strong>
+      /afs/bp/system/config/linux-kickstart/configs/DEPT</li>
+    <li><strong>Bcfg2 (Configuration Management) Repository:</strong>
+      /afs/bp/system/config/linux-kickstart/bcfg2/DEPT</li>
+    <li><a href="https://secure.linux.ncsu.edu/moin/Realm%20Linux%20Administrators%27%20Guide/Root%20Passwords%20and%20Admin%20Users">
+        Root Password and System Admin List</a></li>
+  </ul>
 
-  <form method="post" action="${baseURL}/admin/createDept">
+  <form method="get" action="${baseURL}/admin/createDept">
     <table>
       <tr>
         <td class="right">
@@ -50,28 +72,42 @@
       </tr>
       <tr>
         <td class="right">
-          Create AFS cron directories in /afs/bp/system/@sys/athena/adm.DEPT
+          Create Departmental Cron Scripts:
         </td>
         <td>
-          <input type="checkbox" name="afscron"/>
+          <input type="checkbox" value="afscron" name="options"/>
         </td>
       </tr>
       <tr>
         <td class="right">
-          Create Web-Kickstart directory
-          /afs/bp/system/config/linux-kickstart/configs/DEPT
+          Create Web-Kickstart Directory:
         </td>
         <td>
-          <input type="checkbox" name="webks"/>
+          <input type="checkbox" value="webks" name="options"/>
         </td>
       </tr>
       <tr>
         <td class="right">
-          Create Bcfg2 directory
-          /afs/bp/system/config/linux-kickstart/configs/DEPT
+          Create Bcfg2 Directory:
         </td>
         <td>
-          <input type="checkbox" name="webks"/>
+          <input type="checkbox" value="bcfg2" name="options"/>
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create New Root Password / System Admin Group:
+        </td>
+        <td>
+          <input type="checkbox" value="admins" name="options"/>
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create Request:
+        </td>
+        <td>
+          <input type="submit" value="Submit"/>
         </td>
       </tr>
     </table>
