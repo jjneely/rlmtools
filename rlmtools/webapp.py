@@ -195,7 +195,10 @@ class Application(AppHelpers):
                           "%s/dept?dept_id=%s" % (url(), detail['dept_id'])),
                          ]
         else:
-            backlinks = []
+            backlinks = [
+                         ('Host Admin Panel',
+                          '%s/admin/host?host_id=%s' % (url(), host_id)),
+                    ]
 
         for row in detail['status']:
             row['url'] = "%s/status?status_id=%s" % (url(),
