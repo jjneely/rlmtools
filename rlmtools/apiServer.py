@@ -34,6 +34,7 @@ import MySQLdb
 from datetime import datetime, timedelta
 from resultSet import resultSet
 from configDragon import config
+from rlattributes import RLAttributes
 
 import webKickstart.libwebks
 
@@ -473,6 +474,17 @@ class APIServer(server.Server):
     
         return result[0]
 
+    def setDeptBcfg2(self, deptName, bcfg2args):
+        """Set bcfg2.init attribute on the dept name given"""
+        rla = RLAttributes()
+        dept_id = self.getDeptID(deptName)
+        aptr = rla.getDeptAttrPtr(dept_id)
+
+        rla.setAttribute(aptr, 'bcfg2.init', bcfg2args)
+
+        # XXX: Return code / check?
+        return 0
+
     def initHost(self, fqdn, support, blessing=False):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.
@@ -509,6 +521,11 @@ class APIServer(server.Server):
         self.cursor.execute(q6, (hostid,))
         self.cursor.execute(q7, (hostid,))
         self.conn.commit()
+
+        # Attributes
+        rla = RLAttributes()
+        rla.removeAllHostAttrs(hostid)
+        rla.importWebKickstart(hostid)
         
         log.info("Initialized host: %s" % fqdn)
         if support:

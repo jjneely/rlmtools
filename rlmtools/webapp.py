@@ -438,6 +438,7 @@ class Application(AppHelpers):
     search.exposed = True
 
 
+
 def main():
     staticDir = os.path.join(os.path.dirname(__file__), "static")
     staticDir = os.path.abspath(staticDir)
@@ -449,7 +450,7 @@ def main():
                                'static_filter.dir': staticDir },
                             "/rlmtools/static/graphs": {
                                'static_filter.on': True,
-                               'static_filter.dir': graphDir }
+                               'static_filter.dir': graphDir },
                            })
 
     cherrypy.tree.mount(Application(), '/rlmtools')

@@ -153,6 +153,20 @@ class AdminServer(server.Server):
         self.cursor.execute(q2, (attr_id,))
         self.conn.commit()
 
+    def removeAllAttributes(self, attr_ptr):
+        "Remove all attributes associated with this pointer"
+        q1 = "select attr_id from attrgroups where attr_ptr = %s"
+        q2 = "delete from attrgroups where attr_ptr = %s"
+        q3 = "delete from attributes where attr_id = %s"
+
+        self.cursor.execute(q1, (attr_ptr,))
+        result = resultSet(self.cursor).dump()
+        for row in result:
+            self.cursor.execute(q3, (row['attr_id']))
+
+        self.cursor.execute(q2, (attr_ptr,))
+        self.conn.commit()
+
     def getAttrKeys(self, attr_ptr):
         "Return a list of the keys an attr pointer references."
 

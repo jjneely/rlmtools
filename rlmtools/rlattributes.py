@@ -40,6 +40,12 @@ class RLAttributes(object):
     def __init__(self):
         self._admin = AdminServer()
 
+    def getHostAttrPtr(self, host_id): 
+        return self._admin.getHostAttrPtr(host_id)
+
+    def getDeptAttrPtr(self, dept_id):
+        return self._admin.getDeptAttrPtr(dept_id)
+
     def importWebKickstart(self, host_id):
         "Store the WebKickstart and important attributes in the database."
 
@@ -190,4 +196,12 @@ class RLAttributes(object):
     def setHostAttribute(self, host_id, key, value):
         aptr = self._admin.getHostAttrPtr(host_id)
         return self.setAttribute(aptr, key, value)
+
+    def removeAllHostAttrs(self, host_id):
+        aptr = self._admin.getHostAttrPtr(host_id)
+        self._admin.removeAllAttributes(aptr)
+
+    def removeAllDeptAttrs(self, dept_id):
+        aptr = self._admin.getDeptAttrPtr(dept_id)
+        self._admin.removeAllAttributes(aptr)
 

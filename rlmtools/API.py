@@ -27,7 +27,12 @@ import socket
 import logging
 import apiServer as server
 
-from mod_python import apache
+try:
+    from mod_python import apache
+except ImportError:
+    # Not running under mod_python -- testing harness
+    apache = None
+    import cherrypy
 
 log = logging.getLogger("xmlrpc")
 
@@ -39,6 +44,7 @@ __API__ = ['hello',
            'updateRHNSystemID',
 
            'initHost',
+           'setDeptBcfg2',
 
            'getServerKey',
            'getEncKeyFile',
@@ -59,8 +65,23 @@ def getHostName():
     """Digs out the hostname from the headers.  This identifies who we
        say we are."""
     
-    ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
-    addr = socket.gethostbyaddr(ip)
+    if apache is not None:
+        ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
+    else:
+        # Part of cherrypy test harness
+        ip = cherrypy.request.remote.ip
+
+    try:
+        addr = socket.gethostbyaddr(ip)
+    except socket.herror, e:
+        if e[0] == 0:
+            # No error...IP does not resolve
+            log.warning("Request from %s which does not resolve" % ip)
+            addr = [ip]
+        else:
+            log.error("HELP! socket.gethostbyaddr(%s) blew up with: %s" \
+                    % (ip, e))
+            raise
 
     return addr[0]
 
@@ -119,7 +140,19 @@ def initHost(apiVersion, secret, fqdn):
     s.initHost(fqdn, support=1)  # returns host_id
     return 0
 
-    
+
+def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args):
+    """Set the bcfg2.init attribute for the given department name.
+       You need the admin secret to do so.  This API function is used
+       by the script that syncs Bcfg2 repos to the config servers."""
+
+    s = server.Server(apiVersion, "fqdn", "uuid")
+    if not s.verifySecret(secret):
+        log.warning("setDeptBcfg2() called with bad secret")
+        return 1
+
+    return s.setDeptBcfg2(deptName, bcfg2args)
+
 def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 
