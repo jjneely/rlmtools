@@ -50,10 +50,13 @@ class Application(AppHelpers, RLAttributes):
                                ))
     index.exposed = True
 
-    def aclGroups(self):
+    def aclGroups(self, cell=None, ptsGroup=None, aclName=None):
+        if cell is not None and ptsGroup is not None and aclName is not None:
+            self._admin.createACL(aclName, ptsGroup, cell)
+
         ptsgroups = self._admin.getPTSGroups()
-        for pts in ptsgroups:
-            pts['ids'] = self._admin.getSysAdmins(pts['acl_id'])
+        #for pts in ptsgroups:
+        #    pts['ids'] = self._admin.getSysAdmins(pts['acl_id'])
 
         return self.render('admin.aclgroups', 
                            dict(ptsgroups=ptsgroups))

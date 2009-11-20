@@ -112,6 +112,9 @@ class MiscServer(server.Server):
             cKeys = current.keys()
             cKeys.sort()
             pts = self.getPTS(row['pts'], row['cell'])
+            if pts is None:
+                # Error...bad PTS data...check logs
+                continue
 
             i = 0
             while i < len(pts):

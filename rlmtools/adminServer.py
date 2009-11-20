@@ -178,6 +178,18 @@ class AdminServer(server.Server):
         result = resultSet(self.cursor)
         return [ r['akey'] for r in result ]
 
+    def createACL(self, name, pts, cell):
+        "Create a PTS based ACL"
+        q = "insert into acls (name, pts, cell) values (%s, %s, %s)"
+        self.cursor.execute(q, (name, pts, cell))
+        self.conn.commit()
+
+    def getACL(self, acl_id):
+        "Return basic information about an ACL"
+        q = "select name, pts, cell from acls where acl_id = %s"
+        self.cursor.execute(q, (acl_id,))
+        return resultSet(self.cursor).dump()[0]
+
     def getPTSGroups(self):
         """Returns a list of dicts"""
 

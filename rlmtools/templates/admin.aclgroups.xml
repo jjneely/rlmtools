@@ -12,27 +12,70 @@
 <body>
 
   <p>
-    Gah!!
+    ACLs are based off of AFS PTS groups.  The following table lists out
+    the ACLs known.  Click on the ACL Name to alter the permissions 
+    assigned to that ACL.
   </p>
+
+  <h2>ACLs</h2>
 
   <table>
     <tr class="neutral">
       <th class="bottom">ACL Name</th>
       <th class="bottom">PTS Group</th>
       <th class="bottom">AFS Cell</th>
-      <th class="bottom">Users</th>
     </tr>
     <tr class="neutral" py:for="g in ptsgroups">
       <td py:content="g['name']" />
       <td py:content="g['pts']" />
       <td py:content="g['cell']" />
-      <td>
-        <span py:for="id in g['ids']">
-          <span py:content="id" /><br/>
-        </span>
-      </td>
     </tr>
   </table>
+
+  <h2>Add ACL</h2>
+
+  <p>
+    You can create a new ACL by filling in this form to link the new ACL
+    to a PTS group.  Once the new ACL is created you can assign permissions
+    to it.
+  </p>
+
+  <form method="get" action="${baseURL}/admin/aclGroups">
+    <table>
+      <tr>
+        <td class="right">
+          New ACL Name:
+        </td>
+        <td>
+          <input type="text" name="aclName" value="" size="15" />
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          PTS Group:
+        </td>
+        <td>
+          <input type="text" name="ptsGroup" value="" size="15" />
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          AFS Cell:
+        </td>
+        <td>
+          <input type="text" name="cell" value="" size="5" />
+        </td>
+      </tr>
+      <tr>
+        <td class="right">
+          Create ACL:
+        </td>
+        <td>
+          <input type="submit" value="Submit"/>
+        </td>
+      </tr>
+    </table>
+  </form>
 
 </body>
 
