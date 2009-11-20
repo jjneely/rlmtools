@@ -78,11 +78,27 @@ class Application(AppHelpers, RLAttributes):
     removeACL.exposed = True
 
     def permissions(self, acl_id):
+        ADMIN = 0x01
+        WRITE = 0x02
+        READ  = 0x04
         acl = self._admin.getACL(int(acl_id))
+        depts = self._admin.getPermsForACL(int(acl_id))
+        mydepts = []
+
+        for i in depts:
+            d = {}
+            d['name'] = i['name']
+            d['dept_id'] = i['dept_id']
+            d['write'] = i['perms'] & WRITE
+            d['read'] = i['perms'] & READ
+            d['admin'] = i['perms'] & ADMIN
+            mydepts.append(d)
+
         return self.render('admin.perm', dict(
             acl_id=acl_id,
             title="ACL Permissions",
             aclname=acl['name'],
+            depts=mydepts,
             ))
     permissions.exposed = True
 

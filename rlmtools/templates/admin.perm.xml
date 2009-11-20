@@ -23,19 +23,24 @@
   </p>
 
   <table>
-    <tr class="bottom">
-      <th>Department</th>
-      <th>Read</th>
-      <th>Write</th>
-      <th>Administer</th>
+    <tr class="neutral">
+      <th class="bottom">Department</th>
+      <th class="bottom">Read</th>
+      <th class="bottom">Write</th>
+      <th class="bottom">Administer</th>
     </tr>
-
+    <tr class="neutral" py:for="i in depts">
+      <td py:content="i['name']"/>
+      <td py:content="i['read'] > 0"/>
+      <td py:content="i['write'] > 0"/>
+      <td py:content="i['admin'] > 0"/>
+    </tr>
   </table>
 
   <h2>Delete ACL</h2>
 
   <table>
-    <tr class="right">
+    <tr class="neutral">
       <td>
         <a href="${baseURL}/admin/removeACL?acl_id=${acl_id}">
           Delete ACL "${aclname}"

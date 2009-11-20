@@ -216,6 +216,15 @@ class AdminServer(server.Server):
         result = resultSet(self.cursor)
         return [ row['userid'] for row in result ]
 
+    def getPermsForACL(self, acl_id):
+        q = """select d.dept_id, d.name, a.perms 
+               from dept as d, aclgroups as a
+               where d.dept_id = a.dept_id and
+               a.acl_id = %s"""
+
+        self.cursor.execute(q, (acl_id,))
+        return resultSet(self.cursor).dump()
+
     def getImportantKeys(self):
         q = "select keyword from webkickstartkeys"
         self.cursor.execute(q)
