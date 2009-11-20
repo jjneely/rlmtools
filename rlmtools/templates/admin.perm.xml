@@ -28,12 +28,39 @@
       <th class="bottom">Read</th>
       <th class="bottom">Write</th>
       <th class="bottom">Administer</th>
+      <th class="bottom">Delete Permission</th>
     </tr>
     <tr class="neutral" py:for="i in depts">
       <td py:content="i['name']"/>
       <td py:content="i['read'] > 0"/>
       <td py:content="i['write'] > 0"/>
       <td py:content="i['admin'] > 0"/>
+      <td>
+        <a href="${baseURL}/admin/removePerm?aclg_id=${i['aclg_id']}">
+          Delete
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Add Permissions</h2>
+
+  <table>
+    <tr class="neutral">
+      <th class="right">Department:</th>
+      <td/>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Read:</th>
+      <td/>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Write:</th>
+      <td/>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Admin:</th>
+      <td/>
     </tr>
   </table>
 

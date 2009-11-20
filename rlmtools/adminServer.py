@@ -217,13 +217,24 @@ class AdminServer(server.Server):
         return [ row['userid'] for row in result ]
 
     def getPermsForACL(self, acl_id):
-        q = """select d.dept_id, d.name, a.perms 
+        q = """select d.dept_id, d.name, a.perms, a.aclg_id 
                from dept as d, aclgroups as a
                where d.dept_id = a.dept_id and
                a.acl_id = %s"""
 
         self.cursor.execute(q, (acl_id,))
         return resultSet(self.cursor).dump()
+
+    def setPerm(self, acl_id, dept_id, bitfield):
+        "Add permissions to an ACL group"
+        q = "insert into aclgroups (acl_id, dept_id, perms) values (%s, %s, %s)"
+        self.cursor.execute(q, (acl_id, dept_id, bitfield))
+        self.conn.commit()
+
+    def removePerm(self, aclg_id):
+        q = "delete from aclgroups where aclg_id = %s"
+        self.cursor.execute(q, (aclg_id,))
+        self.conn.commit()
 
     def getImportantKeys(self):
         q = "select keyword from webkickstartkeys"

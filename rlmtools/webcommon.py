@@ -52,6 +52,15 @@ class Auth(object):
 
 class AppHelpers(object):
 
+    # Permission bitfield operations
+    ADMIN = 0x01
+    WRITE = 0x02
+    READ  = 0x04
+
+    def isADMIN(self, field): return (field & self.ADMIN) == 1
+    def isWRITE(self, field): return (field & self.WRITE) >> 1 == 1
+    def isREAD(self, field): return (field & self.READ) >> 2 == 1
+
     def __init__(self, loader=None):
         # The DB interface is safe enough for multiple classes to
         # instantiate their own.
