@@ -62,6 +62,21 @@ class Application(AppHelpers, RLAttributes):
                            dict(ptsgroups=ptsgroups))
     aclGroups.exposed = True
 
+    def removeACL(self, acl_id, consent=None):
+        if consent == "yes":
+            self._admin.removeACL(acl_id)
+            return self.aclGroups()
+        if consent == "no":
+            return self.aclGroups()
+
+        acl = self._admin.getACL(int(acl_id))
+        return self.render('admin.removeacl', dict(
+            title="Delete ACL",
+            aclname=acl['name'],
+            acl_id=acl_id,
+            ))
+    removeACL.exposed = True
+
     def host(self, host_id, importWebKS=None):
         #aptr = self._admin.getHostAttrPtr(host_id)
         ikeys = self._admin.getImportantKeys()

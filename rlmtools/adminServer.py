@@ -184,6 +184,17 @@ class AdminServer(server.Server):
         self.cursor.execute(q, (name, pts, cell))
         self.conn.commit()
 
+    def removeACL(self, acl_id):
+        "Wipe her out, Scotty!"
+        q1 = "delete from acls where acl_id = %s"
+        q2 = "delete from sysadmins where acl_id = %s"
+        q3 = "delete from aclgroups where acl_id = %s"
+
+        self.cursor.execute(q1, (acl_id,))
+        self.cursor.execute(q2, (acl_id,))
+        self.cursor.execute(q3, (acl_id,))
+        self.conn.commit()
+
     def getACL(self, acl_id):
         "Return basic information about an ACL"
         q = "select name, pts, cell from acls where acl_id = %s"

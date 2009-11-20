@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Are you sure you want to remove this ACL and all permissions and access
+    governed by it?
+  </p>
+
+  <h2>Delete "${aclname}"?</h2>
+
+  <table>
+    <tr class="neutral">
+      <td>
+        <form method="get" action="${baseURL}/admin/removeACL"
+              style="margin-bottom: 0">
+          <input type="hidden" name="acl_id" value="${acl_id}"/>
+          <input type="hidden" name="consent" value="yes"/>
+          <input type="submit" value="Yes"/>
+        </form>
+      </td>
+      <td>
+        <form method="get" action="${baseURL}/admin/removeACL"
+              style="margin-bottom: 0">
+          <input type="hidden" name="acl_id" value="${acl_id}"/>
+          <input type="hidden" name="consent" value="no"/>
+          <input type="submit" value="No"/>
+        </form>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+
