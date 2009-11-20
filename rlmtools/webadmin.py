@@ -77,6 +77,15 @@ class Application(AppHelpers, RLAttributes):
             ))
     removeACL.exposed = True
 
+    def permissions(self, acl_id):
+        acl = self._admin.getACL(int(acl_id))
+        return self.render('admin.perm', dict(
+            acl_id=acl_id,
+            title="ACL Permissions",
+            aclname=acl['name'],
+            ))
+    permissions.exposed = True
+
     def host(self, host_id, importWebKS=None):
         #aptr = self._admin.getHostAttrPtr(host_id)
         ikeys = self._admin.getImportantKeys()

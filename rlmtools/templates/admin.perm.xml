@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Gah Bah!
+  </p>
+
+  <h2>Permissions for ACL: ${aclname}</h2>
+
+  <p>
+    This ACL has the following permissions in regards to the listed
+    department.
+  </p>
+
+  <table>
+    <tr class="bottom">
+      <th>Department</th>
+      <th>Read</th>
+      <th>Write</th>
+      <th>Administer</th>
+    </tr>
+
+  </table>
+
+  <h2>Delete ACL</h2>
+
+  <table>
+    <tr class="right">
+      <td>
+        <a href="${baseURL}/admin/removeACL?acl_id=${acl_id}">
+          Delete ACL "${aclname}"
+        </a>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

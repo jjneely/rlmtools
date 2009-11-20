@@ -24,7 +24,6 @@
       <th class="bottom">ACL Name</th>
       <th class="bottom">PTS Group</th>
       <th class="bottom">AFS Cell</th>
-      <th class="bottom">Delete</th>
     </tr>
     <tr class="neutral" py:for="g in ptsgroups">
       <td>
@@ -33,10 +32,6 @@
       </td>
       <td py:content="g['pts']" />
       <td py:content="g['cell']" />
-      <td>
-        <a href="${baseURL}/admin/removeACL?acl_id=${g['acl_id']}"
-          py:content="'Delete ACL'" />
-      </td>
     </tr>
   </table>
 
