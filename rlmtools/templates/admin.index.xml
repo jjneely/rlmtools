@@ -28,7 +28,7 @@
     <input type="submit" value="Search" />
   </form>
 
-  <h2>Department Admin Panels</h2>
+  <h2 style="clear:both;" >Department Admin Panels</h2>
 
   <div class="category">
     <div py:for="d in depts" class="field">
@@ -112,6 +112,14 @@
       </tr>
     </table>
   </form>
+
+  <h2>Manage ACLs</h2>
+
+  <p>
+    You may also manage access permissions for each department and their
+    children on the <a href="${baseURL}/admin/aclGroups">ACL Groups</a>
+    page.
+  </p>
 
 </body>
 

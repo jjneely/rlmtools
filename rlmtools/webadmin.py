@@ -43,10 +43,16 @@ class Application(AppHelpers, RLAttributes):
         self._admin = AdminServer()
 
     def index(self, message=""):
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/admin/aclGroups' % url()),
+                  ]
         depts = WebServer().getDepartments()
         return self.render('admin.index', 
                            dict(message=message,
                                 depts=depts,
+                                subMenu=subMenu,
+                                title="Administration",
                                ))
     index.exposed = True
 
@@ -59,7 +65,9 @@ class Application(AppHelpers, RLAttributes):
         #    pts['ids'] = self._admin.getSysAdmins(pts['acl_id'])
 
         return self.render('admin.aclgroups', 
-                           dict(ptsgroups=ptsgroups))
+                           dict(ptsgroups=ptsgroups,
+                                title="Manage ACLs",
+                               ))
     aclGroups.exposed = True
 
     def removeACL(self, acl_id, consent=None):
