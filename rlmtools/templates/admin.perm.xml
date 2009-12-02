@@ -12,7 +12,9 @@
 <body>
 
   <p>
-    Gah Bah!
+    This page lists all the permissions associated with a specific ACL.  You
+    can add and delete permissions here as well.  This affects what users
+    have access to look at or alter attributes on departments and hosts.
   </p>
 
   <h2>Permissions for ACL: ${aclname}</h2>
@@ -22,7 +24,9 @@
     department.
   </p>
 
-  <table>
+  <p py:if="len(depts) == 0">No permissions defined for ${aclname}</p>
+
+  <table py:if="len(depts) > 0">
     <tr class="neutral">
       <th class="bottom">Department</th>
       <th class="bottom">Read</th>
@@ -36,7 +40,7 @@
       <td py:content="i['write'] > 0"/>
       <td py:content="i['admin'] > 0"/>
       <td>
-        <a href="${baseURL}/admin/removePerm?aclg_id=${i['aclg_id']}">
+        <a href="${baseURL}/admin/removePerm?aclg_id=${i['aclg_id']}&amp;acl_id=${acl_id}">
           Delete
         </a>
       </td>
@@ -45,24 +49,58 @@
 
   <h2>Add Permissions</h2>
 
-  <table>
-    <tr class="neutral">
-      <th class="right">Department:</th>
-      <td/>
-    </tr>
-    <tr class="neutral">
-      <th class="right">Read:</th>
-      <td/>
-    </tr>
-    <tr class="neutral">
-      <th class="right">Write:</th>
-      <td/>
-    </tr>
-    <tr class="neutral">
-      <th class="right">Admin:</th>
-      <td/>
-    </tr>
-  </table>
+  <p>
+    Remeber, permissions are inhairited from parent departments.  So giving an
+    ACL read access to the "oit" department will also allow read access to the
+    "oit-iso" department.  However, you can explicitly set permissions on the
+    "oit-iso" department to override the "oit" permissions.
+  </p>
+
+  <form method="get" action="${baseURL}/admin/addPerm">
+    <input type="hidden" name="acl_id" value="${acl_id}"/>
+    <table>
+      <tr class="neutral">
+        <th class="right">ACL:</th>
+        <td>
+          ${aclname}
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Department:</th>
+        <td>
+          <select name="dept_id">
+            <option py:for="d in deptlist" value="${d['dept_id']}">
+              ${d['name']}
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Read:</th>
+        <td>
+          <input type="checkbox" name="read" value="True"/>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Write:</th>
+        <td>
+          <input type="checkbox" name="write" value="True"/>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Admin:</th>
+        <td>
+          <input type="checkbox" name="admin" value="True"/>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Submit:</th>
+        <td>
+          <input type="submit" value="Submit"/>
+        </td>
+      </tr>
+    </table>
+  </form>
 
   <h2>Delete ACL</h2>
 
@@ -75,6 +113,19 @@
       </td>
     </tr>
   </table>
+
+  <h2>Users</h2>
+
+  <p>
+    This ACL currently refers to the following users.  Users are pulled from
+    the PTS database every 30 minutes.
+  </p>
+
+  <div class="category">
+    <div py:for="i in users" class="field">
+      ${i}
+    </div>
+  </div>
 
 </body>
 

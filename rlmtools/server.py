@@ -124,6 +124,13 @@ class Server(object):
         else:
             return None
 
+    def getAllDepts(self):
+        "Return a dict of department name => department ID"
+        q = "select name, dept_id from dept order by name"
+        self.cursor.execute(q)
+        result = resultSet(self.cursor).dump()
+        return result
+
     def getDeptName(self, dept_id):
         q = """select name from dept where dept_id = %s"""
 

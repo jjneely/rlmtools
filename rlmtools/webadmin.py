@@ -80,6 +80,7 @@ class Application(AppHelpers, RLAttributes):
     def permissions(self, acl_id):
         acl = self._admin.getACL(int(acl_id))
         depts = self._admin.getPermsForACL(int(acl_id))
+        users = self._admin.getSysAdmins(acl_id)
 
         for i in depts:
             i['write'] = self.isWRITE(i['perms'])
@@ -87,6 +88,8 @@ class Application(AppHelpers, RLAttributes):
             i['admin'] = self.isADMIN(i['perms'])
 
         return self.render('admin.perm', dict(
+            deptlist=self._admin.getAllDepts(),
+            users=users,
             acl_id=acl_id,
             title="ACL Permissions",
             aclname=acl['name'],
@@ -94,8 +97,33 @@ class Application(AppHelpers, RLAttributes):
             ))
     permissions.exposed = True
 
-    def removePerm(self, acl_id):
-        pass
+    def addPerm(self, dept_id, acl_id, read=None, write=None, admin=None):
+        dept_id = int(dept_id)
+        acl_id = int(acl_id)
+        perms = self._admin.getPermsForACL(acl_id)
+
+        for i in perms:
+            # See if we are modifying an existing permission
+            if i['dept_id'] == dept_id:
+                self._admin.removePerm(i['aclg_id'])
+
+        field = 0
+        if read == "True":
+            field = field | self.READ
+        if write == "True":
+            field = field | self.WRITE
+        if admin == "True":
+            field = field | self.ADMIN
+
+        self._admin.setPerm(acl_id, dept_id, field)
+
+        return self.permissions(acl_id)
+    addPerm.exposed = True
+
+    def removePerm(self, acl_id, aclg_id):
+        self._admin.removePerm(int(aclg_id))
+        return self.permissions(int(acl_id))
+    removePerm.exposed = True
 
     def host(self, host_id, importWebKS=None):
         #aptr = self._admin.getHostAttrPtr(host_id)
