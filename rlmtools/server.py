@@ -141,6 +141,16 @@ class Server(object):
         else:
             return result[0]
 
+    def getDeptIDNoCreate(self, dept):
+        q1 = "select dept_id from dept where name = %s"
+        dept = dept.replace(' ', '-').lower()
+        dept = self.conn.escape_string(dept)
+        self.cursor.execute(q1, (dept,))
+        if self.cursor.rowcount > 0:
+            return self.cursor.fetchone()[0]
+        else:
+            return None
+
     def getDeptID(self, dept):
         "Return the DB ID of this department.  Create it if needed."
 
@@ -302,4 +312,28 @@ class Server(object):
         self.cursor.execute(q, (htype_id, host_id, datetime.today(), data))
         self.conn.commit()
 
+    def getAccess(self, userid, dept_id):
+        """Return the bitfield representing this users access level.  This
+           does some looping to calculate Permissions based on inhairited
+           permissions."""
+
+        q = """select aclgroups.perms from aclgroups, sysadmins
+               where sysadmins.acl_id  = aclgroups.acl_id 
+               and sysadmins.userid = %s and 
+               aclgroups.dept_id = %s"""
+
+        field = 0  # Default deny
+        d = dept_id
+        while d is not None:
+            self.cursor.execute(q, (userid, d))
+            if self.cursor.rowcount > 0:
+                t = self.cursor.fetchone()[0]
+                # The following allows a sub dept to explicitly override
+                # what is inhairited from a parent dept
+                field = field | t
+            print "d: %s" % d
+            print "bits: %s" % field
+            d = self.getDeptParentID(d)
+
+        return field
 

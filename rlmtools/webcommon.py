@@ -39,10 +39,6 @@ class Auth(object):
     def isAuthenticated(self):
         return self.userid != None
 
-    def isAuthorized(self):
-        # STUB!!!
-        return True
-
     def getName(self):
         # Note that the users that authenticate will also be in the system's
         # password db (hesiod/ldap)
@@ -88,4 +84,32 @@ class AppHelpers(object):
         compiled = self.loader.load('%s.xml' % tmpl)
         stream = compiled.generate(**dict)
         return stream.render('xhtml', encoding=self.outEncoding)
+
+    def isAuthenticated(self):
+        return Auth().isAuthenticated()
+    
+    def _parseDept(self, void):
+        """Figure out what the ID of the dept is from whatever is in void.
+           Returns an int or None."""
+        if isinstance(void, int):
+            return void
+        if void.isdigit():
+            return int(void)
+        # If we are here this must be a name, use the DB to convert
+        return self._server.getDeptIDNoCreate(void)
+
+    def getAuthorization(self, dept):
+        """Return the bitfield that indicates what access permissions the user
+           has that is currently poking the web interface.  0 Mean no rights."""
+
+        a = Auth()
+        # Basic sanity
+        if not a.isAuthenticated():
+            return 0
+
+        # What is our dept_id?
+        d = self._parseDept(dept)
+
+        acl = self._server.getAccess(a.userid, d)
+        return acl
 

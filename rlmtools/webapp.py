@@ -443,6 +443,7 @@ class Application(AppHelpers):
 
 
 def main():
+    # Set "error_page.500" in config to specify a custome error page in CP2.3
     staticDir = os.path.join(os.path.dirname(__file__), "static")
     staticDir = os.path.abspath(staticDir)
 
