@@ -312,6 +312,16 @@ class Server(object):
         self.cursor.execute(q, (htype_id, host_id, datetime.today(), data))
         self.conn.commit()
 
+    def memberOfACL(self, userid):
+        """Return a list of ACLs userid is a member of."""
+        q = """select acls.name from acls, sysadmins where
+               sysadmins.acl_id = acls.acl_id and
+               userid = %s"""
+
+        self.cursor.execute(q, (userid,))
+        result = resultSet(self.cursor)
+        return [ r['name'] for r in result ]
+
     def getAccess(self, userid, dept_id):
         """Return the bitfield representing this users access level.  This
            does some looping to calculate Permissions based on inhairited
@@ -327,10 +337,9 @@ class Server(object):
         while d is not None:
             self.cursor.execute(q, (userid, d))
             if self.cursor.rowcount > 0:
-                t = self.cursor.fetchone()[0]
-                # The following allows a sub dept to explicitly override
-                # what is inhairited from a parent dept
-                field = field | t
+                for i in range(self.cursor.rowcount):
+                    t = self.cursor.fetchone()[0]
+                    field = field | t
             print "d: %s" % d
             print "bits: %s" % field
             d = self.getDeptParentID(d)

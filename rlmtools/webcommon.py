@@ -1,5 +1,7 @@
 from genshi.template import TemplateLoader
 
+from configDragon import config
+
 import cherrypy
 import webServer
 import os.path
@@ -31,7 +33,8 @@ class Auth(object):
             self.null()
 
     def null(self):
-        self.userid = None
+        # XXX: testing purposes
+        self.userid = "jjneely"
         self.affiliation = None
         self.expire = None
         self.ipaddress = None
@@ -61,6 +64,7 @@ class AppHelpers(object):
         # The DB interface is safe enough for multiple classes to
         # instantiate their own.
         self._server = webServer.WebServer()
+        self._default_admin = config.default_admin  # DB query, do it once only
 
         # However, create a shortcut for only using one global template loader
         if loader is None:
@@ -85,6 +89,17 @@ class AppHelpers(object):
         stream = compiled.generate(**dict)
         return stream.render('xhtml', encoding=self.outEncoding)
 
+    def message(self, str):
+        a = Auth()
+        acls = self._server.memberOfACL(a.userid)
+
+        return self.render('message', dict(
+                               message=str,
+                               userid=a.userid,
+                               acls=acls,
+                               fullname=a.getName(),
+                          ))
+
     def isAuthenticated(self):
         return Auth().isAuthenticated()
     
@@ -98,7 +113,7 @@ class AppHelpers(object):
         # If we are here this must be a name, use the DB to convert
         return self._server.getDeptIDNoCreate(void)
 
-    def getAuthorization(self, dept):
+    def getAuthZ(self, dept):
         """Return the bitfield that indicates what access permissions the user
            has that is currently poking the web interface.  0 Mean no rights."""
 
@@ -107,9 +122,13 @@ class AppHelpers(object):
         if not a.isAuthenticated():
             return 0
 
+        # Check the default initial admin
+        if a.userid == self._default_admin:
+            return 7   # read, write, admin
+
         # What is our dept_id?
         d = self._parseDept(dept)
 
-        acl = self._server.getAccess(a.userid, d)
-        return acl
+        perm = self._server.getAccess(a.userid, d)
+        return perm
 

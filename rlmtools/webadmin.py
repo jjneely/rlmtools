@@ -43,26 +43,36 @@ class Application(AppHelpers, RLAttributes):
         self._admin = AdminServer()
 
     def index(self, message=""):
+        # Readable by any authenticated user
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
         subMenu = [
                     ('Manage ACLs',
                      '%s/admin/aclGroups' % url()),
                   ]
         depts = WebServer().getDepartments()
+        a = Auth()
+        acls = self._server.memberOfACL(a.userid)
+
         return self.render('admin.index', 
                            dict(message=message,
                                 depts=depts,
                                 subMenu=subMenu,
                                 title="Administration",
+                                fullname=a.getName(),
+                                acls=acls,
+                                userid=a.userid,
                                ))
     index.exposed = True
 
-    def aclGroups(self, cell=None, ptsGroup=None, aclName=None):
-        if cell is not None and ptsGroup is not None and aclName is not None:
-            self._admin.createACL(aclName, ptsGroup, cell)
+    def aclGroups(self):
+        # Readable by any authenticated user
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "ACLs.")
 
         ptsgroups = self._admin.getPTSGroups()
-        #for pts in ptsgroups:
-        #    pts['ids'] = self._admin.getSysAdmins(pts['acl_id'])
 
         return self.render('admin.aclgroups', 
                            dict(ptsgroups=ptsgroups,
@@ -70,7 +80,21 @@ class Application(AppHelpers, RLAttributes):
                                ))
     aclGroups.exposed = True
 
+    def newACL(self, cell, ptsGroup, aclName):
+        # You need admin access to mess with ACLs
+        if not self.isADMIN(self.getAuthZ("root")):
+            return self.message("You need root level admin access to modify "
+                                "ACLs.")
+
+        self._admin.createACL(aclName, ptsGroup, cell)
+        return self.aclGroups()
+    newACL.exposed = True
+
     def removeACL(self, acl_id, consent=None):
+        if not self.isADMIN(self.getAuthZ("root")):
+            return self.message("You need root level admin access to modify "
+                                "ACLs.")
+
         if consent == "yes":
             self._admin.removeACL(acl_id)
             return self.aclGroups()
@@ -86,6 +110,15 @@ class Application(AppHelpers, RLAttributes):
     removeACL.exposed = True
 
     def permissions(self, acl_id):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "ACLs.")
+
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/admin/aclGroups' % url()),
+                  ]
+
         acl = self._admin.getACL(int(acl_id))
         depts = self._admin.getPermsForACL(int(acl_id))
         users = self._admin.getSysAdmins(acl_id)
@@ -102,10 +135,15 @@ class Application(AppHelpers, RLAttributes):
             title="ACL Permissions",
             aclname=acl['name'],
             depts=depts,
+            subMenu=subMenu,
             ))
     permissions.exposed = True
 
     def addPerm(self, dept_id, acl_id, read=None, write=None, admin=None):
+        if not self.isADMIN(self.getAuthZ("root")):
+            return self.message("You need root level admin access to modify "
+                                "ACLs.")
+
         dept_id = int(dept_id)
         acl_id = int(acl_id)
         perms = self._admin.getPermsForACL(acl_id)
@@ -129,16 +167,28 @@ class Application(AppHelpers, RLAttributes):
     addPerm.exposed = True
 
     def removePerm(self, acl_id, aclg_id):
+        if not self.isADMIN(self.getAuthZ("root")):
+            return self.message("You need root level admin access to modify "
+                                "ACLs.")
+
         self._admin.removePerm(int(aclg_id))
         return self.permissions(int(acl_id))
     removePerm.exposed = True
 
     def host(self, host_id, importWebKS=None):
-        #aptr = self._admin.getHostAttrPtr(host_id)
+        dept_id = self._admin.getHostDept(host_id)
+        deptname = self._admin.getDeptName(dept_id)
+        if not self.isREAD(self.getAuthZ(dept_id)):
+            return self.message("You need %s level read access to view "
+                                "host attributes." % deptname)
+
         ikeys = self._admin.getImportantKeys()
         message = ''
 
         if importWebKS is not None:
+            if not self.isWRITE(self.getAuthZ(dept_id)):
+                return self.message("You need %s level write access to set "
+                                "attributes." % deptname)
             if not self.importWebKickstart(host_id):
                 message="Error Importing Web-Kickstart Configuration"
 
@@ -153,8 +203,6 @@ class Application(AppHelpers, RLAttributes):
                                        time.localtime(meta['meta.imported']))
         
         hostname = self._admin.getHostName(host_id)
-        dept_id = self._admin.getHostDept(host_id)
-        deptname = self._admin.getDeptName(dept_id)
         subMenu = [ ('%s Status Panel' % short(hostname),
                      '%s/client?host_id=%s' % (url(), host_id)),
                     ('%s Status Panel' % deptname,
@@ -178,6 +226,11 @@ class Application(AppHelpers, RLAttributes):
     host.exposed = True
 
     def dept(self, dept_id):
+        deptname = self._admin.getDeptName(int(dept_id))
+        if not self.isREAD(self.getAuthZ(dept_id)):
+            return self.message("You need %s level read access to view "
+                                "department attributes." % deptname)
+
         message = ''
 
         meta, attributes = self.deptAttrs(dept_id)
@@ -201,11 +254,22 @@ class Application(AppHelpers, RLAttributes):
     def modifyHost(self, host_id, modifyKey, textbox=None,
                    setAttribute=None, reset=None, modify=None):
         # XXX: check for altering meta. keys??
+        dept_id = self._admin.getHostDept(int(host_id))
+        deptname = self._admin.getDeptName(dept_id)
+
         if setAttribute == "Submit":
+            if not self.isWRITE(self.getAuthZ(dept_id)):
+                return self.message("You need %s level write access to set "
+                                    "attributes." % deptname)
             aptr = self._admin.getHostAttrPtr(host_id)
             self.setAttribute(aptr, modifyKey, textbox)
             # Set the value and redirect to the Host Admin Panel
             return self.host(host_id)
+
+        if not self.isREAD(self.getAuthZ(dept_id)):
+            return self.message("You need %s level read access to view "
+                                "host attributes." % deptname)
+
         meta, attributes = self.hostAttrs(host_id)
         attributes.update(meta)
         hostname = self._admin.getHostName(host_id)
@@ -246,11 +310,21 @@ class Application(AppHelpers, RLAttributes):
     def modifyDept(self, dept_id, modifyKey, textbox=None,
                    setAttribute=None, reset=None, modify=None):
         # XXX: check for altering meta. keys??
+        deptname = self._admin.getDeptName(int(dept_id))
+
         if setAttribute == "Submit":
+            if not self.isWRITE(self.getAuthZ(dept_id)):
+                return self.message("You need %s level write access to set "
+                                    "attributes." % deptname)
             aptr = self._admin.getDeptAttrPtr(dept_id)
             self.setAttribute(aptr, modifyKey, textbox)
             # Set the value and redirect to the Dept Admin Panel
             return self.dept(dept_id)
+
+        if not self.isREAD(self.getAuthZ(dept_id)):
+            return self.message("You need %s level read access to view "
+                                "attributes." % deptname)
+
         meta, attributes = self.deptAttrs(dept_id)
         attributes.update(meta)
         deptname = self._admin.getDeptName(dept_id)
@@ -288,6 +362,9 @@ class Application(AppHelpers, RLAttributes):
 
     def createDept(self, textBox, options=[]):
         # Create a remedy request and return some goodness
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
         regex = "^[-a-z0-9]+$"
         print textBox
         print re.search(regex, textBox)
@@ -308,7 +385,7 @@ class Application(AppHelpers, RLAttributes):
         fd = os.popen("/usr/sbin/sendmail -t", 'w')
         fd.write("From: nobody@ncsu.edu\n")  # XXX: Needs to be the auth'd user
         fd.write("To: linux@help.ncsu.edu\n")  
-        fd.write("Subject: Create LD Department\n\n")
+        fd.write("Subject: Create Realm Linux Department\n\n")
         
         fd.write("User %s has requested the creation of RLMT Department %s.\n" \
                  % ('nobody', textBox))

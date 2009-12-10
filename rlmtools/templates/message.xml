@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <h2>Message</h2>  
+
+  <div class="message">
+    <p py:content="message" />
+  </div>
+
+  <p>If you are having a problem with the Realm Linux Management Tools, or
+    perhaps feel as if the Liquid Dragon wont let you near the treasure,
+    please create a support ticket by emailing 
+    <a href="mailto:linux@help.ncsu.edu">linux@help.ncsu.edu</a>.
+  </p>
+
+  <h2>Authorization Information</h2>
+
+  <p>Greetings, ${fullname}.  You are user "${userid}".</p>
+
+  <p>You are a member of the following ACLs:</p>
+  <ul py:if="len(acls) > 0">
+    <li py:for="acl in acls" py:content="acl"/>
+  </ul>
+  <p py:if="len(acls) == 0">
+    You have no ACL memberships.
+  </p>
+
+</body>
+
+</html>
+

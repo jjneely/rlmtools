@@ -33,6 +33,7 @@ init_logging = True
 # Format:
 # config option -> (help string, isIntType)
 requiredConfig = {
+        'default_admin': ["First user with admin access permission.", False],
         'webks_dir': ["Directory where the Web-Kickstart configs live.", False],
         'privatekey': ["Filename for the private key.", False],
         'publickey': ["Filename for the public key.",   False],

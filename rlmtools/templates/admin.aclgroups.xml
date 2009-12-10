@@ -43,7 +43,7 @@
     to it.
   </p>
 
-  <form method="get" action="${baseURL}/admin/aclGroups">
+  <form method="get" action="${baseURL}/admin/newACL">
     <table>
       <tr>
         <td class="right">
