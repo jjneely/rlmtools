@@ -42,6 +42,9 @@ class Application(AppHelpers):
     admin.exposed = True
 
     def index(self):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
         totals = self._server.getTotalClients()
         active = self._server.getActiveClients()
         departments = self._server.getDepartments()
@@ -75,6 +78,9 @@ class Application(AppHelpers):
 
     def versionIndex(self, version):
         # See also dept()
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the version index.")
         services = ['updates', 'client'] # Services that affect client status
         clients = self._server.getVersionPile(version)
         days7 = datetime.timedelta(7)
@@ -144,6 +150,10 @@ class Application(AppHelpers):
         return client
 
     def dept(self, dept_id):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the department index.")
+
         # set some globals to speed helper fucntions
         self.days7 = datetime.timedelta(7)
         self.today = datetime.datetime.today()
@@ -176,6 +186,10 @@ class Application(AppHelpers):
     dept.exposed = True
 
     def client(self, host_id):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the client index.")
+
         days7 = datetime.timedelta(7)
         today = datetime.datetime.today()
         detail = self._server.getClientDetail(int(host_id))
@@ -236,6 +250,9 @@ class Application(AppHelpers):
     client.exposed = True
 
     def status(self, status_id):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the a client status message.")
         status = self._server.getStatusDetail(int(status_id))
         backlinks = [
                      ('Dept: %s' % status['dept'],
@@ -257,6 +274,9 @@ class Application(AppHelpers):
     status.exposed = True
 
     def notregistered(self):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the non-registered clients.")
         clients = self._server.getNotRegistered()
         support = []
         nosupport = []
@@ -278,6 +298,9 @@ class Application(AppHelpers):
     notregistered.exposed = True
 
     def problems(self):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the problem children.")
         clients = self._server.getProblemList()
         data = {}
 
@@ -296,6 +319,9 @@ class Application(AppHelpers):
     problems.exposed = True
 
     def noupdates(self):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the clients not updating.")
         clients = self._server.getNoUpdates()
         data = {}
 
@@ -317,6 +343,9 @@ class Application(AppHelpers):
     noupdates.exposed = True
 
     def versionList(self):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the version list.")
         versions = self._server.getVersionList()
         graphs = []
         image = "versions-3d.png"
@@ -340,6 +369,9 @@ class Application(AppHelpers):
     versionList.exposed = True
 
     def showGraph(self, title, domain):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "graphs.")
         graphs = []
         for zone in rrdconstants.timeZones:
             d = {}
@@ -366,6 +398,9 @@ class Application(AppHelpers):
     showGraph.exposed = True
 
     def usage(self):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to view "
+                                "the usage information.")
         depts = self._server.getDeptNames()
         graphs = []
 
@@ -400,6 +435,9 @@ class Application(AppHelpers):
     usage.exposed = True
 
     def search(self, searchBox=None, dest=None):
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to search.")
+        
         # This works a lot like the dept() method above
         # set some globals to speed helper fucntions
         self.days7 = datetime.timedelta(7)
