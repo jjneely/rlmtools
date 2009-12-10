@@ -40,19 +40,17 @@ class Application(AppHelpers):
         return webKickstart('url', {}, config.webks_dir)
 
     def index(self):
-        auth = Auth()
-        name = auth.getName()
-
-        if not auth.isAuthorized():
-            return self.render('wk.notauth', dict(name=name))
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to debug "
+                                    "Web-Kickstarts.")
         
         return self.render('wk.index', dict(title="Web-Kickstart Tools"))
     index.exposed = True
 
     def rawKickstart(self, host):
-        auth = Auth()
-        if not auth.isAuthorized():
-            return self.render('wk.notauth', dict(name=auth.getName()))
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to debug "
+                                    "Web-Kickstarts.")
 
         host = host.strip()
         w = self._getWebKs()
@@ -65,9 +63,9 @@ class Application(AppHelpers):
     rawKickstart.exposed = True
 
     def debugtool(self, host):
-        auth = Auth()
-        if not auth.isAuthorized():
-            return self.render('wk.notauth', dict(name=auth.getName()))
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to debug "
+                                    "Web-Kickstarts.")
         
         host = host.strip()
         if host == "":
@@ -83,9 +81,9 @@ class Application(AppHelpers):
     debugtool.exposed = True
 
     def collision(self, host):
-        auth = Auth()
-        if not auth.isAuthorized():
-            return self.render('wk.notauth', dict(name=auth.getName()))
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to debug "
+                                    "Web-Kickstarts.")
         
         host = host.strip()
         if host == "":
@@ -98,9 +96,9 @@ class Application(AppHelpers):
     collision.exposed = True
 
     def checkconfigs(self):
-        auth = Auth()
-        if not auth.isAuthorized():
-            return self.render('wk.notauth', dict(name=auth.getName()))
+        if not self.isREAD(self.getAuthZ("root")):
+            return self.message("You need root level read access to debug "
+                                    "Web-Kickstarts.")
         
         w = self._getWebKs()
         tuple = w.checkConfigHostnames()
