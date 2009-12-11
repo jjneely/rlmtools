@@ -18,10 +18,20 @@ def short(fqdn): return fqdn.split('.')[0]
 class Auth(object):
     
     def __init__(self):
+        self.null()
+        if "auth" in configDragon.config.vars:
+            # We are running in test harness, fake that auth, mode
+            self.userid = configDragon.config.auth
+            self.alliliation = "El Fako Land"
+            self.expire = "37:00"
+            self.ipaddress = "No Man's Land"
+            return
+
         try:
             env = cherrypy.request.wsgi_environ
         except AttributeError:
-            self.null()
+            # Gah!  Where is the WSGI environment?
+            return
 
         try:
             self.userid = env['WRAP_USERID']
@@ -38,7 +48,7 @@ class Auth(object):
         self.ipaddress = None
 
     def isAuthenticated(self):
-        return self.userid != None
+        return self.userid is not None
 
     def getName(self):
         # Note that the users that authenticate will also be in the system's
