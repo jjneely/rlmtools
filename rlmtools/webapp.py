@@ -29,6 +29,7 @@ import cherrypy
 import rrdconstants
 
 from webcommon import *
+from constants import defaultConfFiles
 
 import configDragon
 import webks
