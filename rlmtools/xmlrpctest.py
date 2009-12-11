@@ -1,4 +1,8 @@
 import cherrypy
+import optparse
+import configDragon
+
+from constants import defaultConfFiles
 
 class XMLRPCTest(object):
     # Test Harness for XMLRPC calls
@@ -12,12 +16,26 @@ class XMLRPCTest(object):
             # Set the exposed flag
             setattr(getattr(self, method), 'exposed', True)
 
-cherrypy.root = XMLRPCTest()
-cherrypy.config.update({'xmlrpc_filter.on': True,
-                        'server.socket_port': 8081,
-                        'server.thread_pool':10,
-                        'server.socket_queue_size':10 
-                        })
+def main():
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+    (options, args) = parser.parse_args()
 
-cherrypy.server.start()
+    # Start up configuration/logging/databases
+    configDragon.initConfig(options.configfile)
+
+    cherrypy.root = XMLRPCTest()
+    cherrypy.config.update({'xmlrpc_filter.on': True,
+                            'server.socket_port': 8081,
+                            'server.thread_pool':10,
+                            'server.socket_queue_size':10 
+                            })
+
+    cherrypy.server.start()
+
+if __name__ == "__main__":
+    main()
 

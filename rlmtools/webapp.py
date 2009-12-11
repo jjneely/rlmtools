@@ -23,23 +23,30 @@
 import sys
 import os.path
 import datetime
+import optparse
 
 import cherrypy
 import rrdconstants
 
-from configDragon import config
 from webcommon import *
 
+import configDragon
 import webks
 import webadmin
 
+config = None
+
 class Application(AppHelpers):
 
-    webKickstart = webks.Application()
-    webKickstart.exposed = True
+    def __init__(self, **kwargs):
+        AppHelpers.__init__(self, **kwargs)
 
-    admin = webadmin.Application()
-    admin.exposed = True
+        # Sub directories in the webapp attach here
+        self.webKickstart = webks.Application()
+        self.webKickstart.exposed = True
+
+        self.admin = webadmin.Application()
+        self.admin.exposed = True
 
     def index(self):
         if not self.isAuthenticated():
@@ -481,6 +488,25 @@ class Application(AppHelpers):
 
 
 def main():
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+    parser.add_option("-a", "--auth", action="store", default=None,
+                      dest="auth", 
+                      help="The webapp will pretend you are this user.")
+    (options, args) = parser.parse_args()
+
+    # Start up configuration/logging/databases
+    configDragon.initConfig(options.configfile)
+    config = configDragon.config
+
+    # Handle testing harness authorization
+    if options.auth is not None:
+        config.vars['auth'] = ["", False]
+        config.auth = options.auth
+
     # Set "error_page.500" in config to specify a custome error page in CP2.3
     staticDir = os.path.join(os.path.dirname(__file__), "static")
     staticDir = os.path.abspath(staticDir)
@@ -498,7 +524,16 @@ def main():
     cherrypy.tree.mount(Application(), '/rlmtools')
     cherrypy.server.start()
 
-def wsgi(start_responce):
+def wsgi(req):
+    if req.get_options().has_key('rlmtools.configfile'):
+        configfile = req.get_options()['rlmtools.configfile']
+    else:
+        configfile = defaultConfFiles
+
+    # Start up configuration/logging/databases
+    configDragon.initConfig(configfile)
+    config = configDragon.config
+
     staticDir = os.path.join(os.path.dirname(__file__), "static")
     staticDir = os.path.abspath(staticDir)
 

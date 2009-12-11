@@ -1,7 +1,6 @@
 from genshi.template import TemplateLoader
 
-from configDragon import config
-
+import configDragon
 import cherrypy
 import webServer
 import os.path
@@ -33,8 +32,7 @@ class Auth(object):
             self.null()
 
     def null(self):
-        # XXX: testing purposes
-        self.userid = "jjneely"
+        self.userid = None
         self.affiliation = None
         self.expire = None
         self.ipaddress = None
@@ -64,7 +62,9 @@ class AppHelpers(object):
         # The DB interface is safe enough for multiple classes to
         # instantiate their own.
         self._server = webServer.WebServer()
-        self._default_admin = config.default_admin  # DB query, do it once only
+
+        # DB query, do it once only
+        self._default_admin = configDragon.config.default_admin
 
         # However, create a shortcut for only using one global template loader
         if loader is None:

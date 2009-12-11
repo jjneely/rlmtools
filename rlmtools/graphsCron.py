@@ -41,11 +41,14 @@ import os
 import os.path
 import time
 import rrdtool
+import optparse
 
 from datetime     import datetime, timedelta
-from configDragon import config
 from statsServer  import StatsServer
 from rrdconstants import *
+from constants    import defaultConfFiles
+
+import configDragon
 
 log = logging.getLogger("xmlrpc")
 
@@ -54,7 +57,7 @@ class RRDGraphs(object):
     def __init__(self):
         self.stats = StatsServer()
 
-        self.dir    = config.rrd_dir
+        self.dir    = configDragon.config.rrd_dir
         self.graphs = 'graphs/'
         self.hosts  = 'hosts/'
         self.misc   = 'global/'
@@ -308,6 +311,16 @@ class RRDGraphs(object):
             self.__usageHelper(list, 'usage@%s' % dept)
 
 def main():
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+    (options, args) = parser.parse_args()
+
+    # Start up configuration/logging/databases
+    configDragon.initConfig(options.configfile)
+
     log.info("Running RRDGraphs cron job...")
     graphs = RRDGraphs()
     graphs.goMaster()

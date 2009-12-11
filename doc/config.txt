@@ -10,6 +10,8 @@ config:
         PythonHandler rlmtools.handler
         PythonPath "sys.path + ['/extra/python/path']"
         PythonInterpreter rlmtools
+
+        PythonOption rlmtools.configfile /path/to/configuration
 </Location>
 
 The top level rlmtools/ directory must be in the python path as well as
@@ -20,7 +22,8 @@ distribution.
 The code looks in /etc/rlmtools.conf to find the following 4 options in 
 a [db] section: host, user, passwd, db.  Also, [main] must include 'logfile' 
 and 'log_level'.  The log level should be set to 1 for everything, 10 for
-normal operations.
+normal operations.  You can override the location of the config file by 
+using the PythonOption "rlmtools.configfile", otherwise it is optional.
 
 The rest of the configuration RLMTools uses is stored inside the database.  Use
 the CLI in configDragon.py to insert configuration and check the configuration
@@ -55,11 +58,16 @@ rlmtools module/package is if its not installed in your Python path.
     PythonOption wsgi.startup rlmtools.webapp::wsgi
     PythonOption SCRIPT_NAME /rlmtools
 
+    PythonOption rlmtools.configfile /path/to/configuration
+
     AuthType WRAP
     require affiliation ncsu.edu
     require known-user
 </Location>
 
+The PythonOption for "rlmtools.configfile" is optional and can be used
+to specify a file to read for the initial configuration.
+
 Jack Neely
-11/05/2008
+12/11/2009
 

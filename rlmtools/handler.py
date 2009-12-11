@@ -41,10 +41,24 @@ import API
 import server
 import logging
 
+from constants import defaultConfFiles
+
+log = None
+
+def doSetup(req):
+    if req.get_options().has_key('rlmtools.configfile'):
+        configfile = req.get_options()['rlmtools.configfile']
+    else:
+        configfile = defaultConfFiles
+
+    configDragon.initConfig(configfile)
+    log = logging.getLogger("xmlrpc")
+
 def handler(req):
     "Process XML_RPC"
 
-    log = logging.getLogger("xmlrpc")
+    if configDragon.conf is None:
+        doSetup(req)
 
     # Log the request
     if req.headers_in.has_key('User-Agent'):

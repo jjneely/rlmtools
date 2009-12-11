@@ -34,6 +34,9 @@ log = logging.getLogger("xmlrpc")
 # Holds the database class
 DataBase = None
 
+# Config files to look for database connection information
+config_files = None
+
 def logException():
     # even though tracing is not normally done at lower logging levels,
     # we add trace data for exceptions
@@ -47,10 +50,12 @@ def logException():
         log.critical(line.strip())
 
 def getDBDict():
-    files = ['./rlmtools.conf', '/etc/rlmtools.conf']
+    if config_files is None:
+        raise StandardError("Config file not specified. Cannot connect "
+                            "to database.")
 
     parser = ConfigParser.ConfigParser()
-    parser.read(files)
+    parser.read(config_files)
 
     if parser.sections() == []:
         raise StandardError("Error reading config file to locate database.")

@@ -30,14 +30,14 @@ from webKickstart import configtools
 # How to better handle web authentication?
 from webKickstart.plugins import webauth
 
-from configDragon import config
+import configDragon
 from webcommon import *
 
 class Application(AppHelpers):
 
     def _getWebKs(self):
         # Helper function to return a WebKickstart object
-        return webKickstart('url', {}, config.webks_dir)
+        return webKickstart('url', {}, configDragon.config.webks_dir)
 
     def index(self):
         if not self.isREAD(self.getAuthZ("root")):

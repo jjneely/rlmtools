@@ -25,8 +25,10 @@ import logging
 import server
 import ConfigParser
 
-config_files = ['/etc/rlmtools.conf', './rlmtools.conf']
-config = None
+from constants import defaultConfFiles
+
+config_files = None   # The files we look in for configuration
+config = None         # The main configuration object
 log = logging.getLogger("xmlrpc")
 init_logging = True
 
@@ -83,8 +85,6 @@ def initLogging():
 
     init_logging = False
 
-# XXX: Configuration crap all needs to be re-worked and this class
-# well help with that.  But not now used.
 class Parser(ConfigParser.ConfigParser):
 
     def get(self, section, option, default):
@@ -150,6 +150,20 @@ class ConfigDragon(server.Server):
         return True
 
 
+def initConfig(files):
+    global config_files, config
+
+    if config is not None:
+        return # we are alread setup
+
+    config_files = files
+    server.config_files = files
+    initLogging()
+    config = ConfigDragon()
+    if not config.verifyConfiguration():
+        raise StandardError("RLMTools does not have a complete configuration "
+                            "in the database.")
+
 def checkConfig(config):
     for key in requiredConfig.keys():
         value = getattr(config, key)
@@ -167,7 +181,6 @@ def checkConfig(config):
 def main():
     import optparse
 
-    config = ConfigDragon()
     parser = optparse.OptionParser()
     for key in requiredConfig.keys():
         parser.add_option("--set"+key, action="store", default=None,
@@ -177,10 +190,15 @@ def main():
     parser.add_option("--check", action="store_true", default=False,
                       dest="check", 
                       help="Check and verify the stored configuration.")
-
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
     opts, args = parser.parse_args(sys.argv[1:])
 
     print "Liquid Dragon Configuration Tool.\n"
+
+    initConfig(opts.configfile)
 
     if len(sys.argv) < 2:
         parser.print_help()
@@ -200,9 +218,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-else:
-    initLogging()
-    if config == None: config = ConfigDragon()
-    if not config.verifyConfiguration():
-        raise StandardError("RLMTools does not have a complete configuration in the database.")
 
