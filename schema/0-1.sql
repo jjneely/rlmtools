@@ -15,7 +15,7 @@ create table attrgroups (
     attr_ptr        INTEGER NOT NULL default 0,
     attr_id         INTEGER NOT NULL default 0,
 
-    index(attr_ptr)
+    KEY `attr_ptr_k` (`attr_ptr`)
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS attrpointer;
@@ -51,7 +51,7 @@ create table aclgroups (
     acl_id      INTEGER not NULL,
     perms       INTEGER not NULL,
 
-    index(dept_id)
+    KEY `dept_id_k` (`dept_id`)
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS acls;
@@ -68,7 +68,8 @@ create table sysadmins (
     acl_id      INTEGER NOT NULL,
     userid      VARCHAR(16),
 
-    index(acl_id)
+    KEY `acl_id_k` (`acl_id`),
+    KEY `userid_k` (`userid`)
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS webkickstartkeys;
@@ -76,7 +77,7 @@ create table webkickstartkeys (
     wkk_id      INTEGER PRIMARY KEY auto_increment,
     keyword     VARCHAR(255),
 
-    index(keyword)
+    KEY `keyword_k` (`keyword`)
 ) ENGINE=InnoDB;
 
 insert into service (name) values ('bcfg2');

@@ -164,6 +164,7 @@ create table sysadmins (
     acl_id      INTEGER NOT NULL,
     userid      VARCHAR(16),
 
+    index(userid),
     index(acl_id)
 );
 
