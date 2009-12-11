@@ -180,6 +180,7 @@ def checkConfig(config):
 
 def main():
     import optparse
+    global config_files, config
 
     parser = optparse.OptionParser()
     for key in requiredConfig.keys():
@@ -197,8 +198,14 @@ def main():
     opts, args = parser.parse_args(sys.argv[1:])
 
     print "Liquid Dragon Configuration Tool.\n"
+    print "Licensed under the GNU General Public License version 2.0 or, at"
+    print "your option, any greater version."
+    print
 
-    initConfig(opts.configfile)
+    config_files = opts.configfile
+    server.config_files = opts.configfile
+    initLogging()
+    config = ConfigDragon()
 
     if len(sys.argv) < 2:
         parser.print_help()
