@@ -117,6 +117,16 @@ def bless(apiVersion, dept, version, uuid=None, rhnid=None):
     ret = s.bless(dept, version, rhnid)
     return ret
 
+def resetHostname(apiVersion, uuid, sig):
+    s = server.Server(apiVersion, getHostName(), uuid)
+
+    if apiVersion < 1:
+        # This function doesn't exist on apiVersions < 1
+        return 1
+    if not s.verifyClient(uuid, sig):
+        return 1
+
+    return s.resetHostname()
 
 def message(apiVersion, publicKey, sig, dict):
     """Log a message from a client."""

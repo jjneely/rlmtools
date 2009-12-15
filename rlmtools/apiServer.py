@@ -247,6 +247,18 @@ class APIServer(server.Server):
 
         return hostinfo['publickey']
 
+    def resetHostname(self):
+        """Allow a logged in host to update its hostname."""
+
+        host_id = self.getHostID()
+        oldname = self.getHostName(host_id) # Query the DB for the old name
+        if self.client == oldname:
+            # Name change is complete...it didn't need updating
+            return 0
+
+        self.changeHostname(host_id, oldname, self.client)
+        return 0
+
     def changeHostname(self, hostID, oldname, newname):
         q1 = """select host_id from realmlinux where hostname = %s"""
         q2 = """update realmlinux set hostname = %s where host_id = %s"""
@@ -254,13 +266,23 @@ class APIServer(server.Server):
         # Change the hostname for this client if it exists
         self.cursor.execute(q1, (newname,))
         if self.cursor.rowcount > 0:
+            # Can only be one match -- see DB schema
             hid = self.cursor.fetchone()[0]
-            self.cursor.execute(q2, ("unknown - ID: %s" % hid, hid))
+            log.info("changeHostname: duplicate host renamed %s:ID:%s" %
+                      (newname, hid))
+            self.cursor.execute(q2, ("%s:ID:%s" % (newname, hid), hid))
 
-        # XXX: unknown host names are most likely masquraded hosts and we
-        # don't know how to better handle this right now
-        if not oldname.startswith('unknown - ID'):
-            # Now update the registration we found
+        if self.apiVersion < 1:
+            # XXX: unknown host names are most likely masquraded hosts and we
+            # don't know how to better handle this right now
+            if not oldname.startswith('unknown - ID'):
+                # Now update the registration we found
+                log.info("apiVersion 0 client %s changing hostname to %s" %
+                         (oldname, newname))
+                self.cursor.execute(q2, (newname, hostID))
+        else:
+            # UUID based version APIs track hosts not by hostname, just do it
+            log.info("Hostname update %s -> %s" % (oldname, newname))
             self.cursor.execute(q2, (newname, hostID))
         
         self.conn.commit()
