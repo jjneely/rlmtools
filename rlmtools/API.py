@@ -42,6 +42,7 @@ __API__ = ['hello',
            'bless',
            'message',
            'updateRHNSystemID',
+           'getAddress',
 
            'initHost',
            'setDeptBcfg2',
@@ -61,10 +62,10 @@ def hello(apiVersion):
     return "Hello World"
 
 
-def getHostName():
-    """Digs out the hostname from the headers.  This identifies who we
-       say we are."""
-    
+def getAddress(apiVersion):
+    """Return the ip/fqdn address pair of the calling client.  This is
+       the address as viewed from the RLMTools server."""
+
     if apache is not None:
         ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
     else:
@@ -83,7 +84,13 @@ def getHostName():
                     % (ip, e))
             raise
 
-    return addr[0]
+    return ip, addr[0]
+
+def getHostName():
+    """Digs out the hostname from the headers.  This identifies who we
+       say we are."""
+    
+    return getAddress(1)[1]
 
 
 def getServerKey(apiVersion, uuid=None):
