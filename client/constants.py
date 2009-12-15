@@ -35,3 +35,6 @@ blessings_dir = "/afs/bp/system/config/linux-kickstart/blessings"
 # Message Queue Directory
 mqueue = "/var/spool/rlmqueue"
 
+# Default locations of the config file
+defaultConfFiles = ['/etc/rlmtools.conf', './rlmtools.conf']
+

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- client code
-# Copyright (C) 2004 - 2007 NC State University
+# Copyright (C) 2004 - 2009 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -403,7 +403,15 @@ def main():
        called directly via 'ncsubless' to administratively register
        a machine."""
 
-    URL = clientconf.initConfig()
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+
+    (options, args) = parser.parse_args()
+
+    URL = clientconf.initConfig(options.configfile)
     server = xmlrpc.setupServer(URL)
 
     if os.path.basename(sys.argv[0]) == "ncsubless":
