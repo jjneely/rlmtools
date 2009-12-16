@@ -30,7 +30,7 @@ import os
 
 from errors import error
 
-apiVersion = 1
+apiVersion = 2
 __serverURL = None
 
 

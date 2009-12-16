@@ -120,8 +120,8 @@ def bless(apiVersion, dept, version, uuid=None, rhnid=None):
 def resetHostname(apiVersion, uuid, sig):
     s = server.Server(apiVersion, getHostName(), uuid)
 
-    if apiVersion < 1:
-        # This function doesn't exist on apiVersions < 1
+    if apiVersion < 2:
+        # This function doesn't exist on apiVersions < 2
         return 1
     if not s.verifyClient(uuid, sig):
         return 1
@@ -163,6 +163,9 @@ def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args):
        You need the admin secret to do so.  This API function is used
        by the script that syncs Bcfg2 repos to the config servers."""
 
+    if apiVersion < 2:
+        # This function doesn't exist on apiVersions < 2
+        return 1
     s = server.Server(apiVersion, "fqdn", "uuid")
     if not s.verifySecret(secret):
         log.warning("setDeptBcfg2() called with bad secret")
