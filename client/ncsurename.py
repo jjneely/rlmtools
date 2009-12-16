@@ -121,9 +121,17 @@ ncsurename [-C configfile]"""
         sys.exit(0)
 
     logger.info("Renaming host to %s" % newHost[1])
+    print "Altering /etc/hosts..."
     alterHosts(newHost)
+    print "Altering /etc/sysconfig/network..."
     alterSysconfig(newHost)
+    print "Altering current hostname..."
     alterMind(newHost)
+
+    print "Altering RLMTools (Liquid Dragon) database..."
+    xmlrpc.doRPC(server.resetHostname, uuid, sig)
+    print "Updating RLMTools stored RHN ID for this client..."
+    xmlrpc.doRPC(server.updateRHNSystemID, uuid, sig, client.getRHNSystemID())
 
 if __name__ == "__main__":
     main()
