@@ -2,9 +2,5 @@
     rotate 12
     missingok
     notifempty
-    sharedscripts
     compress
-    postrotate
-        /sbin/service httpd restart > /dev/null 2>/dev/null || true
-    endscript
 }
