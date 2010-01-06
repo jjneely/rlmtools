@@ -25,6 +25,12 @@ import logging
 import server
 import ConfigParser
 
+# Use WatchedFileHandler from Python2.6 if we are there if not use ours
+try:
+    from logging.handlers import WatchedFileHandler
+except ImportError:
+    from WatchedFileHandler import WatchedFileHandler
+
 config_files = ['./rlmtools.conf', '/etc/rlmtools.conf']
 config = None
 log = logging.getLogger("xmlrpc")
@@ -60,7 +66,7 @@ def initLogging():
         raise StandardError("Database config file missing sections/options.")
 
     logger = logging.getLogger("xmlrpc")
-    handler = logging.FileHandler(logfile)
+    handler = WatchedFileHandler(logfile)
     # Time format: Jun 24 10:16:54
     formatter = logging.Formatter(
             '%(asctime)s %(levelname)s: %(message)s',
