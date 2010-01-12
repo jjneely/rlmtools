@@ -161,7 +161,7 @@ def initConfig(files):
     global config_files, config
 
     if config is not None:
-        return # we are alread setup
+        return # we are already setup
 
     config_files = files
     server.config_files = files

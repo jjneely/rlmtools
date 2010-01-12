@@ -87,7 +87,8 @@ class AppHelpers(object):
                 == "HTTP/1.1":
             self.outEncoding = 'utf-8'
         else:
-            self.outEncoding = 'latin-1'
+            #self.outEncoding = 'latin-1'
+            self.outEncoding = 'utf-8'
 
     def render(self, tmpl, dict):
         # Add some default variables

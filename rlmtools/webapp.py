@@ -489,6 +489,7 @@ class Application(AppHelpers):
 
 
 def main():
+    global config
     parser = optparse.OptionParser()
     parser.add_option("-C", "--configfile", action="store",
                       default=defaultConfFiles,
@@ -526,6 +527,7 @@ def main():
     cherrypy.server.start()
 
 def wsgi(req):
+    global config
     if req.get_options().has_key('rlmtools.configfile'):
         configfile = req.get_options()['rlmtools.configfile']
     else:
