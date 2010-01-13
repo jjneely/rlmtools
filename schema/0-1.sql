@@ -80,6 +80,18 @@ create table webkickstartkeys (
     KEY `keyword_k` (`keyword`)
 ) ENGINE=InnoDB;
 
+DROP TABLE IF EXISTS sessions;
+create table sessions (
+    session_id     INTEGER PRIMARY KEY,
+    sid            varchar(256) unique not null,
+    createtime     float not null,
+    timeout        float not null,
+    data           text,
+
+    KEY `session_idx` (`sid`)
+);
+
+
 insert into service (name) values ('bcfg2');
 
 -- Test Data

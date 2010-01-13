@@ -175,6 +175,15 @@ create table webkickstartkeys (
     index(keyword)
 ) ENGINE=InnoDB;
 
+create table sessions (
+    session_id     INTEGER PRIMARY KEY,
+    sid            varchar(256) unique not null,
+    createtime     float not null,
+    timeout        float not null,
+    data           text,
+
+    KEY `session_idx` (`sid`)
+);
 
 -- The following are service types and RRD data source types to collect.
 -- The server will record status information of these types.  Adding rows
