@@ -68,7 +68,7 @@ def doRPC(method, *params):
             error(msg)
 
         if i < 5:
-            time.sleep(i*3)
+            time.sleep((i+1)**2)
         
     error("Can not initiate XMLRPC protocol to %s" % __serverURL)
     print "Realm Linux Management: Can not initiate XMLRPC protocol to %s" \
