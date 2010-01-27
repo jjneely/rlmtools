@@ -27,6 +27,10 @@ import urllib2
 import xmlrpclib
 import time
 import optparse
+import os
+import os.path
+import tempfile
+import ezPyCrypto
 
 from rlmtools.constants import defaultConfFiles
 from rlmtools import configDragon
@@ -72,11 +76,86 @@ def doRPC(method, apiVersion, *params):
         
     raise StandardError("Can not initiate XMLRPC protocol to %s" % __serverURL)
 
+def getUUID(location):
+    cmd = "/usr/bin/uuidgen -t"
+    uuidFile = os.path.join(location, "uuid")
+    if not os.path.exists(uuidFile):
+        fd = os.popen(cmd)
+        uuid = fd.read().strip()
+        fd.close()
+        try:
+            fd = open(uuidFile, 'w')
+            fd.write(uuid + '\n')
+            fd.close()
+            os.chmod(uuidFile, 0644)
+        except IOError:
+            # We are not root!
+            return None
+    else:
+        fd = open(uuidFile)
+        uuid = fd.read().strip()
+        fd.close()
+
+    return uuid
+
+def saveKey(location, key):
+    # make sure the key is written to disk
+    publicKey = os.path.join(location, "rkhost.pub")
+    privateKey = os.path.join(location, "rkhost.priv")
+
+    if not os.path.exists(publicKey):
+        pubKey = key.exportKey()
+        privKey = key.exportKeyPrivate()
+        
+        fd = open(publicKey, "w")
+        fd.write(pubKey)
+        fd.close()
+        os.chmod(publicKey, 0644)
+
+        fd = open(privateKey, "w")
+        fd.write(privKey)
+        fd.close()
+        os.chmod(privateKey, 0600)
+
+def getLocalKey(location):
+    "Return an ezPyCrypto keypair for this local host."
+    privateKey = os.path.join(location, "rkhost.priv")
+
+    if not os.access(privateKey, os.R_OK):
+        key = ezPyCrypto.key(1024)
+        saveKey(location, key)
+    else: 
+        # Check bits
+        mode = os.stat(publicKey).st_mode
+        if not stat.S_IMODE(mode) == 0644:
+            os.chmod(publicKey, 0644)
+        mode = os.stat(privateKey).st_mode
+        if not stat.S_IMODE(mode) == 0600:
+            os.chmod(publicKey, 0600)
+
+        fd = open(privateKey)
+        privKeyText = fd.read()
+        fd.close()
+
+        key = ezPyCrypto.key()
+        key.importKey(privKeyText)
+
+    return key
+    
 class TestLiquidDragonXMLRPC(unittest.TestCase):
 
     def setUp(self):
         URL = "http://localhost:8081"
         self.server = setupServer(URL)
+
+        # Imitate a RL machine
+        self.location = tempfile.mkdtemp(prefix="rlmtoolstest")
+        self.uuid = getUUID(self.location)
+        print "Imitating machine from %s, UUID = %s" \
+                % (self.location, self.uuid)
+
+    def tearDown(self):
+        os.system("rm -rf %s" % self.location)
 
     def test000HelloWorld(self):
         i = doRPC(self.server.hello, 1)
