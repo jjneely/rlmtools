@@ -70,7 +70,10 @@ def getAddress(apiVersion):
         ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
     else:
         # Part of cherrypy test harness
-        ip = cherrypy.request.remote.ip
+        try:
+            ip = cherrypy.request.remote.ip
+        except AttributeError:
+            ip = cherrypy.request.remote_addr
 
     try:
         addr = socket.gethostbyaddr(ip)
@@ -148,8 +151,13 @@ def message(apiVersion, publicKey, sig, dict):
 def initHost(apiVersion, secret, fqdn):
     """API call for Web-Kickstart to initialize a host in the database.
        Protected by the knowing of a secret."""
-       
-    s = server.Server(apiVersion, fqdn)
+    
+    if apiVersion > 0:
+        # Supply a fake UUID, its never used with initHost()
+        s = server.Server(apiVersion, fqdn, uuid="foobarbaz")
+    else:
+        s = server.Server(apiVersion, fqdn)
+
     if not s.verifySecret(secret):
         log.warning("initHost() called with bad secret")
         return 1
