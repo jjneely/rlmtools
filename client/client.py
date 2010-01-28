@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- client code
-# Copyright (C) 2004 - 2009 NC State University
+# Copyright (C) 2004 - 2010 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG

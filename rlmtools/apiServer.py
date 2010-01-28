@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005 - 2008 NC State University
+# Copyright (C) 2003, 2005 - 2010 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
