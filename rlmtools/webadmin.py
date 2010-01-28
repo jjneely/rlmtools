@@ -178,8 +178,8 @@ class Application(AppHelpers, RLAttributes):
     def host(self, host_id, importWebKS=None):
         dept_id = self._admin.getHostDept(host_id)
         deptname = self._admin.getDeptName(dept_id)
-        if not self.isREAD(self.getAuthZ(dept_id)):
-            return self.message("You need %s level read access to view "
+        if not self.isADMIN(self.getAuthZ(dept_id)):
+            return self.message("You need %s level admin access to view "
                                 "host attributes." % deptname)
 
         ikeys = self._admin.getImportantKeys()
@@ -193,6 +193,15 @@ class Application(AppHelpers, RLAttributes):
                 message="Error Importing Web-Kickstart Configuration"
 
         meta, attributes = self.hostAttrs(host_id)
+
+        # Don't display encrypt secrets fully
+        regex = re.compile(r"([-a-zA-Z0-9]+) ([a-zA-Z0-9]+)")
+        for a in ['root', 'users']:
+            if isinstance(attributes[a], str):
+                match = regex.match(attributes[a])
+                if match is None: continue
+                attributes[a] = "%s ...%s [Secret Obscured]" % \
+                        (match.group(1), match.group(2)[:6])
 
         if 'meta.imported' not in meta:
             if message == "":
@@ -227,8 +236,8 @@ class Application(AppHelpers, RLAttributes):
 
     def dept(self, dept_id):
         deptname = self._admin.getDeptName(int(dept_id))
-        if not self.isREAD(self.getAuthZ(dept_id)):
-            return self.message("You need %s level read access to view "
+        if not self.isADMIN(self.getAuthZ(dept_id)):
+            return self.message("You need %s level admin access to view "
                                 "department attributes." % deptname)
 
         message = ''
@@ -321,8 +330,8 @@ class Application(AppHelpers, RLAttributes):
             # Set the value and redirect to the Dept Admin Panel
             return self.dept(dept_id)
 
-        if not self.isREAD(self.getAuthZ(dept_id)):
-            return self.message("You need %s level read access to view "
+        if not self.isADMIN(self.getAuthZ(dept_id)):
+            return self.message("You need %s level admin access to view "
                                 "attributes." % deptname)
 
         meta, attributes = self.deptAttrs(dept_id)

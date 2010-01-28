@@ -117,7 +117,7 @@ class AppHelpers(object):
     def _parseDept(self, void):
         """Figure out what the ID of the dept is from whatever is in void.
            Returns an int or None."""
-        if isinstance(void, int):
+        if isinstance(void, int) or isinstance(void, long):
             return void
         if void.isdigit():
             return int(void)
