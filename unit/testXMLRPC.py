@@ -30,10 +30,12 @@ import optparse
 import os
 import os.path
 import tempfile
+import base64
 import ezPyCrypto
 
 from rlmtools.constants import defaultConfFiles
 from rlmtools import configDragon
+from rlmtools import miscServer
 
 __serverURL = None
 
@@ -149,25 +151,113 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.server = setupServer(URL)
 
         # Imitate a RL machine
-        self.location = tempfile.mkdtemp(prefix="rlmtoolstest")
+        self.location = tempfile.mkdtemp(prefix="LD")
         self.uuid = getUUID(self.location)
-        print "Imitating machine from %s, UUID = %s" \
+        print "\nImitating machine from %s, UUID = %s" \
                 % (self.location, self.uuid)
 
     def tearDown(self):
+        # Remove UUID from RLMTools database if present
+        misc = miscServer.MiscServer()
+        host_id = misc.getUuidID(self.uuid)
+        misc.deleteClient(host_id)
+
+        # Remove UUID and keys representing fake host
         os.system("rm -rf %s" % self.location)
 
     def test000HelloWorld(self):
         i = doRPC(self.server.hello, 1)
         self.assertEqual("Hello World", i)
 
-    def test100InitHost(self):
+    def test100SupportedHost(self):
         secret = configDragon.ConfigDragon().secret
-        i = doRPC(self.server.initHost, 1, secret, "fqdn.example.net")
+        fqdn = doRPC(self.server.getAddress, 1)[1]
+        print "Support FQDN: %s" % fqdn
+
+        print "initHost()..."
+        i = doRPC(self.server.initHost, 1, secret, fqdn)
         self.assertEqual(i, 0)
 
-        i = doRPC(self.server.isRegistered, 1, "fqdn.example.net", "")
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 1, self.uuid, "")
         self.assertFalse(i)
+
+        print "register()..."
+        key = getLocalKey(self.location)
+        sig = key.signString(self.uuid)
+        i = doRPC(self.server.register, 1, key.exportKey(), "test-dept", 
+                  "test-version", self.uuid, 0)
+        self.assertEqual(i, 0)
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 1, self.uuid, sig)
+        self.assertTrue(i)
+
+        print "isSupported()..."
+        i = doRPC(self.server.isSupported, 1, self.uuid)
+        self.assertTrue(i)
+
+        print "checkIn()..."
+        i = doRPC(self.server.checkIn, 1, self.uuid, sig)
+        self.assertEqual(i, 0)
+
+        print "message()..."
+        m = {}
+        m['type'] = 'boot'
+        m['success'] = True
+        m['timestamp'] = time.time()
+        m['data'] = base64.encodestring("")
+        i = doRPC(self.server.message, 1, self.uuid, sig, m)
+        self.assertEqual(i, 0)
+
+        print "updateRHNSystemID()..."
+        i = doRPC(self.server.updateRHNSystemID, 1, self.uuid, sig, 1)
+        self.assertEqual(i, 0)
+
+        print "getServerKey()..."
+        i = doRPC(self.server.getServerKey, 1, self.uuid)
+        self.assertTrue(len(i) == 993) # Textual length of pubkey
+        rlPub = ezPyCrypto.key()
+        rlPub.importKey(i)
+
+        print "getEncKeyFile()..."
+        i = doRPC(self.server.getEncKeyFile, 1, self.uuid, sig)
+        self.assertFalse(i == [])
+        self.assertTrue(rlPub.verifyString(i[0], i[1]))
+        blob = key.decStringFromAscii(i[0])
+        
+    def test105NoSupport(self):
+        fqdn = doRPC(self.server.getAddress, 1)[1]
+        print "No Support FQDN: %s" % fqdn
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 1, self.uuid, "")
+        self.assertFalse(i)
+
+        print "register()..."
+        key = getLocalKey(self.location)
+        sig = key.signString(self.uuid)
+        i = doRPC(self.server.register, 1, key.exportKey(), "test-dept", 
+                  "test-version", self.uuid, 0)
+        self.assertEqual(i, 0)
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 1, self.uuid, sig)
+        self.assertTrue(i)
+
+        print "isSupported()..."
+        i = doRPC(self.server.isSupported, 1, self.uuid)
+        self.assertFalse(i)
+
+        print "getServerKey()..."
+        i = doRPC(self.server.getServerKey, 1, self.uuid)
+        self.assertTrue(len(i) == 993) # Textual length of pubkey
+        rlPub = ezPyCrypto.key()
+        rlPub.importKey(i)
+
+        print "getEncKeyFile()..."
+        i = doRPC(self.server.getEncKeyFile, 1, self.uuid, sig)
+        self.assertTrue(i == [])
 
 
 if __name__ == "__main__":
