@@ -96,6 +96,7 @@ insert into service (name) values ('bcfg2');
 
 -- Test Data
 insert into acls (name, pts, cell) values ('admin', 'linux', 'bp');
+insert into acls (name, pts, cell) values ('admintest', 'jjneely:webks', 'unity');
 insert into acls (name, pts, cell) values ('installer:common', 'installer:common', 'bp');
 insert into acls (name, pts, cell) values ('installer:itd-unix', 'installer:itd-unix', 'bp');
 
