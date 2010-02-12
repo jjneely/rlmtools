@@ -89,7 +89,7 @@ create table sessions (
     data           text,
 
     KEY `session_idx` (`sid`)
-);
+) ENGINE=InnoDB;
 
 
 insert into service (name) values ('bcfg2');
