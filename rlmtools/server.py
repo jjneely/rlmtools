@@ -345,8 +345,6 @@ class Server(object):
                 for i in range(self.cursor.rowcount):
                     t = self.cursor.fetchone()[0]
                     field = field | t
-            print "d: %s" % d
-            print "bits: %s" % field
             d = self.getDeptParentID(d)
 
         return field
