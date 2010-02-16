@@ -33,6 +33,7 @@ install:
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools/static/css
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools/templates
 	install -d -m 755 $(DESTDIR)/usr/share/rlmtools/server
+	install -d -m 755 $(DESTDIR)/usr/share/rlmtools/unit
 	
 	for FILE in client/*.py ; do \
 		install -m 644 $$FILE $(DESTDIR)/usr/share/rlmtools ; \
@@ -54,8 +55,11 @@ install:
 	install -m 644 rlmtools/static/*.gif  $(DESTDIR)$(SITELIB)/rlmtools/static/
 	install -m 644 rlmtools/templates/*.xml  $(DESTDIR)$(SITELIB)/rlmtools/templates/
 	install -m 644 rlmtools/*.py $(DESTDIR)$(SITELIB)/rlmtools
+	install -m 644 unit/*.py $(DESTDIR)/usr/share/rlmtools/unit/
 	
 	install -m 644 schema/*.sql $(DESTDIR)/usr/share/rlmtools/server/
+	install -m 755 scripts/0-1.py $(DESTDIR)/usr/share/rlmtools/server/
+	install -m 755 scripts/massloadwebks.py $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 644 dbcron.py $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
