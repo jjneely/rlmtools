@@ -507,6 +507,32 @@ class APIServer(server.Server):
         # XXX: Return code / check?
         return 0
 
+    def loadWebKickstart(self):
+        rla = RLAttributes()
+        try:
+            ret = rla.importWebKickstart(self.getHostID())
+        except Exception, e:
+            log.warning("Exception loading web-kickstart: %s" % str(e))
+            return 2
+
+        if ret:
+            return 0
+        else:
+            return 3 # No Web-Kickstart config file?
+
+    def dumpClients(self):
+        """This function dumps out a report sent out over XMLRPC."""
+        q = """select r.hostname, IFNULL(r.uuid, "") as uuid,
+                   IFNULL(r.rhnid, "") as rhnid, 
+                   DATE_FORMAT(r.installdate, "%a %b %d %H:%M:%S %Y") 
+                       as installdate,
+                   r.version, r.support, d.name
+               from realmlinux as r, dept as d
+               where r.dept_id = d.dept_id"""
+
+        self.cursor.execute(q)
+        return (0, resultSet(self.cursor).dump())
+
     def initHost(self, fqdn, support, blessing=False):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.

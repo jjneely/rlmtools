@@ -27,6 +27,8 @@ import socket
 import logging
 import apiServer as server
 
+from xmlrpclib import Fault
+
 try:
     from mod_python import apache
 except ImportError:
@@ -46,6 +48,8 @@ __API__ = ['hello',
 
            'initHost',
            'setDeptBcfg2',
+           'loadWebKickstart',
+           'dumpClients',
 
            'getServerKey',
            'getEncKeyFile',
@@ -173,13 +177,44 @@ def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args):
 
     if apiVersion < 2:
         # This function doesn't exist on apiVersions < 2
-        return 1
+        raise Fault(1, "Method 'setDeptBcfg2' does not exist at this "
+                       "API version")
     s = server.Server(apiVersion, "fqdn", "uuid")
     if not s.verifySecret(secret):
         log.warning("setDeptBcfg2() called with bad secret")
         return 1
 
     return s.setDeptBcfg2(deptName, bcfg2args)
+
+def loadWebKickstart(apiVersion, secret, uuid):
+    """(re-)load the Web-Kickstart data into this hosts attributes"""
+
+    if apiVersion < 2:
+        # This function doesn't exist on apiVersions < 2
+        raise Fault(1, "Method 'loadWebKickstart' does not exist at this "
+                       "API version")
+
+    s = server.Server(apiVersion, "fqdn", uuid)
+    if not s.verifySecret(secret):
+        log.warning("loadWebKickstart() called with bad secret")
+        return 1
+
+    return s.loadWebKickstart()
+
+def dumpClients(apiVersion, secret):
+    """Return a list of dicts for each host"""
+
+    if apiVersion < 2:
+        # This function doesn't exist on apiVersions < 2
+        raise Fault(1, "Method 'dumpClients' does not exist at this "
+                       "API version")
+
+    s = server.Server(apiVersion, "fqdn", "uuid")
+    if not s.verifySecret(secret):
+        log.warning("dumpClients() called with bad secret")
+        return 1
+
+    return s.dumpClients()
 
 def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""

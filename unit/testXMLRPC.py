@@ -259,6 +259,26 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         i = doRPC(self.server.getEncKeyFile, 1, self.uuid, sig)
         self.assertTrue(i == [])
 
+    def test200SecretOps(self):
+        secret = configDragon.ConfigDragon().secret
+        dump = doRPC(self.server.dumpClients, 2, secret)
+        self.assertTrue(isinstance(dump, list))
+
+        client = None
+        i = 0
+        for c in dump[1]:
+            print "Loading Web-Kickstart for %s" % c['hostname']
+            if c['uuid'] != "":
+                ret = doRPC(self.server.loadWebKickstart, 2, secret, c['uuid'])
+                if ret == 3:
+                    print "Client %s does not have a web-kickstart config" \
+                            % c['hostname']
+                self.assertTrue(ret == 0 or ret == 3)
+                i = i + 1
+                if i > 10:
+                    break
+                
+
 
 if __name__ == "__main__":
     # access to server configuration so we can find the "secret"
