@@ -189,15 +189,18 @@ class Application(AppHelpers, RLAttributes):
             if not self.isWRITE(self.getAuthZ(dept_id)):
                 return self.message("You need %s level write access to set "
                                 "attributes." % deptname)
-            if not self.importWebKickstart(host_id):
-                message="Error Importing Web-Kickstart Configuration"
+            try:
+                if not self.importWebKickstart(host_id):
+                    message="Error Importing Web-Kickstart Configuration"
+            except Exception, e:
+                message = "Exception Importing Web-Kickstart: %s" % str(e)
 
         meta, attributes = self.hostAttrs(host_id)
 
         # Don't display encrypt secrets fully
         regex = re.compile(r"([-a-zA-Z0-9]+) ([a-zA-Z0-9]+)")
         for a in ['root', 'users']:
-            if isinstance(attributes[a], str):
+            if a in attributes and isinstance(attributes[a], str):
                 match = regex.match(attributes[a])
                 if match is None: continue
                 attributes[a] = "%s ...%s [Secret Obscured]" % \
