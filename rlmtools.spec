@@ -88,10 +88,14 @@ fi
 %attr(0600, apache, apache) %config(noreplace) %{_sysconfdir}/rlmtools.conf
 %config(noreplace) %{_sysconfdir}/cron.d/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/*
+%{_datadir}/rlmtools/unit
 %{_datadir}/rlmtools/server
 %{python_sitelib}/*
 
 %changelog
+* Tue Feb 16 2010 Jack Neely <jjneely@ncsu.edu>
+- Packaging updates for 1.9.x in preperation for 2.x
+
 * Mon Sep 28 2009 Jack Neely <jjneely@ncsu.edu>
 - Replace realmconfig on the client end
 - add Bcfg2 and autoupdate cron jobs
