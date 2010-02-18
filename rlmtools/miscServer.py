@@ -27,6 +27,7 @@ import server
 
 from datetime import datetime, timedelta
 from resultSet import resultSet
+from rlattributes import RLAttributes
 
 log = logging.getLogger("xmlrpc")
 
@@ -59,11 +60,14 @@ class MiscServer(server.Server):
         q3 = """select host_id from realmlinux where 
                 recvdkey = 0 and installdate < %s"""
 
+        self.rla = RLAttributes()
         date = datetime.today() - timedelta(days)
 
         self.cursor.execute(q1, (date,))
         result = resultSet(self.cursor).dump()
-        for client in result: self.deleteClient(client['host_id'])
+        for client in result: 
+            self.rla.removeAllHostAttrs(client['host_id'])
+            self.deleteClient(client['host_id'])
 
         self.cursor.execute(q3, (date,))
         result = resultSet(self.cursor).dump()
