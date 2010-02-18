@@ -37,7 +37,7 @@ def main():
     # Start up configuration/logging/databases
     configDragon.initConfig(options.configfile)
     m = miscServer.MiscServer()
-    s.cleanDB()
+    m.cleanDB()
 
 if __name__ == "__main__":
     main()
