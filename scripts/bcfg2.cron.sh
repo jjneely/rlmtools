@@ -23,7 +23,7 @@
 
 # Default to being enabled
 # Turn off in /etc/sysconfig/bcfg2 (which is also managed by Bcfg2)
-BCFG2_ENABLED=1
+BCFG2_ENABLED=0
 BCFG2_OPTIONS="-qv"
 BCFG2_BIN=/usr/sbin/bcfg2
 BCFG2_CFG=/etc/bcfg2.conf
