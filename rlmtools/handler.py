@@ -46,6 +46,7 @@ from constants import defaultConfFiles
 log = None
 
 def doSetup(req):
+    global log
     if req.get_options().has_key('rlmtools.configfile'):
         configfile = req.get_options()['rlmtools.configfile']
     else:
@@ -57,7 +58,7 @@ def doSetup(req):
 def handler(req):
     "Process XML_RPC"
 
-    if configDragon.conf is None:
+    if configDragon.config is None:
         doSetup(req)
 
     # Log the request
@@ -81,9 +82,7 @@ def handler(req):
     ret = ""
     
     if not isinstance(method_ret, xmlrpclib.Fault):
-        if not type(method_ret) is TupleType:
-            method_ret = (method_ret, )
-        
+        method_ret = (method_ret, )
         ret = xmlrpclib.dumps(method_ret, methodresponse=1)
     else:
         apache.log_error(str(method_ret))
