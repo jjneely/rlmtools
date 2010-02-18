@@ -54,8 +54,8 @@ related cron jobs.
 make DESTDIR=$RPM_BUILD_ROOT install
 
 %if ! %{replaceRC}
-rm -f %{_sysconfdir}/cron.daily/autoupdate.cron.sh
-rm -f %{_sysconfdir}/rc.d/init.d/autoupdate
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/cron.daily/autoupdate.cron.sh
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/autoupdate
 %endif
 
 %clean
