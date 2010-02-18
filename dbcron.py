@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # dbcron.py -- Cron job to maintain DB
-# Copyright (C) 2004 - 2006 NC State University
+# Copyright (C) 2004 - 2010 NC State University
 # Written by Jack Neely <jjneely@pncsu.edu>
 #
 # SDG
@@ -21,10 +21,22 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 from rlmtools import miscServer
-from rlmtools import configDragon  # This will init the logging
+from rlmtools import configDragon 
+from rlmtools.constants import defaultConfFiles
+
+import optparse
 
 def main():
-    s = miscServer.MiscServer()
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+    (options, args) = parser.parse_args()
+
+    # Start up configuration/logging/databases
+    configDragon.initConfig(options.configfile)
+    m = miscServer.MiscServer()
     s.cleanDB()
 
 if __name__ == "__main__":
