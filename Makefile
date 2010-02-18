@@ -66,6 +66,9 @@ install:
 	install -m 644 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	install -m 644 rlmlogs $(DESTDIR)/etc/logrotate.d/
+	
+	install -m 755 scripts/autoupdate.cron.sh $(DESTDIR)/etc/cron.daily
+	install -m 755 scripts/autoupdate.init $(DESTDIR)/etc/rc.d/init.d/autoupdate
 
 clean:
 	rm -f `find . -name \*.pyc -o -name \*~`

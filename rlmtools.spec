@@ -3,7 +3,7 @@
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
 Version: 1.9.0
-Release: 1%{?dist:%(echo .%{dist})}
+Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
