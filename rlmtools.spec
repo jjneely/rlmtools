@@ -95,7 +95,6 @@ fi
 %endif
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
-%{_sysconfdir}/rc.d/init.d/*
 %{_datadir}/rlmtools/*.py*
 %{_bindir}/*
 /var/spool/rlmqueue
