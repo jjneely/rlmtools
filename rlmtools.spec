@@ -16,8 +16,14 @@ Requires: e2fsprogs
 BuildArch: noarch
 BuildRequires: python-devel
 Obsoletes: ncsu-rlmtools
-# provides for realmconfig
 Provides: ncsu-rlmtools
+
+# Are we replacing realmconfig (>=EL6?) or existing with it (<=EL5)?
+%define replaceRC 0
+
+%if %{replaceRC}
+Provides: realmconfig
+%endif
 
 %description
 The Realm Linux Management Tools provide infrastructure to manage certain
@@ -47,16 +53,25 @@ related cron jobs.
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
 
+%if ! %{replaceRC}
+rm -f %{_sysconfdir}/cron.daily/autoupdate.cron.sh
+rm -f %{_sysconfdir}/rc.d/init.d/autoupdate
+%endif
+
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %preun
+%if %{replaceRC}
 if [ $1 = 0 ]; then
     chkconfig --del autoupdate
 fi
+%endif
 
 %post
+%if %{replaceRC}
 chkconfig --add autoupdate
+%endif
 
 %post server
 
@@ -74,7 +89,10 @@ fi
 %files
 %defattr(-,root,root)
 %dir %{_datadir}/rlmtools
-%{_sysconfdir}/cron.daily/*
+%if %{replaceRC}
+%{_sysconfdir}/cron.daily/autoupdate.cron.sh
+%{_sysconfdir}/rc.d/init.d/autoupdate
+%endif
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
 %{_sysconfdir}/rc.d/init.d/*
@@ -93,6 +111,9 @@ fi
 %{python_sitelib}/*
 
 %changelog
+* Thu Feb 18 2010 Jack Neely <jjneely@ncsu.edu>
+- add a macro so that we can take over realmconfig or co-exist peacefully
+
 * Tue Feb 16 2010 Jack Neely <jjneely@ncsu.edu>
 - Packaging updates for 1.9.x in preperation for 2.x
 
