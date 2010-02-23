@@ -126,11 +126,11 @@ class MiscServer(server.Server):
                     self.cursor.execute(q3, (row['acl_id'], pts[i]))
                     cKeys.insert(i, pts[i]) # Keep our index numbers intact
                 elif cKeys[i] < pts[i]:
-                    self.cursor.execute(q2, (current[cKeys],))
+                    self.cursor.execute(q2, (current[cKeys[i]],))
                     del cKeys[i]            # Keep our index numbers intact
                 i = i + 1
             while len(cKeys) > len(pts):
-                self.cursor.execute(q3, (current[cKeys],))
+                self.cursor.execute(q3, (current[cKeys[i]],))
                 del cKeys[i]                # Keep our index numbers intact
 
         self.conn.commit()
