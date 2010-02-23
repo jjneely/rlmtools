@@ -52,8 +52,7 @@
   <p>
     Remeber, permissions are inhairited from parent departments.  So giving an
     ACL read access to the "oit" department will also allow read access to the
-    "oit-iso" department.  However, you can explicitly set permissions on the
-    "oit-iso" department to override the "oit" permissions.
+    "oit-iso" department.
   </p>
 
   <form method="get" action="${baseURL}/admin/addPerm">
