@@ -54,6 +54,13 @@ class APIServer(server.Server):
            
         server.Server.__init__(self)
 
+        global config
+        if config is None:        # Hmmm...check again
+            import configDragon
+            config = configDragon.config
+        if config is None:        # Still?  Bail
+            raise StandardError("Configuration environment not setup")
+
         self.apiVersion = apiVersion
         self.client = client
         self.uuid = uuid

@@ -36,7 +36,7 @@ import string
 import os.path
 
 ## API that is exposed
-import configDragon  # setup logging early
+import configDragon
 import API
 import server
 import logging
@@ -54,6 +54,7 @@ def doSetup(req):
 
     configDragon.initConfig(configfile)
     log = logging.getLogger("xmlrpc")
+    log.info("Started XMLRPC handler")
 
 def handler(req):
     "Process XML_RPC"
