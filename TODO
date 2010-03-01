@@ -1,0 +1,7 @@
+2.x Road Map
+============
+
+ * Fully implement APIv2
+ + Using sessions code, have machines initially register with a
+   hash, rather than hostname checking
+
