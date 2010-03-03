@@ -43,10 +43,7 @@ import logging
 
 from constants import defaultConfFiles
 
-log = None
-
 def doSetup(req):
-    global log
     if req.get_options().has_key('rlmtools.configfile'):
         configfile = req.get_options()['rlmtools.configfile']
     else:
@@ -68,6 +65,7 @@ def handler(req):
     else:
         userAgent = "None"
 
+    log = logging.getLogger("xmlrpc")
     log.info("%s - %s - %s" % (req.get_remote_host(apache.REMOTE_NOLOOKUP),
                               userAgent, req.the_request))
 
