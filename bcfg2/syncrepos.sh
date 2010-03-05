@@ -15,7 +15,9 @@ if [ ! -d $LOCALREPOS ] ; then
     mkdir -p $LOCALREPOS
 fi
 
-for r in `ls $MASTERREPOS`; do
+# This bit of magic with the root directory makes it first in the list
+REPOS="root $(ls --hide root $MASTERREPOS)"
+for r in $REPOS; do
     if [ ! -d $MASTERREPOS/$r ] ; then continue ; fi
     if [ -d $LOCALREPOS/$r ] ; then
         cd $LOCALREPOS/$r

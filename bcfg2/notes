@@ -1,0 +1,12 @@
+Dear Jack,  WTF does all this do?
+=================================
+
+Bcfg repos live in AFS.
+
+Makefile - lives in AFS with the repos, does management 
+
+syncrepos.sh - cron job on the Bcfg2 servers that syncs the repos
+
+RLMetadata.py - Bcfg2 plugin that ties Bcfg2's metadata together with RLMTools
+
+
