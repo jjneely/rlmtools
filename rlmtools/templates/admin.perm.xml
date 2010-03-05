@@ -12,12 +12,12 @@
 <body>
 
   <p>
-    This page lists all the permissions associated with a specific ACL.  You
-    can add and delete permissions here as well.  This affects what users
+    This page lists all the permissions associated with a specific ACL group.  
+    You can add and delete permissions here as well.  This affects what users
     have access to look at or alter attributes on departments and hosts.
   </p>
 
-  <h2>Permissions for ACL: ${aclname}</h2>
+  <h2>Permissions for: ${aclname}</h2>
 
   <p>
     This ACL has the following permissions in regards to the listed
@@ -51,8 +51,8 @@
 
   <p>
     Remeber, permissions are inhairited from parent departments.  So giving an
-    ACL read access to the "oit" department will also allow read access to the
-    "oit-iso" department.
+    ACL group read access to the "oit" department will also allow read 
+    access to the "oit-iso" department.
   </p>
 
   <form method="get" action="${baseURL}/admin/addPerm">

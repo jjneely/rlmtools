@@ -25,7 +25,7 @@
 
   <p>Greetings, ${fullname}.  You are user "${userid}".</p>
 
-  <p>You are a member of the following ACLs:</p>
+  <p>You are a member of the following ACL groups:</p>
   <ul py:if="len(acls) > 0">
     <li py:for="acl in acls" py:content="acl"/>
   </ul>

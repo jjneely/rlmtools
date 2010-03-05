@@ -12,7 +12,7 @@
 <body>
 
   <p>
-    ACLs are based off of AFS PTS groups.  The following table lists out
+    ACL groups are based off of AFS PTS groups.  The following table lists out
     the ACLs known.  Click on the ACL Name to alter the permissions 
     assigned to that ACL.
   </p>
@@ -38,7 +38,7 @@
   <h2>Add ACL</h2>
 
   <p>
-    You can create a new ACL by filling in this form to link the new ACL
+    You can create a new ACL group by filling in this form to link the new ACL
     to a PTS group.  Once the new ACL is created you can assign permissions
     to it.
   </p>
