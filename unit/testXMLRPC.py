@@ -278,6 +278,22 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
                 if i > 10:
                     break
                 
+    def test220Bcfg2Opts(self):
+        secret = configDragon.ConfigDragon().secret
+        ret = doRPC(self.server.getDeptBcfg2, 2, "root")
+        
+        # if bcfg2.init doesn't exist yet here
+        self.assertTrue(ret[0] == 2)
+
+        init = "-S http://foobar.com:8072 -x %(password)s -n -qv"
+        ret = doRPC(self.server.setDeptBcfg2, 2, secret, "oit",
+                    init)
+        self.assertTrue(ret == 0)
+
+        ret = doRPC(self.server.getDeptBcfg2, 2, "oit-hs")
+        print ret
+        self.assertTrue(ret[0] == 0)
+        self.assertTrue(ret[1] == init)
 
 
 if __name__ == "__main__":

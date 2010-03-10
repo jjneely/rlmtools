@@ -514,6 +514,19 @@ class APIServer(server.Server):
         # XXX: Return code / check?
         return 0
 
+    def getDeptBcfg2(self, deptName):
+        """Return the bcfg2.init attribute for a department.  This string
+           should be a python %s-style string template with no passwords."""
+
+        rla = RLAttributes()
+        dept_id = self.getDeptID(deptName)
+        m, a = rla.deptAttrs(dept_id)
+        if 'bcfg2.init' not in a:
+            return (2, "")
+        if a['bcfg2.init'] is None or a['bcfg2.init'] == "":
+            return (3, "")
+        return (0, str(a['bcfg2.init']))
+
     def loadWebKickstart(self):
         rla = RLAttributes()
         try:
