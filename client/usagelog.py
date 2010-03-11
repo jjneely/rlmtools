@@ -23,8 +23,11 @@
 import os
 import sys
 import pickle
+import optparse
+import clientconf
 
 from client import Message
+from constants import defaultConfFiles
 
 ServiceType = "usagelog"
 
@@ -48,19 +51,29 @@ def main():
     """Create a message from pam_ncsu_access's session usage report
        and send that to the central glue server."""
 
-    if len(sys.argv) != 3:
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+
+    (options, args) = parser.parse_args()
+
+    URL = clientconf.initConfig(options.configfile)
+
+    if len(args) != 2:
         print "Usage: %s <userid> <session time in seconds>" % sys.argv[0]
         sys.exit(1)
 
-    if len(sys.argv[1]) <= 8:
-        userid = sys.argv[1]
+    if len(args[0]) <= 8:
+        userid = args[0]
     else:
-        print "Invalid format for userid: %s" % sys.argv[1]
+        print "Invalid format for userid: %s" % args[0]
         sys.exit(1)
     try:
-        session = int(sys.argv[2])
+        session = int(args[1])
     except ValueError:
-        print "Invalud format for seconds: %s" % sys.argv[2]
+        print "Invalud format for seconds: %s" % args[1]
         sys.exit(1)
 
     data = {'userid': userid, 'time': session, 'sync':isSafe()}

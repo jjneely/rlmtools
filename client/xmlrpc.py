@@ -20,6 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import logging
 import socket
 import httplib
 import urllib2
@@ -28,7 +29,7 @@ import time
 import sys
 import os
 
-from errors import error
+logger = logging.getLogger("rlmclient")
 
 apiVersion = 2
 __serverURL = None
@@ -51,26 +52,27 @@ def doRPC(method, *params):
         try:
             return apply(method, params)
         except xmlrpclib.Error, e:
-            error("XMLRPC Error: " + str(e))
+            logger.error("XMLRPC Error: " + str(e))
         except socket.error, e:
-            error("Socket Error: %s" % str(e))
+            logger.error("Socket Error: %s" % str(e))
         except socket.sslerror, e:
-            error("Socket SSL Error: %s" % str(e))
+            logger.error("Socket SSL Error: %s" % str(e))
         except AssertionError, e:
-            error("Assertion Error (this is weird): %s" % str(e))
+            logger.error("Assertion Error (this is weird): %s" % str(e))
         except httplib.IncompleteRead, e:
-            error("HTTP library reported an Incomplete Read error: %s" % str(e))
+            logger.error("HTTP library reported an Incomplete Read error: %s" \
+                         % str(e))
         except urllib2.HTTPError, e:
             msg = "\nAn HTTP error occurred:\n"
             msg = msg + "URL: %s\n" % e.filename
             msg = msg + "Status Code: %s\n" % e.code
             msg = msg + "Error Message: %s\n" % e.msg
-            error(msg)
+            logger.error(msg)
 
         if i < 5:
             time.sleep((i+1)**2)
         
-    error("Can not initiate XMLRPC protocol to %s" % __serverURL)
+    logger.error("Can not initiate XMLRPC protocol to %s" % __serverURL)
     print "Realm Linux Management: Can not initiate XMLRPC protocol to %s" \
           % __serverURL
     sys.exit(1)

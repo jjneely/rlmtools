@@ -23,6 +23,7 @@ import optparse
 import sys
 
 from message import Message
+import clientconf
 
 def doReport():
     usage = """Realm Linux Management report tool.  Licensed under the 
@@ -37,8 +38,14 @@ ncsureport --service < --ok | --fail > --message <file>"""
                      dest="fail", help="Service is a failure.")
     parser.add_option("-m", "--message", action="store", default=False,
                      dest="message", help="Filename or '-' of message to send.")
+    parser.add_option("-C", "--configfile", action="store",
+                      default=defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
 
     opts, args = parser.parse_args(sys.argv[1:])
+    clientconf.initConfig(opts.configfile)
+
     if opts.ok == None and opts.fail == None:
         parser.print_help()
         return
