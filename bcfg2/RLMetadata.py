@@ -9,6 +9,14 @@ from rlmtools.rlattributes import RLAttributes
 # To setup new hosts...
 from rlmtools.apiServer import APIServer
 
+# To setup RLMTools configuration
+import rlmtools.configDragon
+from rlmtools.constants import defaultConfFiles
+
+if rlmtools.configDragon.config is None:
+    # XXX: How do we customize configfiles here?
+    rlmtools.configDragon.initConfig(defaultConfFiles)
+
 # We get our client metadata information from a database not the local
 # clients.xml files in the Bcfg2 repository.
 
