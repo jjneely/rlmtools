@@ -23,6 +23,7 @@ import optparse
 import sys
 
 from message import Message
+from constants import defaultConfFiles
 import clientconf
 
 def doReport():
