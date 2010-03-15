@@ -205,3 +205,6 @@ class RLAttributes(object):
         aptr = self._admin.getDeptAttrPtr(dept_id)
         self._admin.removeAllAttributes(aptr)
 
+    def removeAttributeByKey(self, attr_ptr, key):
+        return self._admin.removeAttributeByKey(attr_ptr, key)
+

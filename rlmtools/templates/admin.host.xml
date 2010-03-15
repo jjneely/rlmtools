@@ -81,6 +81,7 @@ configuration file.
           <input type="hidden" name="host_id" value="${host_id}"/>
           <input type="hidden" name="modifyKey" value="${attr}"/>
           <input type="submit" name="reset" value="Reset"/>
+          <input type="submit" name="delete" value="Delete"/>
           <input type="submit" name="modify" value="Modify"/>
         </form>
       </th>

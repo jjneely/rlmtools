@@ -263,8 +263,47 @@ class Application(AppHelpers, RLAttributes):
                              ))
     dept.exposed = True
 
+    def deleteHostAttr(self, modifyKey, host_id=None,
+                       submit=None, aptr=None, callback=None):
+        if submit is not None:
+            if callback is None:
+                return self.message(
+                        "Interal application fault in deleteHostAttr()")
+            host_id = int(callback)
+        dept_id = self._admin.getHostDept(int(host_id))
+        hostname = self._admin.getHostName(host_id)
+        aptr = self._admin.getHostAttrPtr(int(host_id))
+
+        if not self.isWRITE(self.getAuthZ(dept_id)):
+            return self.message("You need %s level write access to remove "
+                                    "attributes." % deptname)
+
+        if submit is not None:
+            self.removeAttributeByKey(aptr, modifyKey)
+            # To reuse the template we stuck this in 'callback'
+            return self.host(host_id)
+
+        subMenu = [ ('%s Admin Panel' % short(hostname),
+                     '%s/admin/host?host_id=%s' % (url(), int(host_id)))
+                  ]
+
+        meta, attributes = self.hostAttrs(host_id)
+        if modifyKey not in attributes:
+            return self.message("%s is not an attribute of %s" \
+                                % (modifyKey, hostname))
+
+        return self.render('admin.delattr', dict(
+                           subMenu=subMenu,
+                           title=hostname,
+                           key=modifyKey,
+                           value=attributes[modifyKey],
+                           message="",
+                           callback=host_id,
+                           ))
+    deleteHostAttr.exposed = True
+
     def modifyHost(self, host_id, modifyKey, textbox=None,
-                   setAttribute=None, reset=None, modify=None):
+                   setAttribute=None, reset=None, delete=None, modify=None):
         # XXX: check for altering meta. keys??
         dept_id = self._admin.getHostDept(int(host_id))
         deptname = self._admin.getDeptName(dept_id)
@@ -278,13 +317,23 @@ class Application(AppHelpers, RLAttributes):
             # Set the value and redirect to the Host Admin Panel
             return self.host(host_id)
 
-        if not self.isREAD(self.getAuthZ(dept_id)):
-            return self.message("You need %s level read access to view "
-                                "host attributes." % deptname)
-
         meta, attributes = self.hostAttrs(host_id)
         attributes.update(meta)
         hostname = self._admin.getHostName(host_id)
+
+        if delete == "Delete":
+            if 'meta.inhairited' in meta:
+                if modifyKey in meta['meta.inhairited']:
+                    return self.message(
+                            "The attribute %s is inhairited from a higher "
+                            "order department.  It cannot be deleted from "
+                            "this host %s" % (modifyKey, hostname))
+
+            return self.deleteHostAttr(modifyKey, host_id)
+
+        if not self.isADMIN(self.getAuthZ(dept_id)):
+            return self.message("You need %s level admin access to view "
+                                "host attributes." % deptname)
 
         if len(attributes) > 1:
             logger.warning("DB Issues: multiple identical keys for host %s" \
