@@ -11,8 +11,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: realm-hooks
 Requires: python-ezpycrypto
 Requires: rpm-python >= 4.2
-# For uuidgen we require e2fsprogs
-Requires: e2fsprogs 
 BuildArch: noarch
 BuildRequires: python-devel
 Obsoletes: ncsu-rlmtools

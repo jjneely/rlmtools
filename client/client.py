@@ -30,6 +30,7 @@ import time
 import optparse
 import rpm
 import logging
+import uuid
 
 from message   import Message
 from xmlrpc    import doRPC
@@ -60,14 +61,11 @@ def getUUID():
     """Return my unique ID for this machine.  Returns None if we are not
        root and a UUID has not been previously created."""
 
-    cmd = "/usr/bin/uuidgen -t"
     if not os.path.exists(uuidFile):
-        fd = os.popen(cmd)
-        uuid = fd.read().strip()
-        fd.close()
+        u = str(uuid.uuid4())
         try:
             fd = open(uuidFile, 'w')
-            fd.write(uuid + '\n')
+            fd.write(u + '\n')
             fd.close()
             os.chmod(uuidFile, 0644)
         except IOError:
@@ -75,10 +73,10 @@ def getUUID():
             return None
     else:
         fd = open(uuidFile)
-        uuid = fd.read().strip()
+        u = fd.read().strip()
         fd.close()
 
-    return uuid
+    return u
 
 
 def getRHNSystemID():
