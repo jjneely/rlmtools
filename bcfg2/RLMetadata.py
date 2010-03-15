@@ -8,6 +8,7 @@ from rlmtools.rlattributes import RLAttributes
 
 # To setup new hosts...
 from rlmtools.apiServer import APIServer
+import rlmtools.uuid
 
 # To setup RLMTools configuration
 import rlmtools.configDragon
@@ -183,7 +184,16 @@ class RLMetadata(Metadata):
         logger.info("RLMetadata: Creating new host %s with attributes %s" % \
                     (client_name, attribs))
 
-        server = APIServer()
+        # XXX: The client normally provides a UUID rather than RLMTools
+        # generating one for it.  In this specific case (new Bcfg2 host)
+        # we are left with no choice but to assume its UUID.  Somehow
+        # this needs to be made consistant.
+
+        u = str(rlmtools.uuid.uuid4())
+        logger.warning("RLMetadata: Making up UUID %s for %s" \
+                       % (u, client_name))
+
+        server = APIServer(2, client_name, u)
         attributes = RLAttributes()
 
         # Setup a new client.  We've not seen this client before
