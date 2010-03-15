@@ -271,7 +271,8 @@ class Application(AppHelpers, RLAttributes):
                         "Interal application fault in deleteHostAttr()")
             host_id = int(callback)
         dept_id = self._admin.getHostDept(int(host_id))
-        hostname = self._admin.getHostName(host_id)
+        deptname = self._admin.getDeptName(dept_id)
+        hostname = self._admin.getHostName(int(host_id))
         aptr = self._admin.getHostAttrPtr(int(host_id))
 
         if not self.isWRITE(self.getAuthZ(dept_id)):
@@ -292,15 +293,59 @@ class Application(AppHelpers, RLAttributes):
             return self.message("%s is not an attribute of %s" \
                                 % (modifyKey, hostname))
 
+        if modifyKey in ['root', 'users']:
+            value = "[Secret Obscured]"
+        else:
+            value = attributes[modifyKey]
         return self.render('admin.delattr', dict(
                            subMenu=subMenu,
                            title=hostname,
                            key=modifyKey,
-                           value=attributes[modifyKey],
+                           value=value,
                            message="",
                            callback=host_id,
+                           call="deleteHostAttr",
                            ))
     deleteHostAttr.exposed = True
+
+    def deleteDeptAttr(self, modifyKey, dept_id=None,
+                       submit=None, aptr=None, callback=None):
+        if submit is not None:
+            if callback is None:
+                return self.message(
+                        "Interal application fault in deleteDeptAttr()")
+            dept_id = int(callback)
+        deptname = self._admin.getDeptName(int(dept_id))
+        aptr = self._admin.getDeptAttrPtr(int(dept_id))
+
+        if not self.isWRITE(self.getAuthZ(dept_id)):
+            return self.message("You need %s level write access to remove "
+                                    "attributes." % deptname)
+
+        if submit is not None:
+            self.removeAttributeByKey(aptr, modifyKey)
+            # To reuse the template we stuck this in 'callback'
+            return self.dept(int(dept_id))
+
+        subMenu = [ ('%s Admin Panel' % deptname,
+                     '%s/admin/dept?dept_id=%s' % (url(), int(dept_id)))
+                  ]
+
+        meta, attributes = self.deptAttrs(dept_id)
+        if modifyKey not in attributes:
+            return self.message("%s is not an attribute of %s" \
+                                % (modifyKey, deptname))
+
+        return self.render('admin.delattr', dict(
+                           subMenu=subMenu,
+                           title=deptname,
+                           key=modifyKey,
+                           value=attributes[modifyKey],
+                           message="",
+                           callback=dept_id,
+                           call="deleteDeptAttr",
+                           ))
+    deleteDeptAttr.exposed = True
 
     def modifyHost(self, host_id, modifyKey, textbox=None,
                    setAttribute=None, reset=None, delete=None, modify=None):
@@ -327,17 +372,13 @@ class Application(AppHelpers, RLAttributes):
                     return self.message(
                             "The attribute %s is inhairited from a higher "
                             "order department.  It cannot be deleted from "
-                            "this host %s" % (modifyKey, hostname))
+                            "this host: %s" % (modifyKey, hostname))
 
             return self.deleteHostAttr(modifyKey, host_id)
 
         if not self.isADMIN(self.getAuthZ(dept_id)):
             return self.message("You need %s level admin access to view "
                                 "host attributes." % deptname)
-
-        if len(attributes) > 1:
-            logger.warning("DB Issues: multiple identical keys for host %s" \
-                           % host_id)
 
         replaceValue = None
         if reset == "Reset":
@@ -369,7 +410,7 @@ class Application(AppHelpers, RLAttributes):
     modifyHost.exposed = True
 
     def modifyDept(self, dept_id, modifyKey, textbox=None,
-                   setAttribute=None, reset=None, modify=None):
+                   setAttribute=None, reset=None, delete=None, modify=None):
         # XXX: check for altering meta. keys??
         deptname = self._admin.getDeptName(int(dept_id))
 
@@ -390,9 +431,15 @@ class Application(AppHelpers, RLAttributes):
         attributes.update(meta)
         deptname = self._admin.getDeptName(dept_id)
 
-        if len(attributes) > 1:
-            logger.warning("DB Issues: multiple identical keys for dept %s" \
-                           % dept_id)
+        if delete == "Delete":
+            if 'meta.inhairited' in meta:
+                if modifyKey in meta['meta.inhairited']:
+                    return self.message(
+                            "The attribute %s is inhairited from a higher "
+                            "order department.  It cannot be deleted from "
+                            "this department: %s" % (modifyKey, deptname))
+
+            return self.deleteDeptAttr(modifyKey, int(dept_id))
 
         replaceValue = None
         if reset == "Reset":

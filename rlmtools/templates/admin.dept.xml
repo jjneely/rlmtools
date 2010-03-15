@@ -37,6 +37,7 @@
           <input type="hidden" name="dept_id" value="${dept_id}"/>
           <input type="hidden" name="modifyKey" value="${attr}"/>
           <input type="submit" name="reset" value="Reset"/>
+          <input type="submit" name="delete" value="Delete"/>
           <input type="submit" name="modify" value="Modify"/>
         </form>
       </th>

@@ -39,7 +39,7 @@
     </tr>
     <tr class="neutral">
       <td colspan="2" style="text-align: right;">
-        <form method="post" action="${baseURL}/admin/deleteHostAttr"
+        <form method="post" action="${baseURL}/admin/${call}"
               style="margin-bottom: 0">
           <input type="hidden" name="callback" value="${callback}"/>
           <input type="hidden" name="modifyKey" value="${key}"/>
