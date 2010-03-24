@@ -36,15 +36,25 @@ for r in $REPOS; do
         PID="X"
     fi
 
-    if [ "$PID" != "X" -a -e /proc/$PID ] ; then
-        # We are done...bcfg2-server is running
-        continue
-    fi
-
     if [ ! -e $LOCALREPOS/$r/bcfg2.conf ] ; then
         # No config file
         echo "$LOCALREPOS/$r lacks bcfg2.conf" > /dev/stderr
         continue
+    fi
+
+    if [ "$PID" != "X" -a -e /proc/$PID ] ; then
+        if [ $LOCALREPOS/$r/bcfg2.conf -nt $LOCALREPOS/$r/bcfg2.pid ] ; then
+            # The bcfg2.conf file is newer than the running bcfg2-server
+            # process.  We need to get it to reload the bcfg2.conf file
+            echo "Killing $r bcfg2-server for restart"
+            kill -9 $PID
+            rm -f $LOCALREPOS/$r/bcfg2.pid
+            # -9 Is needed for some weird kernel interaction with RHEL5
+            # Do not continue, drop through to where we start the bcfg2-server
+        else
+            # We are done...bcfg2-server is running
+            continue
+        fi
     fi
 
     # Start up a bcfg2 server for this repo
