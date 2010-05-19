@@ -115,6 +115,7 @@ class RLAttributes(object):
         dbattrs = self._admin.getAllAttributes(ptr)
         m, a = self.parseAttrs(dbattrs)
         newKeys = a.keys() + m.keys()
+        oldKeys = meta.keys() + attrs.keys()
         m.update(meta)
         a.update(attrs)
 
@@ -126,7 +127,11 @@ class RLAttributes(object):
                 inhairited = []
 
             for k in newKeys:
+                # Have we already found an inhairited key?
                 if k in inhairited: continue
+                # This key is not inhairited if its found lower in the tree
+                if k in oldKeys: continue
+                # OK: This key is inhairited and we've not found it before
                 inhairited.append(k)
             m['meta.inhairited'] = inhairited
         else:
@@ -153,7 +158,8 @@ class RLAttributes(object):
 
         for key in meta['meta.inhairited']:
             if key in a:
-                # We have a local version of this key that overrides the inharited
+                # We have a local version of this key that 
+                # overrides the inharited
                 meta['meta.inhairited'].remove(key)
 
         meta.update(m)
