@@ -38,3 +38,7 @@ mqueue = "/var/spool/rlmqueue"
 # Default locations of the config file
 defaultConfFiles = ['/etc/rlmtools.conf', './rlmtools.conf']
 
+# Default logging info
+logfile = ''               # This logs to syslog
+log_level = '1'            # A text represntation of an int, log level
+

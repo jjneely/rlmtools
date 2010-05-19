@@ -22,15 +22,15 @@ class Parser(ConfigParser.ConfigParser):
             return default
 
 
-def initConfig(config_files=['/etc/rlmtools.conf', './rlmtools.conf']):
+def initConfig(config_files=constants.defaultConfFiles):
     global init_logging
     if not init_logging: return
 
     parser = Parser()
     parser.read(config_files)
 
-    logfile = parser.get('main', 'logfile', '')
-    level = int(parser.get('main', 'log_level', '1'))
+    logfile = parser.get('main', 'logfile', constants.logfile)
+    level = int(parser.get('main', 'log_level', constants.log_level))
     URL = parser.get('client', 'URL', constants.URL)
     logger = logging.getLogger("rlmclient")
 
