@@ -204,7 +204,7 @@ def getLocalKey():
     return key
 
 
-def doRegister(server):
+def doRegister(server, session):
     # Need a new public/private key pair, dept, and version
     # Generate new key pair
     keypair = getLocalKey()
@@ -213,7 +213,7 @@ def doRegister(server):
     uuid = getUUID()
 
     ret = doRPC(server.register, pubKey, getDepartment(), getVersion(),
-                uuid, rhnid)
+                uuid, rhnid, session)
     
     if ret == 0:
         return ret
@@ -434,9 +434,14 @@ def main():
 
     parser = optparse.OptionParser()
     parser.add_option("-C", "--configfile", action="store",
-                      default=defaultConfFiles,
-                      dest="configfile",
-                      help="Configuration file")
+            default=defaultConfFiles,
+            dest="configfile",
+            help="Configuration File")
+    if os.path.basename(sys.argv[0]) != "ncsubless":
+        parser.add_option("-s", "--session", action="store",
+                default='',
+                dest="session",
+                help="RLMTools Initial Registration Hash (Web-Kickstart)")
 
     (options, args) = parser.parse_args()
 
@@ -453,7 +458,7 @@ def main():
         sys.exit(1)
 
     if not isRegistered(server):
-        if doRegister(server) != 0:
+        if doRegister(server, options.session) != 0:
             sys.exit()
 
     doCheckIn(server)
