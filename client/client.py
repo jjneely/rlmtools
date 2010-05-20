@@ -108,6 +108,37 @@ def getDepartment():
     return dept
 
 
+def getRPMDist():
+    "Figure out my dist tag for this OS"
+
+    packages = [('redhat-release', 'el'),
+                ('centos-release', 'el'),
+                ('fedora-release', 'fc'),
+               ]
+    ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
+                                 rpm.RPMVSF_NOHDRCHK or
+                                 rpm._RPMVSF_NODIGESTS or
+                                 rpm.RPMVSF_NEEDPAYLOAD))
+
+    for pkg, prefix in packages:
+        mi = ts.dbMatch('name', pkg)
+        for h in mi:
+            # If the Match Iterator is empty we don't get here
+            if h['version'].endswith('Client'):
+                version = h['version'][:-6]
+            elif h['version'].endswith('Server'):
+                version = h['version'][:-6]
+            else:
+                version = h['version']
+            try:
+                if int(version) < 6 and pgk[:-8] in ['redhat', 'centos']:
+                    return "%s%s" % (prefix.upper(), version)
+            except Exception:
+                pass
+            return "%s%s" % (prefix, version)
+
+    return "Unknown"
+
 def getVersion():
     "Return the version string for a Realm Linux product."
 
