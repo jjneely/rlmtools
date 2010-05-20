@@ -35,6 +35,7 @@ from datetime import datetime, timedelta
 from resultSet import resultSet
 from configDragon import config
 from rlattributes import RLAttributes
+from sessions import Session
 
 import webKickstart.libwebks
 
@@ -363,7 +364,7 @@ class APIServer(server.Server):
         
         if not self.cursor.rowcount > 0:
             # Then we put it there
-            hid = self.initHost(self.client, 1, True)
+            hid, sid = self.initHost(self.client, 1, True)
         else:
             hid = self.cursor.fetchone()[0]
             q = """update realmlinux set support = 1 where host_id = %s"""
@@ -612,8 +613,15 @@ class APIServer(server.Server):
             htype = 'install_nosupport'
         if not blessing:
             self.storeHistoryEvent(htype, hostid, fqdn)
+
+        # Generate a unique session so that we can ID this host later
+        # 43,200 seconds = 1 day
+        sess = Session(lifetime=43200, secret=config.secret)
+        sess['fqdn'] = fqdn
+        sess['hostid'] = hostid
+        sess.save()
         
-        return hostid
+        return hostid, sid
 
     def setUsageSync(self, host_id, timestamp):
         # We need to know when its safe to populate the RRDs for

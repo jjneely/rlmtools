@@ -165,10 +165,14 @@ def initHost(apiVersion, secret, fqdn):
 
     if not s.verifySecret(secret):
         log.warning("initHost() called with bad secret")
-        return 1
+        if apiVersion < 2: return 1
+        else: return (1, "")
 
-    s.initHost(fqdn, support=1)  # returns host_id
-    return 0
+    hid, sid = s.initHost(fqdn, support=1)  # returns host_id, session ID
+    if apiVersion < 2:
+        return 0
+    else:
+        return (0, sid)
 
 
 def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args, url):
