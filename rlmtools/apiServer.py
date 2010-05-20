@@ -295,7 +295,7 @@ class APIServer(server.Server):
         
         self.conn.commit()
     
-    def register(self, publicKey, dept, version, rhnid):
+    def register(self, publicKey, dept, version, rhnid, sid):
         """Workstation requests registration.  Check DB and register host as
            appropiate.  On success 0 is returned, otherwise a non-zero error
            code is returned."""
@@ -308,10 +308,31 @@ class APIServer(server.Server):
             log.info("Registered client %s attempted to re-register" \
                      % self.client)
             return 1
+        
+        if self.apiVersion >= 2:
+            if sid is not None and sid != '':
+                sess = Session(sid=sid, secret=config.secret)
+                if sess.isNew() or not sess.isValid():
+                    # We have an invalid session hash, its expired or
+                    # just junk.  NoSupport
+                    return self.createNoSupport(publicKey, dept, version, 
+                                                rhnid)
+                else:
+                    return self.__register(publicKey, dept, version, 
+                                           rhnid, sid['hostid'])
+            else:
+                # No session to match a previous initHost.  
+                # Not installed via Web-Kickstart?
+                return self.createNoSupport(publicKey, dept, version, rhnid)
+
+        ### The following is API Versions 1 and 0 ###
+
         # check to see if client has been logged in DB
-        self.cursor.execute("""select installdate from realmlinux where 
+        self.cursor.execute("""select installdate, host_id
+            from realmlinux where 
             hostname=%s and support=1""", (self.client,))
-        if not self.cursor.rowcount > 0:
+        result = resultSet(self.cursor)
+        if not result.rowcount() > 0:
             # SQL query returned zero rows...this client isn't logged
             # to be registered with support (old return code 2)
             return self.createNoSupport(publicKey, dept, version, rhnid)
@@ -325,7 +346,8 @@ class APIServer(server.Server):
             # Old return code 3
             return self.createNoSupport(publicKey, dept, version, rhnid)
 
-        return self.__register(publicKey, dept, version, rhnid)
+        return self.__register(publicKey, dept, version, rhnid, 
+                               result['host_id'])
         
 
     def bless(self, dept, version, rhnid):
@@ -371,7 +393,7 @@ class APIServer(server.Server):
             self.cursor.execute(q, (hid,))
 
         # Update db 
-        ret = self.__register(publicKey, dept, version, rhnid)
+        ret = self.__register(publicKey, dept, version, rhnid, hid)
 
         # Log history information
         if ret == 0:
@@ -390,10 +412,10 @@ class APIServer(server.Server):
 
         log.info("Registering no-support for %s" % self.client)
 
-        self.initHost(self.client, 0)
-        return self.__register(publicKey, dept, version, rhnid)
+        hid, sid = self.initHost(self.client, 0)
+        return self.__register(publicKey, dept, version, rhnid, hid)
 
-    def __register(self, publicKey, dept, version, rhnid):
+    def __register(self, publicKey, dept, version, rhnid, host_id):
         log.info("Registering %s" % self.client)
 
         if self.apiVersion > 0 and not isinstance(rhnid, int):
@@ -419,7 +441,6 @@ class APIServer(server.Server):
             return 4
 
         try:
-            id = self.getHostID(byFQDN=True) 
             deptid = self.getDeptID(dept)
 
             q1 = "delete from hostkeys where host_id = %s"
@@ -428,16 +449,17 @@ class APIServer(server.Server):
                    where host_id=%s"""
             q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
-            self.cursor.execute(q1, (id,))
+            self.cursor.execute(q1, (host_id,))
             if self.apiVersion > 0:
-                self.cursor.execute(q2, (deptid, version, self.uuid, rhnid, id))
+                self.cursor.execute(q2, (deptid, version, self.uuid, 
+                                         rhnid, host_id))
             else:
-                self.cursor.execute(q2, (deptid, version, None, None, id))
-            self.cursor.execute(q3, (id, publicKey))
+                self.cursor.execute(q2, (deptid, version, None, None, host_id))
+            self.cursor.execute(q3, (host_id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
-                                (id,))
+                                (host_id,))
             self.cursor.execute("""insert into lastheard (host_id, `timestamp`)
-                                   values (%s, %s)""", (id, date))
+                                   values (%s, %s)""", (host_id, date))
             self.conn.commit()
         except MySQLdb.Warning, e:
             # What's this about?

@@ -109,12 +109,13 @@ def getServerKey(apiVersion, uuid=None):
     return ret
     
 
-def register(apiVersion, publicKey, dept, version, uuid=None, rhnid=None):
+def register(apiVersion, publicKey, dept, version, uuid=None, rhnid=None,
+             sid=None):
     """Workstation requests registration.  Check DB and register host as
        appropiate.  A false return code means that registration failed."""
     
     s = server.Server(apiVersion, getHostName(), uuid)
-    ret = s.register(publicKey, dept, version, rhnid)
+    ret = s.register(publicKey, dept, version, rhnid, sid)
     return ret
 
 
