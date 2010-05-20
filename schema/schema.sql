@@ -176,8 +176,8 @@ create table webkickstartkeys (
 ) ENGINE=InnoDB;
 
 create table sessions (
-    session_id     INTEGER PRIMARY KEY,
-    sid            varchar(256) unique not null,
+    session_id     INTEGER PRIMARY KEY auto_increment,
+    sid            varchar(255) unique not null,
     createtime     float not null,
     timeout        float not null,
     data           text,

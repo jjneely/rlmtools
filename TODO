@@ -3,14 +3,15 @@
 
 Server:
 
- * Fully implement APIv2
- + Using sessions code, have machines initially register with a
+ * Using sessions code, have machines initially register with a
    hash, rather than hostname checking
  * set/get Bcfgs Dept strings
+    * Done, the bcfg2.init and bcfg2.url attributes
 
 Client:
 
  * A --configure or similar option to pull the Bcfg2 init string
    and run bcfg2 in the proper incatation to initially configure the
    machine?  Optional --dept and/or --password
+    * Done: this is its own tool now called ncsubootstrap
 

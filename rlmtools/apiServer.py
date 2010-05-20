@@ -338,7 +338,7 @@ class APIServer(server.Server):
             return self.createNoSupport(publicKey, dept, version, rhnid)
 
         # Check the Time window for 24 hours
-        installDate = self.cursor.fetchone()[0]
+        installDate = result['installdate']
         if datetime.today() - timedelta(days=1) > installDate:
             # Client did not register inside 24 hours
             log.info("Client %s attempted to register outside security " \
@@ -643,7 +643,7 @@ class APIServer(server.Server):
         sess['hostid'] = hostid
         sess.save()
         
-        return hostid, sid
+        return hostid, sess.sid
 
     def setUsageSync(self, host_id, timestamp):
         # We need to know when its safe to populate the RRDs for
