@@ -42,3 +42,6 @@ defaultConfFiles = ['/etc/rlmtools.conf', './rlmtools.conf']
 logfile = ''               # This logs to syslog
 log_level = '1'            # A text represntation of an int, log level
 
+# Default Bcfg2 Bootstrap info.  
+bcfg2_init = '/usr/sbin/bcfg2 -qv -u %(uuid)s -x %(password)s -p %(profile)s -S %(url)s'
+

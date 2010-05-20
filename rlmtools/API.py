@@ -171,10 +171,9 @@ def initHost(apiVersion, secret, fqdn):
     return 0
 
 
-def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args):
-    """Set the bcfg2.init attribute for the given department name.
-       You need the admin secret to do so.  This API function is used
-       by the script that syncs Bcfg2 repos to the config servers."""
+def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args, url):
+    """Set the bcfg2.init, bcfg2.url attributes for the given department name.
+       You need the admin secret to do so."""
 
     if apiVersion < 2:
         # This function doesn't exist on apiVersions < 2
@@ -185,7 +184,8 @@ def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args):
         log.warning("setDeptBcfg2() called with bad secret")
         return 1
 
-    return s.setDeptBcfg2(deptName, bcfg2args)
+    return s.setDeptBcfg2(deptName, bcfg2args, url)
+
 
 def getDeptBcfg2(apiVersion, dept):
     """Return the command string needed to setup Bcfg2 the first time

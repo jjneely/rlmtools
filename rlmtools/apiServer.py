@@ -503,13 +503,14 @@ class APIServer(server.Server):
     
         return result[0]
 
-    def setDeptBcfg2(self, deptName, bcfg2args):
+    def setDeptBcfg2(self, deptName, bcfg2args, url):
         """Set bcfg2.init attribute on the dept name given"""
         rla = RLAttributes()
         dept_id = self.getDeptID(deptName)
         aptr = rla.getDeptAttrPtr(dept_id)
 
         rla.setAttribute(aptr, 'bcfg2.init', bcfg2args)
+        rla.setAttribute(aptr, 'bcfg2.url', url)
 
         # XXX: Return code / check?
         return 0
@@ -522,10 +523,19 @@ class APIServer(server.Server):
         dept_id = self.getDeptID(deptName)
         m, a = rla.deptAttrs(dept_id)
         if 'bcfg2.init' not in a:
-            return (2, "")
+            return (2, {})
         if a['bcfg2.init'] is None or a['bcfg2.init'] == "":
-            return (3, "")
-        return (0, str(a['bcfg2.init']))
+            return (3, {})
+        if 'bcfg2.url' not in a:
+            return (4, {})
+        if a['bcfg2.url'] is None or a['bcfg2.url'] == "":
+            return (5, {})
+
+        d = {}
+        d['init'] = str(a['bcfg2.init'])
+        d['url'] = str(a['bcfg2.url'])
+
+        return (0, d)
 
     def loadWebKickstart(self):
         rla = RLAttributes()
