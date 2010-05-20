@@ -131,7 +131,7 @@ def getRPMDist():
             else:
                 version = h['version']
             try:
-                if int(version) < 6 and pgk[:-8] in ['redhat', 'centos']:
+                if version in ['5', '4'] and prefix == 'el':
                     return "%s%s" % (prefix.upper(), version)
             except Exception:
                 pass
