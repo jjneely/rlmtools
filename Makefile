@@ -3,7 +3,9 @@ SPECFILE=rlmtools.spec
 VERSION := $(shell rpm -q --qf "%{VERSION}\n" --specfile $(SPECFILE) \
 	         --define "_sourcedir $(shell pwd)" | head -1)
 
-EXEFILES=   client.py sysinfo.py usagelog.py ncsureport.py
+EXEFILES=   client.py sysinfo.py usagelog.py \
+			ncsureport.py ncsubootstrap.py   \
+			ncsurename.py
 
 ifndef PYTHON
 PYTHON=/usr/bin/python
@@ -49,6 +51,8 @@ install:
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsuclient
 	ln -s /usr/share/rlmtools/client.py     $(DESTDIR)/usr/bin/ncsubless
 	ln -s /usr/share/rlmtools/ncsureport.py $(DESTDIR)/usr/bin/ncsureport
+	ln -s /usr/share/rlmtools/ncsubootstrap.py $(DESTDIR)/usr/bin/ncsubootstrap
+	ln -s /usr/share/rlmtools/ncsurename.py $(DESTDIR)/usr/bin/ncsurename
 	
 	install -m 644 rlmtools/static/css/*.css $(DESTDIR)$(SITELIB)/rlmtools/static/css/
 	install -m 644 rlmtools/static/*.png  $(DESTDIR)$(SITELIB)/rlmtools/static/
