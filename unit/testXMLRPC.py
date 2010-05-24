@@ -169,10 +169,10 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         i = doRPC(self.server.hello, 1)
         self.assertEqual("Hello World", i)
 
-    def test100SupportedHost(self):
+    def test110SupportedHost(self):
         secret = configDragon.ConfigDragon().secret
         fqdn = doRPC(self.server.getAddress, 1)[1]
-        print "Support FQDN: %s" % fqdn
+        print "APIv1 Support FQDN: %s" % fqdn
 
         print "initHost()..."
         i = doRPC(self.server.initHost, 1, secret, fqdn)
@@ -226,9 +226,67 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertTrue(rlPub.verifyString(i[0], i[1]))
         blob = key.decStringFromAscii(i[0])
         
-    def test105NoSupport(self):
+    def test120SupportedHost(self):
+        secret = configDragon.ConfigDragon().secret
+        fqdn = doRPC(self.server.getAddress, 2)[1]
+        print "APIv2 Support FQDN: %s" % fqdn
+
+        print "initHost()..."
+        ret, sid = doRPC(self.server.initHost, 2, secret, fqdn)
+        self.assertEqual(ret, 0)
+        self.assertTrue(type(sid) == type(""))
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 2, self.uuid, "")
+        self.assertFalse(i)
+
+        print "register()..."
+        key = getLocalKey(self.location)
+        sig = key.signString(self.uuid)
+        i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
+                  "test-version", self.uuid, 0, sid)
+        self.assertEqual(i, 0)
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 2, self.uuid, sig)
+        self.assertTrue(i)
+
+        print "isSupported()..."
+        i = doRPC(self.server.isSupported, 2, self.uuid)
+        self.assertTrue(i)
+
+        print "checkIn()..."
+        i = doRPC(self.server.checkIn, 2, self.uuid, sig)
+        self.assertEqual(i, 0)
+
+        print "message()..."
+        m = {}
+        m['type'] = 'boot'
+        m['success'] = True
+        m['timestamp'] = time.time()
+        m['data'] = base64.encodestring("")
+        i = doRPC(self.server.message, 2, self.uuid, sig, m)
+        self.assertEqual(i, 0)
+
+        print "updateRHNSystemID()..."
+        i = doRPC(self.server.updateRHNSystemID, 2, self.uuid, sig, 1)
+        self.assertEqual(i, 0)
+
+        print "getServerKey()..."
+        i = doRPC(self.server.getServerKey, 2, self.uuid)
+        self.assertTrue(len(i) == 993) # Textual length of pubkey
+        rlPub = ezPyCrypto.key()
+        rlPub.importKey(i)
+
+        print "getEncKeyFile()..."
+        i = doRPC(self.server.getEncKeyFile, 2, self.uuid, sig)
+        self.assertFalse(i == [])
+        self.assertTrue(rlPub.verifyString(i[0], i[1]))
+        blob = key.decStringFromAscii(i[0])
+        
+    def test115NoSupport(self):
         fqdn = doRPC(self.server.getAddress, 1)[1]
-        print "No Support FQDN: %s" % fqdn
+        print "APIv1 No Support FQDN: %s" % fqdn
 
         print "isRegistered()..."
         i = doRPC(self.server.isRegistered, 1, self.uuid, "")
@@ -259,6 +317,39 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         i = doRPC(self.server.getEncKeyFile, 1, self.uuid, sig)
         self.assertTrue(i == [])
 
+    def test125NoSupport(self):
+        fqdn = doRPC(self.server.getAddress, 2)[1]
+        print "APIv2 No Support FQDN: %s" % fqdn
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 2, self.uuid, "")
+        self.assertFalse(i)
+
+        print "register()..."
+        key = getLocalKey(self.location)
+        sig = key.signString(self.uuid)
+        i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
+                  "test-version", self.uuid, 0)
+        self.assertEqual(i, 0)
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 2, self.uuid, sig)
+        self.assertTrue(i)
+
+        print "isSupported()..."
+        i = doRPC(self.server.isSupported, 2, self.uuid)
+        self.assertFalse(i)
+
+        print "getServerKey()..."
+        i = doRPC(self.server.getServerKey, 2, self.uuid)
+        self.assertTrue(len(i) == 993) # Textual length of pubkey
+        rlPub = ezPyCrypto.key()
+        rlPub.importKey(i)
+
+        print "getEncKeyFile()..."
+        i = doRPC(self.server.getEncKeyFile, 2, self.uuid, sig)
+        self.assertTrue(i == [])
+
     def test200SecretOps(self):
         secret = configDragon.ConfigDragon().secret
         dump = doRPC(self.server.dumpClients, 2, secret)
@@ -282,18 +373,20 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         secret = configDragon.ConfigDragon().secret
         ret = doRPC(self.server.getDeptBcfg2, 2, "root")
         
-        # if bcfg2.init doesn't exist yet here
-        self.assertTrue(ret[0] == 2)
+        # RLMTools found all the attributes it needed
+        self.assertTrue(ret[0] == 0)
 
-        init = "-S http://foobar.com:8072 -x %(password)s -n -qv"
+        url = "http://foobar.com:8072"
+        init = "-S %(url)s -x %(password)s -n -qv"
         ret = doRPC(self.server.setDeptBcfg2, 2, secret, "oit",
-                    init)
+                init, url)
         self.assertTrue(ret == 0)
 
-        ret = doRPC(self.server.getDeptBcfg2, 2, "oit-hs")
-        print ret
-        self.assertTrue(ret[0] == 0)
-        self.assertTrue(ret[1] == init)
+        ret, dict = doRPC(self.server.getDeptBcfg2, 2, "oit-hs")
+        print ret, dict
+        self.assertTrue(ret == 0)
+        self.assertTrue(dict['init'] == init)
+        self.assertTrue(dict['url'] == url)
 
 
 if __name__ == "__main__":
