@@ -319,7 +319,7 @@ class APIServer(server.Server):
                                                 rhnid)
                 else:
                     return self.__register(publicKey, dept, version, 
-                                           rhnid, sid['hostid'])
+                                           rhnid, sess['hostid'])
             else:
                 # No session to match a previous initHost.  
                 # Not installed via Web-Kickstart?

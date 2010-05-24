@@ -178,8 +178,8 @@ create table webkickstartkeys (
 create table sessions (
     session_id     INTEGER PRIMARY KEY auto_increment,
     sid            varchar(255) unique not null,
-    createtime     float not null,
-    timeout        float not null,
+    createtime     double not null,
+    timeout        double not null,
     data           text,
 
     KEY `session_idx` (`sid`)

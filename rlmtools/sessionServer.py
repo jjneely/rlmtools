@@ -21,13 +21,14 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 # create table sessions (
-#    session_id     INTEGER PRIMARY KEY,
-#    sid            varchar(32) unique not null,
-#    createtime     float not null,
-#    timeout        float not null,
-#    data           text
+#     session_id     INTEGER PRIMARY KEY auto_increment,
+#     sid            varchar(255) unique not null,
+#     createtime     double not null,
+#     timeout        double not null,
+#     data           text,
+#
+#     KEY `session_idx` (`sid`)
 # );
-# create index SESSION_IDX on SESSION(sid);
 
 import time
 import logging
