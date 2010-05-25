@@ -80,6 +80,9 @@ def getAddress(apiVersion):
         except AttributeError:
             ip = cherrypy.request.remote_addr
 
+    if ip.startswith('::ffff:'):
+        # Ugh...IPv6 crap in v4 addresses
+        ip = ip[7:]
     try:
         addr = socket.gethostbyaddr(ip)
     except socket.herror, e:
