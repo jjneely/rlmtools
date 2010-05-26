@@ -334,6 +334,7 @@ class APIServer(server.Server):
                     return self.createNoSupport(publicKey, dept, version, 
                                                 rhnid)
                 else:
+                    log.info("Registering support for %s" % self.client)
                     return self.__register(publicKey, dept, version, 
                                            rhnid, sess['hostid'])
             else:
