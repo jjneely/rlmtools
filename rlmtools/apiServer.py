@@ -191,7 +191,7 @@ class APIServer(server.Server):
 
         self.cursor.execute(q4, (self.uuid,))
         hostinfo = resultSet(self.cursor).dump()[0]
-        if hostinfo['hostname'] != self.client:
+        if not self.cmpHostname(hostinfo['hostname'], self.client):
             self.changeHostname(hostinfo['host_id'], hostinfo['hostname'],
                                 self.client)
 
@@ -260,12 +260,28 @@ class APIServer(server.Server):
 
         host_id = self.getHostID()
         oldname = self.getHostName(host_id) # Query the DB for the old name
-        if self.client == oldname:
+        if self.cmpHostname(self.client, oldname):
             # Name change is complete...it didn't need updating
             return 0
 
         self.changeHostname(host_id, oldname, self.client)
         return 0
+
+    def cmpHostname(self, h1, h2):
+        "Compare host names.  Handle the :ID:foo parts"
+
+        i = h1.find(":ID:")
+        if i == -1:
+            t1 = h1
+        else:
+            t1 = h1[:i]
+        i = h2.find(":ID:")
+        if i == -1:
+            t2 = h2
+        else:
+            t2 = h2[:i]
+
+        return t1 == t2
 
     def changeHostname(self, hostID, oldname, newname):
         q1 = """select host_id from realmlinux where hostname = %s"""
@@ -346,6 +362,7 @@ class APIServer(server.Server):
             # Old return code 3
             return self.createNoSupport(publicKey, dept, version, rhnid)
 
+        log.info("Registering support for %s" % self.client)
         return self.__register(publicKey, dept, version, rhnid, 
                                result['host_id'])
         
@@ -610,14 +627,25 @@ class APIServer(server.Server):
         dept = self.getDeptID('unknown')
         self.cursor.execute(q1, (fqdn,))
         if self.cursor.rowcount == 0:
+            # Create a new entry
             self.cursor.execute(q3, (fqdn, date, dept, support))
             self.cursor.execute(q1, (fqdn,))
             hostid = self.cursor.fetchone()[0]
-        else:
+        elif self.apiVersion < 2:
+            # reuse the old entry
             hostid = self.cursor.fetchone()[0]
             self.cursor.execute(q2, (date, dept, support, hostid))
             self.cursor.execute(q4, (hostid,))
             self.cursor.execute(q5, (hostid,))
+        else:
+            # For APIv2 if this is a duplicate, rename the old host
+            # and create a completely new entry rather than reuse an old
+            oldhostid = self.cursor.fetchone()[0]
+            self.changeHostname(oldhostid, fqdn, 
+                                "%s:ID:%s" % (fqdn, oldhostid))
+            self.cursor.execute(q3, (fqdn, date, dept, support))
+            self.cursor.execute(q1, (fqdn,))
+            hostid = self.cursor.fetchone()[0]
 
         self.cursor.execute(q6, (hostid,))
         self.cursor.execute(q7, (hostid,))
