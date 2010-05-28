@@ -22,12 +22,14 @@ for r in $REPOS; do
     if [ -d $LOCALREPOS/$r ] ; then
         cd $LOCALREPOS/$r
         git pull
+        echo
     elif [ -e $LOCALREPOS/$r ] ; then
         echo "ERROR: Non-directory $LOCALREPOS/$r already exists..." > /dev/stderr
         continue
     else
         cd $LOCALREPOS
         git clone $MASTERREPOS/$r $r
+        echo
     fi
 
     if [ -e $LOCALREPOS/$r/bcfg2.pid ] ; then

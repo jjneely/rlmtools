@@ -27,11 +27,13 @@ repo: $(REPODIR)/root
 update: $(REPODIR)/root
 	for r in `ls -d1 $(REPODIR)/*` ; do \
 		if [ "$$r" = "$(REPODIR)/root" ] ; then continue ; fi;  \
+		if [ "$$r" = "$(REPODIR)/cls-test" ] ; then continue ; fi;  \
 		if [ ! -d "$$r"  ] ; then continue ; fi;  \
 		pushd $$r;  \
 		git checkout master;  \
 		git pull $(REPODIR)/root master ; \
 		[ "$$?" == "0" ] || exit 2 ; \
+		echo ; \
 		popd ; \
 	done ;
 
