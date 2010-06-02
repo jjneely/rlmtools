@@ -181,6 +181,11 @@ class RLMetadata(Metadata):
 
 
     def add_client(self, client_name, attribs):
+        logger.error("RLMetadata: Inside add_client()" \
+                     "WE SHOULD NOT BE HERE.  ABORTING!")
+        assert(False)
+
+        # The following left for future notes.  It is not executed
         logger.info("RLMetadata: Creating new host %s with attributes %s" % \
                     (client_name, attribs))
 
@@ -193,12 +198,13 @@ class RLMetadata(Metadata):
         logger.warning("RLMetadata: Making up UUID %s for %s" \
                        % (u, client_name))
 
+        # APIv2 specified here
         server = APIServer(2, client_name, u)
         attributes = RLAttributes()
 
         # Setup a new client.  We've not seen this client before
         # it becomes un-supported
-        host_id = server.initHost(client_name, 0)
+        host_id, sid = server.initHost(client_name, 0)
 
         for key, value in attribs.iteritems():
             attributes.setHostAttribute(host_id, "bcfg2.%s" % key, value)
@@ -212,6 +218,18 @@ class RLMetadata(Metadata):
         for key, value in attribs.iteritems():
             attributes.setHostAttribute(host_id, "bcfg2.%s" % key, value)
 
+    def AuthenticateConnection(self, cert, user, password, address):
+        "Enforce client's authenticating with their UUID."
+        
+        # Make sure we exist
+        if user not in self.uuid:
+            # We don't?  Or bad UUID?  Deny the client.
+            logger.info("RLMetadata: Denying UUID '%s' with address '%s'.  " \
+                        "Unknown UUID/client." % (user, address))
+            return False
+
+        return Metadata.AuthenticateConnection(self, cert, user, 
+                                               password, address)
 
 def main():
     uuids = UUID()

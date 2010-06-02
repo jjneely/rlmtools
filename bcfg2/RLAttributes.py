@@ -22,7 +22,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
     version = '0'
 
     def __init__(self, core, datastore):
-        logger.info("Bringing up RLAttributes()...")
+        logger.info("Bringing up RLAttributes...")
         Bcfg2.Server.Plugin.Plugin.__init__(self, core, datastore)
         Bcfg2.Server.Plugin.Connector.__init__(self)
         self.rla = RLA()
