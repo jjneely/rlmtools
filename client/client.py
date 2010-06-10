@@ -104,7 +104,10 @@ def getDepartment():
         fd.close()
     except IOError, e:
         dept = "ncsu"
-   
+  
+    # Normalization
+    dept = dept.replace(' ', '-').lower()
+
     return dept
 
 
@@ -319,8 +322,8 @@ def doCheckIn(server):
     uuid = getUUID()
     sig = key.signString(uuid)
 
-    ret = doRPC(server.checkIn, uuid, sig)
-        
+    ret = doRPC(server.checkIn, uuid, sig, getDepartment())
+    
     if ret == 0:
         pass
     elif ret == 1:

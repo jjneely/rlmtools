@@ -487,9 +487,12 @@ class APIServer(server.Server):
         return 0
     
     
-    def checkIn(self, uuid, sig):
+    def checkIn(self, uuid, sig, dept=None):
         """Workstation checking in.  Update status in DB."""
-        
+       
+        q1 = """update realmlinux set dept_id = %s where host_id = %s"""
+        q2 = """update lastheard set `timestamp` = %s where host_id = %s"""
+
         date = datetime.today()
 
         if not self.verifyClient(uuid, sig):
@@ -500,8 +503,14 @@ class APIServer(server.Server):
             # Cannot check in non-registered client
             return 2
 
-        self.cursor.execute("""update lastheard
-           set `timestamp` = %s where host_id = %s""", (date, id))
+        self.cursor.execute(q2, (date, id))
+
+        if self.apiVersion >= 2:
+            dept = dept.strip()
+            if self.getHostDept(id) != dept and dept != '':
+                dept_id = self.getDeptID(dept)
+                self.cursor.execute(q1, (dept_id, id))
+
         self.conn.commit()
 
         return 0

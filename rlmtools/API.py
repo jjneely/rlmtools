@@ -271,15 +271,26 @@ def isSupported(apiVersion, uuid=None):
     return s.isSupported()
 
 
-def checkIn(apiVersion, publicKey, sig):
+def checkIn(apiVersion, publicKey, sig, dept=None):
     """Workstation checking in.  Update status in DB."""
+
+    if apiVersion < 2 and dept is not None:
+        raise Fault(1, "checkIn() has only 3 arguments at apiVersion %s" \
+                    % apiVersion)
+    if apiVersion >= 2 and dept is None:
+        raise Fault(1, "checkIn() has only 4 arguments at apiVersion %s" \
+                    % apiVersion)
     
     if apiVersion == 0:
         s = server.Server(apiVersion, getHostName())
     else:
         s = server.Server(apiVersion, getHostName(), uuid=publicKey)
 
-    ret = s.checkIn(publicKey, sig)
+    if apiVersion < 2:
+        ret = s.checkIn(publicKey, sig)
+    else:
+        ret = s.checkIn(publicKey, sig, dept)
+
     return ret
 
 
