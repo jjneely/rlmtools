@@ -34,15 +34,22 @@ def initConfig(config_files=constants.defaultConfFiles):
     URL = parser.get('client', 'URL', constants.URL)
     logger = logging.getLogger("rlmclient")
 
+    def syslogHandler():
+        # When syslog isn't running we need to catch the socket errors
+        try:
+            return logging.handlers.SysLogHandler("/dev/log")
+        except:
+            return logging.StreamHandler()
+
     fileError = None
     if logfile == '-':
         handler = logging.StreamHandler()
     elif logfile == '':
-        handler = logging.handlers.SysLogHandler("/dev/log")
+        handler = syslogHandler()
     else:
         if not os.access(logfile, os.W_OK):
             fileError = "IO Error accessing: %s" % logfile
-            handler = logging.handlers.SysLogHandler("/dev/log")
+            handler = syslogHandler()
         else:
             handler = logging.FileHandler(logfile)
 

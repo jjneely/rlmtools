@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 1.9.7
+Version: 1.9.8
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -108,6 +108,9 @@ fi
 %{python_sitelib}/*
 
 %changelog
+* Wed Aug 18 2010 Jack Neely <jjneely@ncsu.edu 1.9.8-1
+- Handle tracebacks in loggin when syslog isn't running
+
 * Thu Feb 18 2010 Jack Neely <jjneely@ncsu.edu> 1.9.1.-1
 - add a macro so that we can take over realmconfig or co-exist peacefully
 - Bump to 1.9.1 
