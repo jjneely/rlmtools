@@ -1,7 +1,8 @@
 import logging
 import Bcfg2.Server.Plugin
 
-from Bcfg2.Server.Plugins.Metadata import Metadata, MetadataQuery
+from Bcfg2.Server.Plugins.Metadata import Metadata, MetadataQuery, \
+        MetadataConsistencyError, MetadataRuntimeError
 
 from rlmtools.server import Server
 from rlmtools.rlattributes import RLAttributes
