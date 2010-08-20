@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 1.9.8
+Version: 1.9.9
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -15,13 +15,6 @@ BuildArch: noarch
 BuildRequires: python-devel
 Obsoletes: ncsu-rlmtools
 Provides: ncsu-rlmtools
-
-# Are we replacing realmconfig (>=EL6?) or existing with it (<=EL5)?
-%define replaceRC 0
-
-%if %{replaceRC}
-Provides: realmconfig
-%endif
 
 %description
 The Realm Linux Management Tools provide infrastructure to manage certain
@@ -51,25 +44,8 @@ related cron jobs.
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
 
-%if ! %{replaceRC}
-rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/cron.daily/autoupdate.cron.sh
-rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/autoupdate
-%endif
-
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-
-%preun
-%if %{replaceRC}
-if [ $1 = 0 ]; then
-    chkconfig --del autoupdate
-fi
-%endif
-
-%post
-%if %{replaceRC}
-chkconfig --add autoupdate
-%endif
 
 %post server
 
@@ -87,10 +63,6 @@ fi
 %files
 %defattr(-,root,root)
 %dir %{_datadir}/rlmtools
-%if %{replaceRC}
-%{_sysconfdir}/cron.daily/autoupdate.cron.sh
-%{_sysconfdir}/rc.d/init.d/autoupdate
-%endif
 %{_sysconfdir}/cron.update/*
 %{_sysconfdir}/cron.weekly/*
 %{_datadir}/rlmtools/*.py*
@@ -108,6 +80,10 @@ fi
 %{python_sitelib}/*
 
 %changelog
+* Fri Aug 20 2010 Jack Neely <jjneely@ncsu.edu> 1.9.9-1
+- Bcfg2 and Autoupdate cron jobs removed.  They now live in Bcfg2 proper
+- macros for dealing with conflicts with realmconfig removed
+
 * Wed Aug 18 2010 Jack Neely <jjneely@ncsu.edu 1.9.8-1
 - Handle tracebacks in loggin when syslog isn't running
 
