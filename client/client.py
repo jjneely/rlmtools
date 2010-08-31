@@ -185,7 +185,7 @@ def getLocalKey():
     "Return an ezPyCrypto keypair for this local host."
     
     if not os.access(privateKey, os.R_OK):
-        logger.error("Creating public/private keypair.")
+        logger.info("RLMTools: Creating public/private keypair.")
         key = ezPyCrypto.key(1024)
         saveKey(key)
     else: 
