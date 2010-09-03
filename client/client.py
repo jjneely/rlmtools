@@ -28,7 +28,7 @@ import socket
 import stat
 import time
 import optparse
-import rpm
+import yum
 import logging
 import uuid
 
@@ -118,21 +118,19 @@ def getRPMDist():
                 ('centos-release', 'el'),
                 ('fedora-release', 'fc'),
                ]
-    ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
-                                 rpm.RPMVSF_NOHDRCHK or
-                                 rpm._RPMVSF_NODIGESTS or
-                                 rpm.RPMVSF_NEEDPAYLOAD))
 
+    yb = yum.YumBase()
+    yb.preconf.debuglevel = 0  # Yum quiet mode
+    yb.preconf.init_plugins = False # No plugins (like RHN)
     for pkg, prefix in packages:
-        mi = ts.dbMatch('name', pkg)
-        for h in mi:
-            # If the Match Iterator is empty we don't get here
-            if h['version'].endswith('Client'):
-                version = h['version'][:-6]
-            elif h['version'].endswith('Server'):
-                version = h['version'][:-6]
+        POs = yb.rpmdb.searchNevra(name=pkg)
+        for p in POs:
+            if p.version.endswith('Client'):
+                version = p.version[:-6]
+            elif p.version.endswith('Server'):
+                version = p.version[:-6]
             else:
-                version = h['version']
+                version = p.version
             try:
                 if version in ['5', '4'] and prefix == 'el':
                     return "%s%s" % (prefix.upper(), version)
@@ -149,16 +147,15 @@ def getVersion():
                 ('centos-release', 'CentOS'),
                 ('fedora-release', 'FC'),
                ]
-    ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
-                                 rpm.RPMVSF_NOHDRCHK or
-                                 rpm._RPMVSF_NODIGESTS or
-                                 rpm.RPMVSF_NEEDPAYLOAD))
 
+    yb = yum.YumBase()
+    yb.preconf.debuglevel = 0  # Yum quiet mode
+    yb.preconf.init_plugins = False # No plugins (like RHN)
     for pkg, prefix in packages:
-        mi = ts.dbMatch('name', pkg)
-        for h in mi:
+        POs = yb.rpmdb.searchNevra(name=pkg)
+        for p in POs:
             # If the Match Iterator is empty we don't get here
-            return "%s%s" % (prefix, h['version'])
+            return "%s%s" % (prefix, p.version)
 
     return "Unknown"
     
