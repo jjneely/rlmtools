@@ -386,7 +386,7 @@ def doBlessing(server):
     if ret != 0:
         logger.error("Blessing failed with return code %s" % ret, True)
     else:
-        logger.error("Blessing successful")
+        logger.info("Blessing successful")
         print "Blessing successful.  This machine is now a trusted machine"
         print "on NCSU's network."
 
