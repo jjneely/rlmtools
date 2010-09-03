@@ -115,6 +115,8 @@ def getRPMDist():
     "Figure out my dist tag for this OS"
 
     packages = [('redhat-release', 'el'),
+                ('redhat-release-server', 'el'),
+                ('redhat-release-workstation', 'el'),
                 ('centos-release', 'el'),
                 ('fedora-release', 'fc'),
                ]
@@ -129,6 +131,8 @@ def getRPMDist():
                 version = p.version[:-6]
             elif p.version.endswith('Server'):
                 version = p.version[:-6]
+            elif p.version.endswith('Workstation'):
+                version = p.version[:-11]
             else:
                 version = p.version
             try:
@@ -144,6 +148,8 @@ def getVersion():
     "Return the version string for a Realm Linux product."
 
     packages = [('redhat-release', ''),
+                ('redhat-release-workstation', ''),
+                ('redhat-release-server', ''),
                 ('centos-release', 'CentOS'),
                 ('fedora-release', 'FC'),
                ]
