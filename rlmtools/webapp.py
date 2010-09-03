@@ -155,6 +155,12 @@ class Application(AppHelpers):
             if not client[service]:
                 client['status'] = False
 
+        # Optional services that can turn a client red
+        services = ['bcfg2']
+        for service in services:
+            if client.has_key(service) and not client[service]:
+                client['status'] = False
+
         return client
 
     def dept(self, dept_id):
