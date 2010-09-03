@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 1.9.9
+Version: 2.0.0
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -33,6 +33,14 @@ Obsoletes: ncsu-rlmtools-server
 %description server
 The Realm Linux Management Tools web frontend, database backend, and
 related cron jobs.
+
+%package bcfg2
+Summary: RLMTools plugins for the Bcfg2 Configuration Management Server
+Group: Applications/Internet
+Requires: rlmtools-server, bcfg2-server
+
+%description bcfg2
+RLMTools plugins for the Bcfg2 Configuration Management Server.
 
 %prep
 %setup -q 
@@ -77,9 +85,17 @@ fi
 %config(noreplace) %{_sysconfdir}/logrotate.d/*
 %{_datadir}/rlmtools/unit
 %{_datadir}/rlmtools/server
-%{python_sitelib}/*
+%{python_sitelib}/rlmtools
+
+%files bcfg2
+%defattr(-,root,root)
+%{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Fri Sep 03 2010 Jack Neely <jjneely@ncsu.edu> 2.0.0-1
+- Final code touch ups for 2.0
+- Add a bcfg2 subpackage with the Bcfg2 plugins
+
 * Fri Aug 20 2010 Jack Neely <jjneely@ncsu.edu> 1.9.9-1
 - Bcfg2 and Autoupdate cron jobs removed.  They now live in Bcfg2 proper
 - macros for dealing with conflicts with realmconfig removed

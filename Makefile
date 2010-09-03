@@ -7,6 +7,8 @@ EXEFILES=   client.py sysinfo.py usagelog.py \
 			ncsureport.py ncsubootstrap.py   \
 			ncsurename.py
 
+BCFG2=      RLAttributes.py RLMetadata.py
+
 ifndef PYTHON
 PYTHON=/usr/bin/python
 endif
@@ -31,6 +33,7 @@ install:
 	install -d -m 755 $(DESTDIR)/etc/rc.d/init.d
 	install -d -m 1777 $(DESTDIR)/var/spool/rlmqueue
 	
+	install -d -m 755 $(DESTDIR)$(SITELIB)/Bcfg2/Server/Plugins
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools/static/css
 	install -d -m 755 $(DESTDIR)$(SITELIB)/rlmtools/templates
@@ -67,6 +70,11 @@ install:
 	install -m 644 rlmtools.cron $(DESTDIR)/etc/cron.d/
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	install -m 644 rlmlogs $(DESTDIR)/etc/logrotate.d/
+	
+	for FILE in $(BCFG2) ; do \
+		install -m 644 bcfg2/$$FILE \
+		    $(DESTDIR)$(SITELIB)/Bcfg2/Server/Plugins/ ; \
+	done
 
 clean:
 	rm -f `find . -name \*.pyc -o -name \*~`
