@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import sys
+import re
+import os
 import traceback
 import logging
 import Bcfg2.Server.Plugin
@@ -26,6 +28,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         Bcfg2.Server.Plugin.Plugin.__init__(self, core, datastore)
         Bcfg2.Server.Plugin.Connector.__init__(self)
         self.rla = RLA()
+        self.webksConf = "%s/webkickstart/groups.conf" % datastore
 
     def get_additional_data(self, metadata):
         if metadata.uuid is None or metadata.uuid == "":
@@ -54,5 +57,43 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         return {}
 
     def get_additional_groups(self, metadata):
-        return []
+        if metadata.uuid is None or metadata.uuid == "":
+            return []
 
+        logger.info("Building groups for UUID %s" % metadata.uuid)
+        groups = []
+        
+        try:
+            host_id = self.rla.getUUIDID(metadata.uuid)
+            if host_id is None:
+                logger.warning("Could not find a host_id for UUID %s" \
+                               % metadata.uuid)
+                return groups
+            meta, attributes = self.rla.hostAttrs(host_id)
+            attributes.update(meta)
+            if 'bcfg2.groups' in attributes:
+                groups.extend(attributes['bcfg2.groups'].split())
+        except Exception, e:
+            text = traceback.format_exception(sys.exc_type,
+                                              sys.exc_value,
+                                              sys.exc_traceback)
+
+            logger.warning("RLAttributes: An exception occured!")
+            logger.warning("Exception: %s" % text)
+
+        if not os.access(self.webksConf, os.R_OK):
+            return groups
+
+        # Now look for speacial keys
+        logger.warning("Reading %s" % self.webksConf)
+        patt = re.compile('^\s*([-._a-zA-Z0-9]+)\s*:\s*([-._a-zA-Z0-9]+)\s*$')
+        for line in open(self.webksConf).readlines():
+            m = patt.match(line.strip())
+            if m is not None:
+                key = m.group(1)
+                grp = m.group(2)
+                logger.warning("Found %s:%s" % (key, grp))
+                if key in attributes and attributes[key] is not None:
+                    groups.append(grp)
+
+        return groups
