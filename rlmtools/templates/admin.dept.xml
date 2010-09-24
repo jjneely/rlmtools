@@ -1,4 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
+<?python
+
+    sortedKeys = attributes.keys()
+    sortedKeys.sort()
+
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -29,7 +35,7 @@
   <h2>Current Department Attributes</h2>
 
   <table py:if="len(attributes) > 0">
-    <tr py:for="attr in attributes" class="neutral">
+    <tr py:for="attr in sortedKeys" class="neutral">
       <th class="right" py:content="attr"/>
       <th class="right">
         <form method="post" action="${baseURL}/admin/modifyDept"
