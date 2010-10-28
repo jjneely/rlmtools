@@ -94,6 +94,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
                 grp = m.group(2)
                 logger.warning("Found %s:%s" % (key, grp))
                 if key in attributes and attributes[key] is not None:
-                    groups.append(grp)
+                    if grp not in groups:
+                        groups.append(grp)
 
         return groups
