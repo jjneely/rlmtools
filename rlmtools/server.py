@@ -349,3 +349,15 @@ class Server(object):
 
         return field
 
+    def isSupported(self, host_id):
+        """Return true/false if the support flag is set for this client."""
+        
+        q = """select host_id from realmlinux where host_id = %s and
+               support = 1 and recvdkey = 1"""
+
+        if isinstance(host_id, int) or isinstance(host_id, long):
+            self.cursor.execute(q, (host_id,))
+            return self.cursor.rowcount > 0
+        else:
+            return False
+
