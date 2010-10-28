@@ -214,6 +214,3 @@ class RLAttributes(object):
     def removeAttributeByKey(self, attr_ptr, key):
         return self._admin.removeAttributeByKey(attr_ptr, key)
 
-    def getUUIDID(self, uuid):
-        return self._admin.getUuidID(uuid)
-

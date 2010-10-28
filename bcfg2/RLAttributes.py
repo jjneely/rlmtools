@@ -10,6 +10,7 @@ import Bcfg2.Server.Plugin
 import rlmtools.configDragon
 from rlmtools.constants import defaultConfFiles
 from rlmtools.rlattributes import RLAttributes as RLA
+from rlmtools.server import Server as RLServer
 
 if rlmtools.configDragon.config is None:
     # XXX: How do we customize configfiles here?
@@ -28,6 +29,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         Bcfg2.Server.Plugin.Plugin.__init__(self, core, datastore)
         Bcfg2.Server.Plugin.Connector.__init__(self)
         self.rla = RLA()
+        self.rlServer = RLServer()
         self.webksConf = "%s/webkickstart/groups.conf" % datastore
 
     def get_additional_data(self, metadata):
@@ -38,7 +40,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
 
         logger.info("Building attributes for UUID %s" % metadata.uuid)
         try:
-            host_id = self.rla.getUUIDID(metadata.uuid)
+            host_id = self.rlserver.getUuidID(metadata.uuid)
             if host_id is None:
                 logger.warning("Could not find a host_id for UUID %s" \
                                % metadata.uuid)
@@ -64,15 +66,14 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         groups = []
         
         try:
-            host_id = self.rla.getUUIDID(metadata.uuid)
+            host_id = self.rlserver.getUuidID(metadata.uuid)
             if host_id is None:
                 logger.warning("Could not find a host_id for UUID %s" \
                                % metadata.uuid)
                 return groups
+            support = self.rlserver.isSupported(host_id)
             meta, attributes = self.rla.hostAttrs(host_id)
             attributes.update(meta)
-            if 'bcfg2.groups' in attributes:
-                groups.extend(attributes['bcfg2.groups'].split())
         except Exception, e:
             text = traceback.format_exception(sys.exc_type,
                                               sys.exc_value,
@@ -80,6 +81,11 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
 
             logger.warning("RLAttributes: An exception occured!")
             logger.warning("Exception: %s" % text)
+
+        if 'bcfg2.groups' in attributes:
+            groups.extend(attributes['bcfg2.groups'].split())
+        if support is not True and 'feature-nosupport' not in groups:
+            groups.append('feature-nosupport')
 
         if not os.access(self.webksConf, os.R_OK):
             return groups
