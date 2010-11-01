@@ -31,6 +31,10 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         self.rla = RLA()
         self.rlserver = RLServer()
         self.webksConf = "%s/webkickstart/groups.conf" % datastore
+        if datastore.endswith('/'):
+            self.bcfg2repo = datastore[:-1].split('/')[-1]
+        else:
+            self.bcfg2repo = datastore.split('/')[-1]
 
     def get_additional_data(self, metadata):
         if metadata.uuid is None or metadata.uuid == "":
@@ -38,6 +42,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             # with RLMTools yet at the least
             return {}
 
+        attributes = {}
         logger.info("Building attributes for UUID %s" % metadata.uuid)
         try:
             host_id = self.rlserver.getUuidID(metadata.uuid)
@@ -47,7 +52,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
                 return {}
             meta, attributes = self.rla.hostAttrs(host_id)
             attributes.update(meta)
-            return attributes
+            attributes.update({'bcfg2.repo':self.bcfg2repo})
         except Exception, e:
             text = traceback.format_exception(sys.exc_type,
                                               sys.exc_value,
@@ -56,7 +61,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             logger.warning("RLAttributes: An exception occured!")
             logger.warning("Exception: %s" % text)
 
-        return {}
+        return attributes
 
     def get_additional_groups(self, metadata):
         if metadata.uuid is None or metadata.uuid == "":
