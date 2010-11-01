@@ -29,7 +29,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         Bcfg2.Server.Plugin.Plugin.__init__(self, core, datastore)
         Bcfg2.Server.Plugin.Connector.__init__(self)
         self.rla = RLA()
-        self.rlServer = RLServer()
+        self.rlserver = RLServer()
         self.webksConf = "%s/webkickstart/groups.conf" % datastore
 
     def get_additional_data(self, metadata):
