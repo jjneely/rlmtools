@@ -66,14 +66,17 @@ class RLAttributes(object):
         self._admin.setAttribute(aptr, 'meta.imported', FloatType, 
                                  str(time.time()))
 
-        for key in ikeys:
-            if key in akeys:
-                self._admin.removeAttributeByKey(aptr, key)
-            if data is not None and key in data:
+        for key, map in ikeys:
+            if map is None:
+                map = key    # Allow remmapping of variable/attr names
+            if key in data and map in akeys:
+                self._admin.removeAttributeByKey(aptr, map)
+            if key in data:
                 blob = pickle.dumps(data[key])
-                self._admin.setAttribute(aptr, key, PicType, blob)
-            else:
-                self._admin.setAttribute(aptr, key, NoneType, None)
+                self._admin.setAttribute(aptr, map, PicType, blob)
+            # XXX: This just blocks inhairitance...why?    
+            #else:
+            #    self._admin.setAttribute(aptr, map, NoneType, None)
 
         return True
 

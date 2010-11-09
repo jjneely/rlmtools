@@ -44,8 +44,8 @@ right, you will restore them to the values listed in the Web-Kickstart
 configuration file.
         </p>
         <ul>
-          <li py:for="key in webKickstartKeys"
-              py:content="key.replace('.', ' ')"/>
+          <li py:for="key, map in webKickstartKeys"
+              py:content="(map or key).replace('.', ' ')"/>
           </ul>
       </td>
 

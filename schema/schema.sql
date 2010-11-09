@@ -171,6 +171,7 @@ create table sysadmins (
 create table webkickstartkeys (
     wkk_id      INTEGER PRIMARY KEY auto_increment,
     keyword     VARCHAR(255),
+    map         VARCHAR(255),
 
     index(keyword)
 ) ENGINE=InnoDB;

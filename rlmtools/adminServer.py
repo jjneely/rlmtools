@@ -237,8 +237,8 @@ class AdminServer(server.Server):
         self.conn.commit()
 
     def getImportantKeys(self):
-        q = "select keyword from webkickstartkeys"
+        q = "select keyword, map from webkickstartkeys"
         self.cursor.execute(q)
         result = resultSet(self.cursor)
 
-        return [ row['keyword'] for row in result ]
+        return [ ( row['keyword'], row['map'] ) for row in result ]
