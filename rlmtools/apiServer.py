@@ -574,6 +574,8 @@ class APIServer(server.Server):
         if host_id == None:
             # Cannot check in non-registered client
             return (2, {})
+        if not self.isSupported():
+            return (3, {})
 
         m, a = rla.hostAttrs(host_id)
         d = {}
