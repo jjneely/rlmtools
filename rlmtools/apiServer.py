@@ -565,25 +565,21 @@ class APIServer(server.Server):
         # XXX: Return code / check?
         return 0
 
-    def getDeptBcfg2(self, deptName):
-        """Return the bcfg2.init attribute for a department.  This string
-           should be a python %s-style string template with no passwords."""
+    def getBcfg2Bootstrap(self):
+        """Return the bcfg2.* attributes for bcfg2 bootstrapping.  This
+           is for authenticated clients only."""
 
         rla = RLAttributes()
-        dept_id = self.getDeptID(deptName)
-        m, a = rla.deptAttrs(dept_id)
-        if 'bcfg2.init' not in a:
+        host_id = self.getHostID()
+        if host_id == None:
+            # Cannot check in non-registered client
             return (2, {})
-        if a['bcfg2.init'] is None or a['bcfg2.init'] == "":
-            return (3, {})
-        if 'bcfg2.url' not in a:
-            return (4, {})
-        if a['bcfg2.url'] is None or a['bcfg2.url'] == "":
-            return (5, {})
 
+        m, a = rla.hostAttrs(host_id)
         d = {}
-        d['init'] = str(a['bcfg2.init'])
-        d['url'] = str(a['bcfg2.url'])
+        for k in a.keys():
+            if k.startswith('bcfg2.'):
+                d[k[6:]] = a[k]
 
         return (0, d)
 

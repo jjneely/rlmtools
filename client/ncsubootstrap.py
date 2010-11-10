@@ -37,6 +37,8 @@ logger = None
 uuid = client.getUUID()
 dist = client.getRPMDist()
 dept = client.getDepartment()
+keypair = client.getLocalKey()
+sig = keypair.signString(uuid)
 
 def main():
     global logger
@@ -78,13 +80,7 @@ ncsurename [-C configfile]"""
 
     subs = {}
 
-    if options.password is None:
-        print "You must supply a password to authenticate to the Bcfg2"
-        print "repository.  The password for the root level public repository"
-        print "is: \"foobar\""
-        print
-        subs['password'] = getpass.getpass('Password: ')
-    else:
+    if options.password is not None:
         subs['password'] = options.password
 
     if options.profile is None:
@@ -104,23 +100,26 @@ ncsurename [-C configfile]"""
         subs['init'] = options.init
 
     # Get dept into from RLMTools
-    err, rlminfo = xmlrpc.doRPC(server.getDeptBcfg2, dept)
+    err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, uuid, sig)
     if err > 0:
         rlminfo = {}
         logger.warning('ncsubootstrap could not grab bcfg2 info from RLMTools')
         logger.warning('Error code %s' % err)
-        print "An error occured communicating with RLMTools"
-        if 'url' not in subs:
-            print "If you specify the URL to the Bcfg2 repository"
-            print "I can try to fake it."
-            sys.exit(2)
-        else:
-            logger.warning('Trying with default bcfg2.init string')
-            print "I think I have enough information to bootstrap Bcfg2 anyway"
-            subs['init'] = constants.bcfg2_init
+        print "An error occured communicating with RLMTools.  Trying"
+        print "Bcfg2 bootstrap based on defaults and command line options."
 
     rlminfo.update(subs)
     rlminfo['uuid'] = uuid
+    if 'url' not in rlminfo:
+        print "WARNING: Using default Bcfg2 Repository URL: %s" % bcfg2_url
+        rlminfo['url'] = bcfg2_url
+    if 'init' not in rlminfo:
+        print "WARNING: Using default command line template: %s" % bcfg2_init
+        rlminfo['init'] = bcfg2_init
+    if 'password' not in rlminfo:
+        print "WARNING: Using default Bcfg2 password"
+        rlminfo['password'] = 'foobar'
+
     cmd = rlminfo['init'] % rlminfo
 
     logger.info("Invoking ncsubootstrap.py to boot strap Bcfg2")

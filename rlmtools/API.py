@@ -48,7 +48,7 @@ __API__ = ['hello',
 
            'initHost',
            'setDeptBcfg2',
-           'getDeptBcfg2',
+           'getBcfg2Bootstrap',
            'loadWebKickstart',
            'dumpClients',
 
@@ -195,20 +195,19 @@ def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args, url):
     return s.setDeptBcfg2(deptName, bcfg2args, url)
 
 
-def getDeptBcfg2(apiVersion, dept):
-    """Return the command string needed to setup Bcfg2 the first time
-       based on department.  If the string contains %(password)s
-       then a password will be required from the user.  This function
-       will never provide passwords although bcfg2 repos can be
-       password-less."""
-    
+def getBcfg2Bootstrap(apiVersion, uuid, sig):
+    """Registered machines can request their Bcfg2 bootstrap information"""
+        
     if apiVersion < 2:
         # This function doesn't exist on apiVersions < 2
-        raise Fault(1, "Method 'getDeptBcfg2' does not exist at this "
+        raise Fault(1, "Method 'getBcfg2Bootstrap' does not exist at this "
                        "API version")
+        
+    s = server.Server(apiVersion, getHostName(), uuid)
+    if not s.verifyClient(uuid, sig):
+        return (1, {})
 
-    s = server.Server(apiVersion, "fqdn", "uuid")
-    return s.getDeptBcfg2(dept)
+    return s.getBcfg2Bootstrap()
 
 
 def loadWebKickstart(apiVersion, secret, uuid):
