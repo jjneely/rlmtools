@@ -130,7 +130,7 @@ class MiscServer(server.Server):
                     del cKeys[i]            # Keep our index numbers intact
                 i = i + 1
             while len(cKeys) > len(pts):
-                self.cursor.execute(q3, (current[cKeys[i]],))
+                self.cursor.execute(q3, ((row['acl_id'], current[cKeys[i]]))
                 del cKeys[i]                # Keep our index numbers intact
 
         self.conn.commit()
