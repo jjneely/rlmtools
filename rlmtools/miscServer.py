@@ -21,6 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import os
+import re
 import sys
 import logging
 import server
@@ -88,17 +89,38 @@ class MiscServer(server.Server):
         return ret
 
     def getPTS(self, pts, cell):
+        sentry = re.compile(r'^[a-z][a-z0-9_\-]{1,7}$')  # matches NCSU userids
         cmd = "/usr/bin/pts mem %s -c %s -noauth" % (pts, cell)
+        ids = []
+	#print "Executing: %s" % cmd
         fd = os.popen(cmd, 'r')
         blob = fd.readlines()
         ret = fd.close()
+	#print blob
 
         if ret is not None:
             # Some sort of OS Error
             log.error("'%s' failed with return code %s" % (cmd, ret))
             return None
 
-        ids = [ line.strip() for line in blob[1:] ] # throw away first line
+        if len(blob) == 0:
+            # No data?  Something Bad happened
+            return None
+        if len(blob) == 1:
+            # PTS group is empty
+            return []
+        for line in blob[1:]:   # First line is header, toss it
+            user = line.strip()
+            if user == "": 
+                continue
+            if sentry.match(user):
+                ids.append(user)
+            else:
+                sys.stderr.write("Got bad data from PTS command.  User = %s\n"\
+                                 % user)
+                log.error("Got bad data from PTS command.  User = %s" % user)
+                return None
+        
         ids.sort()
         return ids
 
@@ -111,11 +133,17 @@ class MiscServer(server.Server):
         self.cursor.execute(q1)
         result = resultSet(self.cursor).dump()
 
+        # ACQUIRE LOCK
+        log.info("Running PTS watcher, locking sysadmins table")
+        self.cursor.execute("lock tables sysadmins write")
         for row in result:
+            #print "Working on ACL: %s" % str(row)
             current = self.getSysAdmins(row['acl_id'])
             cKeys = current.keys()
             cKeys.sort()
+            #print "Current list: %s" % str(current)
             pts = self.getPTS(row['pts'], row['cell'])
+            #print "New list    : %s" % str(pts)
             if pts is None:
                 # Error...bad PTS data...check logs
                 continue
@@ -130,8 +158,10 @@ class MiscServer(server.Server):
                     del cKeys[i]            # Keep our index numbers intact
                 i = i + 1
             while len(cKeys) > len(pts):
-                self.cursor.execute(q3, ((row['acl_id'], current[cKeys[i]]))
+                self.cursor.execute(q3, (row['acl_id'], current[cKeys[i]]))
                 del cKeys[i]                # Keep our index numbers intact
 
+        self.cursor.execute("unlock tables")
+        log.info("PTS watcher complete")
         self.conn.commit()
 
