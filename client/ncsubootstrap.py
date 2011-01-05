@@ -108,6 +108,11 @@ ncsurename [-C configfile]"""
         print "An error occured communicating with RLMTools.  Trying"
         print "Bcfg2 bootstrap based on defaults and command line options."
 
+    # Sanitize Bootstrap info (remove multiple values)
+    for key in rlminfo.keys():
+        s = rlminfo[key].split('\n')[0]
+        rlminfo[key] = s.strip()
+
     rlminfo.update(subs)
     rlminfo['uuid'] = uuid
     if 'url' not in rlminfo:
