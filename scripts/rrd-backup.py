@@ -41,7 +41,7 @@ def sanity_check_dir(dir):
 
     return dir
 
-def run(source, target, restore=False):
+def run(source, target, restore=False, verbose=False):
     # If restore is Faluse a backup job is run.  Otherwise a restore job.
     def callback(arg, dirname, filenames):
         if dirname.startswith(source):
@@ -58,7 +58,7 @@ def run(source, target, restore=False):
             os.mkdir(newdir)
 
         for file in filenames:
-            print "Examining: %s" % file
+            if verbose: print "Examining: %s" % file
             if not os.path.isfile(os.path.join(dirname, file)): continue
             if restore and (not file.endswith(".xml")): continue
             if not restore and (not file.endswith(".rra")): continue
@@ -70,7 +70,7 @@ def run(source, target, restore=False):
             if os.path.exists(newfile):
                 err("Previous Backup/Restore?  %s already exists." % newfile)
                 sys.exit(3)
-            print "Creating %s..." % newfile
+            if verbose: print "Creating %s..." % newfile
             if restore:
                 cmd = "/usr/bin/rrdtool restore %s %s"
             else:
@@ -84,6 +84,10 @@ def run(source, target, restore=False):
 def main():
     usage = "Usage: %prog [-b|-r] source-directory target-directory"
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-v", "--verbose", action="store_true",
+                      default=False,
+                      dest="verbose",
+                      help="Verbose mode")
     parser.add_option("-b", "--backup", action="store_true",
                       default=False,
                       dest="backup",
@@ -113,7 +117,7 @@ def main():
     target = sanity_check_dir(args[1])
     source = sanity_check_dir(args[0])
 
-    run(source, target, options.restore)
+    run(source, target, options.restore, options.verbose)
 
 
 if __name__ == "__main__":
