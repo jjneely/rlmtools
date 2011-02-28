@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003 - 2009 NC State University
+# Copyright (C) 2003 - 2011 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -78,25 +78,25 @@ class MiscServer(server.Server):
         self.conn.commit()
 
     def getSysAdmins(self, acl_id):
-        q = """select distinct userid, sysadmin_id from sysadmins 
-               where acl_id = %s"""
+        q = """select userid, sysadmin_id from sysadmins 
+               where acl_id = %s order by userid asc"""
 
         self.cursor.execute(q, (acl_id,))
         result = resultSet(self.cursor)
-        ret = {}
+        ret = []
         for row in result:
-            ret[row['userid']] = row['sysadmin_id']
+            ret.append((row['userid'], row['sysadmin_id']))
         return ret
 
     def getPTS(self, pts, cell):
         sentry = re.compile(r'^[a-z][a-z0-9_\-]{1,7}$')  # matches NCSU userids
         cmd = "/usr/bin/pts mem %s -c %s -noauth" % (pts, cell)
         ids = []
-	#print "Executing: %s" % cmd
+        #print "Executing: %s" % cmd
         fd = os.popen(cmd, 'r')
         blob = fd.readlines()
         ret = fd.close()
-	#print blob
+        #print blob
 
         if ret is not None:
             # Some sort of OS Error
@@ -139,8 +139,6 @@ class MiscServer(server.Server):
         for row in result:
             #print "Working on ACL: %s" % str(row)
             current = self.getSysAdmins(row['acl_id'])
-            cKeys = current.keys()
-            cKeys.sort()
             #print "Current list: %s" % str(current)
             pts = self.getPTS(row['pts'], row['cell'])
             #print "New list    : %s" % str(pts)
@@ -150,16 +148,19 @@ class MiscServer(server.Server):
 
             i = 0
             while i < len(pts):
-                if len(cKeys) <= i or cKeys[i] > pts[i]:
+                if len(current) <= i or current[i][0] > pts[i]:
                     self.cursor.execute(q3, (row['acl_id'], pts[i]))
-                    cKeys.insert(i, pts[i]) # Keep our index numbers intact
-                elif cKeys[i] < pts[i]:
-                    self.cursor.execute(q2, (current[cKeys[i]],))
-                    del cKeys[i]            # Keep our index numbers intact
-                i = i + 1
-            while len(cKeys) > len(pts):
-                self.cursor.execute(q3, (row['acl_id'], current[cKeys[i]]))
-                del cKeys[i]                # Keep our index numbers intact
+                    # Keep our index numbers intact
+                    current.insert(i, (pts[i], None)) 
+                    i = i + 1
+                elif current[i][0] < pts[i]:
+                    self.cursor.execute(q2, (current[i][1],))
+                    del current[i]            # Keep our index numbers intact
+                elif current[i][0] == pts[i]:
+                    i = i + 1
+            while len(current) > len(pts):
+                self.cursor.execute(q2, (current[i][1],))
+                del current[i]                # Keep our index numbers intact
 
         self.cursor.execute("unlock tables")
         log.info("PTS watcher complete")
