@@ -87,6 +87,9 @@ class UUID(ImmutableDict):
         self._rlm = self._rattrs._admin
 
     def __contains__(self, key):
+        # XXX: This needs to be a case insensitive compare on the hostname
+        # MySQL isn't case senitive to begin with so that's how we are
+        # working here.  But it may bite us in the future.
         host = self._rlm.getHostByUUID(key)
         return host is not None
 
