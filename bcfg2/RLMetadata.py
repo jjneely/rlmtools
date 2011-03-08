@@ -81,6 +81,7 @@ class Floating(object):
         return id is not None
 
 class UUID(ImmutableDict):
+    # XXX: Hostnames must be returned in lower case for compare operations
 
     def __init__(self):
         self._rattrs = RLAttributes()
@@ -98,14 +99,14 @@ class UUID(ImmutableDict):
         if host is None:
             raise KeyError
         else:
-            return host
+            return host.lower()
 
     def keys(self):
         return self._rlm.getAllUUIDs()
 
     def iteritems(self):
         for k in self.keys():
-            yield (k, self[k])
+            yield (k, self[k].lower())
 
 class RLMetadata(Metadata):
 
