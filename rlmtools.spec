@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 2.0.6
+Version: 2.0.7
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -92,6 +92,10 @@ fi
 %{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Thu Mar 10 2011 Jack Neely <jjneely@ncsu.edu> 2.0.7-1
+- Fix some string compares in the Bcfg2 plugins so that comparing
+  hostnames works reliably.
+
 * Fri Sep 03 2010 Jack Neely <jjneely@ncsu.edu> 2.0.0-1
 - Final code touch ups for 2.0
 - Add a bcfg2 subpackage with the Bcfg2 plugins
