@@ -80,12 +80,11 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             meta, attributes = self.rla.hostAttrs(host_id)
             attributes.update(meta)
         except Exception, e:
-            text = traceback.format_exception(sys.exc_type,
-                                              sys.exc_value,
-                                              sys.exc_traceback)
-
-            logger.warning("RLAttributes: An exception occured!")
-            logger.warning("Exception: %s" % text)
+            # This try/except statement originally here for debugging
+            # if it is triggered, something bad has happened.  DB
+            # connectivity issue or something similar.
+            logger.warning("Unexpected Error: %s" % str(e))
+            raise
 
         if 'bcfg2.groups' in attributes:
             groups.extend(attributes['bcfg2.groups'].split())
