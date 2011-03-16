@@ -83,7 +83,10 @@ class AdminServer(server.Server):
         q1 = "select attr_ptr from realmlinux where host_id = %s"
         q2 = "update realmlinux set attr_ptr = %s where host_id = %s"
         self.cursor.execute(q1, (host_id,))
-        ptr = self.cursor.fetchone()[0]
+        if self.cursor.rowcount == 0:
+            ptr = None
+        else:
+            ptr = self.cursor.fetchone()[0]
 
         if ptr is None:
             ptr = self.newAttrPtr()
