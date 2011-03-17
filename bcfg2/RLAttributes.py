@@ -83,8 +83,8 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             # This try/except statement originally here for debugging
             # if it is triggered, something bad has happened.  DB
             # connectivity issue or something similar.
-            logger.warning("Unexpected Error: %s" % str(e))
-            raise
+            logger.error("Unexpected Error: %s" % str(e))
+            return []
 
         if 'bcfg2.groups' in attributes:
             groups.extend(attributes['bcfg2.groups'].split())
