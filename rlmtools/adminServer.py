@@ -84,7 +84,9 @@ class AdminServer(server.Server):
         q2 = "update realmlinux set attr_ptr = %s where host_id = %s"
         self.cursor.execute(q1, (host_id,))
         if self.cursor.rowcount == 0:
-            ptr = None
+            log.warning("Tried to retrive AttrPtr for non-existant host %s" \
+                    % host_id)
+            return None
         else:
             ptr = self.cursor.fetchone()[0]
 
