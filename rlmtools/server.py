@@ -267,7 +267,13 @@ class Server(object):
         self.cursor.execute(q, (uuid,))
         if self.cursor.rowcount == 0:
             return None
-        return self.cursor.fetchone()[0]
+        row = self.cursor.fetchone()
+        try:
+            return row[0]
+        except Exception, e:
+            log.critical("getHostByUUID: Strange error from DB: %s" % str(e))
+            log.critical("getHostByUUID: DB returned: %s" % str(row))
+            raise
 
     def getHostVersion(self, host_id):
         # XXX: Implemented but not used in bcfg2 connector
