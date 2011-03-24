@@ -1,3 +1,4 @@
+import sys
 import logging
 import traceback
 import Bcfg2.Server.Plugin
@@ -24,18 +25,6 @@ if rlmtools.configDragon.config is None:
 # clients.xml files in the Bcfg2 repository.
 
 logger = logging.getLogger('Bcfg2.Plugins.RLMetadata')
-
-def logException():
-    # even though tracing is not normally done at lower logging levels,
-    # we add trace data for exceptions
-    file, line, func, txt = traceback.extract_stack(None, 2)[0]
-    trace = 'EXCEPTION (File: %s, Method: %s(), Line: %s): [%s]\n' % \
-            (file, func, line, txt)
-    log.critical(trace)
-
-    (type, value, tb) = sys.exc_info()
-    for line in traceback.format_exception(type, value, tb):
-        log.critical(line.strip())
 
 
 class ImmutableDict(dict):
@@ -240,20 +229,25 @@ class RLMetadata(Metadata):
     def AuthenticateConnection(self, cert, user, password, address):
         "Enforce client's authenticating with their UUID."
         
-        # Make sure we exist
-        if user not in self.uuid:
-            # We don't?  Or bad UUID?  Deny the client.
-            logger.info("RLMetadata: Denying UUID '%s' with address '%s'.  " \
-                        "Unknown UUID/client." % (user, address))
-            return False
-
         try:
+            # Make sure we exist
+            if user not in self.uuid:
+                # We don't?  Or bad UUID?  Deny the client.
+                s = "RLMetadata: Denying UUID '%s' with address '%s'. " \
+                        "Unknown UUID/client."
+                logger.info(s % (user, address))
+                return False
+
             return Metadata.AuthenticateConnection(self, cert, user, 
                                                    password, address)
         except Exception, e:
+            text = traceback.format_exception(sys.exc_type,
+                                              sys.exc_value,
+                                              sys.exc_traceback)
             logger.critical("Exception occured authenticating client: %s" \
                            % user)
-            logException()
+            for line in text:
+                logger.critical(line)
         
         return False
 
