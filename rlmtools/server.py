@@ -273,6 +273,8 @@ class Server(object):
         except Exception, e:
             log.critical("getHostByUUID: Strange error from DB: %s" % str(e))
             log.critical("getHostByUUID: DB returned: %s" % str(row))
+            log.critical("getHostByUUID: DB rowcount: %s" \
+                    % self.cursor.rowcount)
             raise
 
     def getHostVersion(self, host_id):
