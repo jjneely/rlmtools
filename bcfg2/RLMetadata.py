@@ -51,9 +51,11 @@ class Clients(ImmutableDict):
         if id is None:
             raise KeyError
         self._rattrs.setHostAttribute(id, 'bcfg2.profile', str(value))
+        # setHostAttribute runs its own commit as a write transaction
 
     def __getitem__(self, key):
         id = self._rlm.getHostID(key)
+        self._rlm.conn.commit()
         if id is None:
             raise KeyError
         value = self._rattrs.getHostAttr(id, 'bcfg2.profile')
@@ -64,10 +66,13 @@ class Clients(ImmutableDict):
 
     def __contains__(self, key):
         id = self._rlm.getHostID(key)
+        self._rlm.conn.commit()
         return id is not None
 
     def keys(self):
-        return self._rlm.getAllHosts().keys()
+        keys = self._rlm.getAllHosts().keys()
+        self._rlm.conn.commit()
+        return keys
 
     def iteritems(self):
         for key in self.keys():
@@ -81,10 +86,15 @@ class Floating(object):
 
     def __contains__(self, key):
         id = self._rlm.getHostID(key)
+        self._rlm.conn.commit()
         return id is not None
 
 class UUID(ImmutableDict):
     # XXX: Hostnames must be returned in lower case for compare operations
+
+    # XXX: This calls commit() even though we only read from the DB
+    # we read a lot, rarely commit, and end up causing transactional
+    # issues even with MyIASM
 
     def __init__(self):
         self._rattrs = RLAttributes()
@@ -95,17 +105,21 @@ class UUID(ImmutableDict):
         # MySQL isn't case senitive to begin with so that's how we are
         # working here.  But it may bite us in the future.
         host = self._rlm.getHostByUUID(key)
+        self._rlm.conn.commit()
         return host is not None
 
     def __getitem__(self, key):
         host = self._rlm.getHostByUUID(key)
+        self._rlm.conn.commit()
         if host is None:
             raise KeyError
         else:
             return host.lower()
 
     def keys(self):
-        return self._rlm.getAllUUIDs()
+        keys = self._rlm.getAllUUIDs()
+        self._rlm.conn.commit()
+        return keys
 
     def iteritems(self):
         for k in self.keys():
