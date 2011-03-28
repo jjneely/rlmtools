@@ -58,8 +58,9 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
                                               sys.exc_value,
                                               sys.exc_traceback)
 
-            logger.warning("RLAttributes: An exception occured!")
-            logger.warning("Exception: %s" % text)
+            logger.critical("RLAttributes: An Exception occured!")
+            for line in text:
+                logger.critical(line.strip())
 
         return attributes
 
@@ -83,7 +84,14 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             # This try/except statement originally here for debugging
             # if it is triggered, something bad has happened.  DB
             # connectivity issue or something similar.
-            logger.error("Unexpected Error: %s" % str(e))
+            text = traceback.format_exception(sys.exc_type,
+                                              sys.exc_value,
+                                              sys.exc_traceback)
+
+            logger.critical("RLAttributes: An Exception occured!")
+            for line in text:
+                logger.critical(line.strip())
+            
             return []
 
         if 'bcfg2.groups' in attributes:
