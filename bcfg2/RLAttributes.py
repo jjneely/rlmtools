@@ -78,7 +78,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
         groups = []
         support = False
         
-        DBlock.aquire()
+        DBlock.acquire()
         try:
             host_id = self.rlserver.getUuidID(metadata.uuid)
             if host_id is None:
