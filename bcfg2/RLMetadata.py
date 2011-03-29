@@ -1,6 +1,7 @@
 import sys
 import logging
 import traceback
+import threading
 import Bcfg2.Server.Plugin
 
 from Bcfg2.Server.Plugins.Metadata import Metadata, MetadataQuery, \
@@ -26,6 +27,9 @@ if rlmtools.configDragon.config is None:
 
 logger = logging.getLogger('Bcfg2.Plugins.RLMetadata')
 
+# Bcfg2 normally runs in a threaded environment
+# We need to be careful of threading our DB connections
+DBlock = threading.Lock()
 
 class ImmutableDict(dict):
 
@@ -47,31 +51,37 @@ class Clients(ImmutableDict):
         logger.warning("WTF is going on?")
 
     def __setitem__(self, key, value):
+        DBlock.acquire()
         id = self._rlm.getHostID(key)
         if id is None:
             raise KeyError
         self._rattrs.setHostAttribute(id, 'bcfg2.profile', str(value))
         # setHostAttribute runs its own commit as a write transaction
+        DBlock.release()
 
     def __getitem__(self, key):
+        DBlock.acquire()
         id = self._rlm.getHostID(key)
-        self._rlm.conn.commit()
         if id is None:
+            self_lock.release()
             raise KeyError
         value = self._rattrs.getHostAttr(id, 'bcfg2.profile')
+        DBlock.release()
         if value is None:
             return 'default'
         else:
             return value
 
     def __contains__(self, key):
+        DBlock.acquire()
         id = self._rlm.getHostID(key)
-        self._rlm.conn.commit()
+        DBlock.release()
         return id is not None
 
     def keys(self):
+        DBlock.acquire()
         keys = self._rlm.getAllHosts().keys()
-        self._rlm.conn.commit()
+        DBlock.release()
         return keys
 
     def iteritems(self):
@@ -85,16 +95,13 @@ class Floating(object):
         self._rlm = self._rattrs._admin
 
     def __contains__(self, key):
+        DBlock.acquire()
         id = self._rlm.getHostID(key)
-        self._rlm.conn.commit()
+        DBlock.release()
         return id is not None
 
 class UUID(ImmutableDict):
     # XXX: Hostnames must be returned in lower case for compare operations
-
-    # XXX: This calls commit() even though we only read from the DB
-    # we read a lot, rarely commit, and end up causing transactional
-    # issues even with MyIASM
 
     def __init__(self):
         self._rattrs = RLAttributes()
@@ -104,21 +111,24 @@ class UUID(ImmutableDict):
         # XXX: This needs to be a case insensitive compare on the hostname
         # MySQL isn't case senitive to begin with so that's how we are
         # working here.  But it may bite us in the future.
+        DBlock.acquire()
         host = self._rlm.getHostByUUID(key)
-        self._rlm.conn.commit()
+        DBlock.release()
         return host is not None
 
     def __getitem__(self, key):
+        DBlock.acquire()
         host = self._rlm.getHostByUUID(key)
-        self._rlm.conn.commit()
+        DBlock.release()
         if host is None:
             raise KeyError
         else:
             return host.lower()
 
     def keys(self):
+        DBlock.acquire()
         keys = self._rlm.getAllUUIDs()
-        self._rlm.conn.commit()
+        DBlock.release()
         return keys
 
     def iteritems(self):
@@ -236,9 +246,11 @@ class RLMetadata(Metadata):
                     (client_name, attribs))
 
         attributes = RLAttributes()
+        DBlock.acquire()
         host_id = attributes.getHostID(client_name)
         for key, value in attribs.iteritems():
             attributes.setHostAttribute(host_id, "bcfg2.%s" % key, value)
+        DBlock.release()
 
     def AuthenticateConnection(self, cert, user, password, address):
         "Enforce client's authenticating with their UUID."

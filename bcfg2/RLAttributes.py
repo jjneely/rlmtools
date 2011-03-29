@@ -12,6 +12,9 @@ from rlmtools.constants import defaultConfFiles
 from rlmtools.rlattributes import RLAttributes as RLA
 from rlmtools.server import Server as RLServer
 
+# XXX; Gah
+from RLMetadata import DBlock
+
 if rlmtools.configDragon.config is None:
     # XXX: How do we customize configfiles here?
     rlmtools.configDragon.initConfig(defaultConfFiles)
@@ -44,6 +47,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
 
         attributes = {}
         logger.info("Building attributes for UUID %s" % metadata.uuid)
+        DBlock.acquire()
         try:
             host_id = self.rlserver.getUuidID(metadata.uuid)
             if host_id is None:
@@ -62,6 +66,7 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             for line in text:
                 logger.critical(line.strip())
 
+        DBlock.release()
         return attributes
 
     def get_additional_groups(self, metadata):
@@ -69,8 +74,11 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             return []
 
         logger.info("Building groups for UUID %s" % metadata.uuid)
+        attributes = {}
         groups = []
+        support = False
         
+        DBlock.aquire()
         try:
             host_id = self.rlserver.getUuidID(metadata.uuid)
             if host_id is None:
@@ -91,8 +99,8 @@ class RLAttributes(Bcfg2.Server.Plugin.Plugin,
             logger.critical("RLAttributes: An Exception occured!")
             for line in text:
                 logger.critical(line.strip())
-            
-            return []
+
+        DBlock.release()
 
         if 'bcfg2.groups' in attributes:
             groups.extend(attributes['bcfg2.groups'].split())
