@@ -63,7 +63,7 @@ class Clients(ImmutableDict):
         DBlock.acquire()
         id = self._rlm.getHostID(key)
         if id is None:
-            self_lock.release()
+            DBlock.release()
             raise KeyError
         value = self._rattrs.getHostAttr(id, 'bcfg2.profile')
         DBlock.release()
