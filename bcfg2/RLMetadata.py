@@ -45,6 +45,7 @@ class Clients(ImmutableDict):
         dict.__init__(self)
         self._rattrs = RLAttributes()
         self._rlm = self._rattrs._admin
+        self._local = threading.local()
 
     def __delitem__(self, key):
         logger.warning("Tried to delete client: %s" % key)
@@ -106,6 +107,7 @@ class UUID(ImmutableDict):
     def __init__(self):
         self._rattrs = RLAttributes()
         self._rlm = self._rattrs._admin
+        self._local = threading.local()
 
     def __contains__(self, key):
         # XXX: This needs to be a case insensitive compare on the hostname
@@ -117,18 +119,28 @@ class UUID(ImmutableDict):
         return host is not None
 
     def __getitem__(self, key):
+        cache = getattr(self._local, "hosts", {})
+        if cache == {}:
+            self._local.hosts = cache
+        if key in cache:
+            return cache[key]
         DBlock.acquire()
         host = self._rlm.getHostByUUID(key)
         DBlock.release()
         if host is None:
             raise KeyError
         else:
-            return host.lower()
+            cache[key] = host.lower()
+            return cache[key]
 
     def keys(self):
+        cache = getattr(self._local, "keys", [])
+        if cache != []:
+            return cache
         DBlock.acquire()
         keys = self._rlm.getAllUUIDs()
         DBlock.release()
+        self._local.keys = keys
         return keys
 
     def iteritems(self):
@@ -174,11 +186,21 @@ class RLMetadata(Metadata):
         self.pdirty = False
         self.extra = {'groups.xml':[]}
         self.password = core.password
-        self.query = MetadataQuery(core.build_metadata,
-                                   lambda:self.clients.keys(),
-                                   self.get_client_names_by_groups,
-                                   self.get_client_names_by_profiles,
-                                   self.get_all_group_names)
+        try:
+            self.query = MetadataQuery(core.build_metadata,
+                                       lambda:self.clients.keys(),
+                                       self.get_client_names_by_groups,
+                                       self.get_client_names_by_profiles,
+                                       self.get_all_group_names)
+        except TypeError:
+            # Bcfg2 1.1.1
+            self.query = MetadataQuery(core.build_metadata,
+                                       lambda:self.clients.keys(),
+                                       self.get_client_names_by_groups,
+                                       self.get_client_names_by_profiles,
+                                       self.get_all_group_names,
+                                       self.get_all_groups_in_category)
+
 
     #def HandleEvent(self, event):
     #    # Ignore any of the FAM events for clients.xml
