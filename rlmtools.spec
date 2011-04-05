@@ -25,8 +25,9 @@ specific aspects of the client's behavior to a central location.
 %package server
 Summary:  RLMTools Server Web App and Database Backend
 Group: Applications/Internet
-Requires: mod_python, python-genshi, python-cherrypy, rrdtool-python
+Requires: mod_python, python-genshi, python-cherrypy2, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python
+Requires: webkickstart
 Requires(post): httpd
 Obsoletes: ncsu-rlmtools-server
 
