@@ -94,7 +94,7 @@ configuration file.
       <td>
         <i py:if="attributes[attr] is None">(Not Set)</i>
         <i py:if="attributes[attr] == ''">(Set)</i>
-        <i py:if="attr in meta['meta.inhairited']">(Inhairited)</i>
+        <i py:if="attr in meta['meta.inhairited']">(Inherited)</i>
         <span py:if="attributes[attr] is not None"
               py:content="str(attributes[attr])" />
       </td>
