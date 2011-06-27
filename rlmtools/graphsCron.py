@@ -35,7 +35,7 @@
 #   |-> graphs/      - Directory containing dynamically generated graphs
 
 import sys
-import sha
+import hashlib
 import logging
 import os
 import os.path
@@ -77,7 +77,7 @@ class RRDGraphs(object):
         return int(time.time())
 
     def hash(self, s):
-        return sha.new(s).hexdigest() + ".rra"
+        return hashlib.sha1(s).hexdigest() + ".rra"
 
     def goVersions(self):
         data = self.stats.getVersions()
