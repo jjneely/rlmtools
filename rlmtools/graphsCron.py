@@ -224,6 +224,9 @@ class RRDGraphs(object):
     def graph(self, dest, defs, *args):
         cmd = "rrdtool graph %s-%s.png -s -%s %s %s > /dev/null 2>&1"
 
+        if len(defs) == 0:
+            log.info("No data to graph for %s" % dest)
+            return
         for zone in timeZones:
             cli = ["%s-%s.png" % (dest, zone),
                    "-s", "-%s" % zone, ] + list(args) + defs
