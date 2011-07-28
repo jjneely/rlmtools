@@ -9,6 +9,27 @@ Server:
         uWSGI ??
         apache + mod_wsgi ??
 
+    * Re-work the UI so that all Admin Panels become "Manage Attributes"
+      or similar.  Be able to drill down to all dept and client status
+      pages from the Front Page.
+    * Each status page should clearly link to the Manage Attributes
+      page for that dept/client
+    * MA pages should not be under the Administration tab
+    * Administration tab shows overview of Realm Linux access perms
+    * Admin tabs allow you to link together, create, delete, alter
+      Realm Linux access permissions
+
+        * Web-Kickstart
+        * PTS Groups
+        * RHN
+        * Red Hat KB accounts
+        * Departments
+        * Bcfg2 Repos
+
+    * Create a plugin style system for managing access permissions
+    * Create -inators for cron jobs to process queue of actions to
+      alter or create PTS groups, depts, web-kickstart dirs, etc.
+
 Client:
 
 
