@@ -496,7 +496,7 @@ class Application(AppHelpers, RLAttributes):
         fd.write("Subject: Create Realm Linux Department\n\n")
         
         fd.write("User %s has requested the creation of RLMT Department %s.\n" \
-                 % ('nobody', textBox))
+                 % (Auth().userid, textBox))
         fd.write("This department has been given ID %s\n\n" % id)
         fd.write("Create AFS Cron directories:\t%s\n" % o['afscron'])
         fd.write("Create Web-Kickstart Directory:\t%s\n" % o['webks'])

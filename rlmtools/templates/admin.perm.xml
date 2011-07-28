@@ -50,7 +50,7 @@
   <h2>Add Permissions</h2>
 
   <p>
-    Remeber, permissions are inhairited from parent departments.  So giving an
+    Remeber, permissions are inherited from parent departments.  So giving an
     ACL group read access to the "oit" department will also allow read 
     access to the "oit-iso" department.
   </p>

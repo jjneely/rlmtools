@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 2.0.10
+Version: 2.0.11
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -28,6 +28,7 @@ Group: Applications/Internet
 Requires: mod_python, python-genshi, python-cherrypy2, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python
 Requires: webkickstart
+Requires: python >= 2.5
 Requires(post): httpd
 Obsoletes: ncsu-rlmtools-server
 
