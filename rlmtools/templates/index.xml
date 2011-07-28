@@ -105,20 +105,21 @@
 
   <table>
     <tr class="neutral">
-      <th class="bottom">Department Name</th>
+      <th class="bottom" colspan="2">Department Status and Attributes</th>
       <th class="bottom">Supported RL Clients</th>
       <th class="bottom">Unsupported RL Clients</th>
     </tr>
     <tr class="neutral" py:for="dept in departments">
-      <td><a href="dept" py:attrs="{'href':dept['url']}"
-                         py:content="dept['name']">Your Department Here</a>
+      <td>
+        <a py:attrs="{'href':dept['url']}"
+          py:content="dept['name']" />
       </td>
-      <td><a href="dept" py:attrs="{'href':dept['url']}"
-                         py:content="dept['supported']" />
+      <td>
+         <a href="${baseURL}/admin/dept?dept_id=${dept['dept_id']}">
+           Manage Attributes</a>
       </td>
-      <td><a href="dept" py:attrs="{'href':dept['url']}"
-                         py:content="dept['unsupported']" />
-      </td>
+      <td py:content="dept['supported']" />
+      <td py:content="dept['unsupported']" />
     </tr>
   </table>
 
