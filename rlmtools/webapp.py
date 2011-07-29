@@ -172,7 +172,7 @@ class Application(AppHelpers):
         self.days7 = datetime.timedelta(7)
         self.today = datetime.datetime.today()
 
-        subMenu = [ ('Department Admin Panel',
+        subMenu = [ ('Manage Department Attributes',
                      '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
                   ]
 
@@ -196,6 +196,7 @@ class Application(AppHelpers):
                          nosupport=nosupport, 
                          department=self._server.getDeptName(int(dept_id)),
                          subMenu=subMenu,
+                         dept_id=dept_id,
                          title="Department Listing"))
     dept.exposed = True
 
