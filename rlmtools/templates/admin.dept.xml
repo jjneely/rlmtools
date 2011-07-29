@@ -26,7 +26,7 @@
     information from Web-Kickstart.
   </p>
 
-  <h1>Department ${deptname}</h1>
+  <h1>Department: ${deptname}</h1>
 
   <div py:if="message != ''" class="message">
     <p py:content="message"/>

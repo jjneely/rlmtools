@@ -215,17 +215,17 @@ class Application(AppHelpers):
         status = {}
         if detail['recvdkey'] == 1:
             backlinks = [
-                         ('Host Admin Panel',
+                         ('Manage Host Attributes',
                           '%s/admin/host?host_id=%s' % (url(), host_id)),
                          ('Version: %s' % detail['version'],
                           '%s/versionIndex?version=%s' % (url(), 
                                                           detail['version'])),
-                         ('Dept: %s' % detail['dept'],
+                         ('Deptartment Status: %s' % detail['dept'],
                           "%s/dept?dept_id=%s" % (url(), detail['dept_id'])),
                          ]
         else:
             backlinks = [
-                         ('Host Admin Panel',
+                         ('Manage Host Attributes',
                           '%s/admin/host?host_id=%s' % (url(), host_id)),
                     ]
 
@@ -270,10 +270,10 @@ class Application(AppHelpers):
                                 "the a client status message.")
         status = self._server.getStatusDetail(int(status_id))
         backlinks = [
-                     ('Dept: %s' % status['dept'],
-                      "%s/dept?dept_id=%s" % (url(), status['dept_id'])),
-                     ('Host: %s' % short(status['hostname']),
-                      "%s/client?host_id=%s" % (url(), status['host_id'])),
+                ('Deptartment Status: %s' % status['dept'],
+                 "%s/dept?dept_id=%s" % (url(), status['dept_id'])),
+                ('Host Status: %s' % short(status['hostname']),
+                 "%s/client?host_id=%s" % (url(), status['host_id'])),
                     ]
 
         if status['data'] == None or status['data'] == "":

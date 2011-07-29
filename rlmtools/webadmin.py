@@ -215,11 +215,11 @@ class Application(AppHelpers, RLAttributes):
                                        time.localtime(meta['meta.imported']))
         
         hostname = self._admin.getHostName(host_id)
-        subMenu = [ ('%s Status Panel' % short(hostname),
+        subMenu = [ ('Host Status: %s' % short(hostname),
                      '%s/client?host_id=%s' % (url(), host_id)),
-                    ('%s Status Panel' % deptname,
+                    ('Department Status: %s' % deptname,
                      '%s/dept?dept_id=%s' % (url(), dept_id)),
-                    ('%s Admin Panel' % deptname,
+                    ('Manage Department Attributes: %s' % deptname,
                      '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
                   ]
 
@@ -248,7 +248,7 @@ class Application(AppHelpers, RLAttributes):
         meta, attributes = self.deptAttrs(dept_id)
 
         deptname = self._admin.getDeptName(dept_id)
-        subMenu = [ ('%s Status Panel' % deptname,
+        subMenu = [ ('Deptartment Status: %s' % deptname,
                      '%s/dept?dept_id=%s' % (url(), dept_id))
                   ]
 
@@ -256,7 +256,7 @@ class Application(AppHelpers, RLAttributes):
                              dept_id=dept_id,
                              deptname=deptname,
                              subMenu=subMenu,
-                             title='Department Admin Panel',
+                             title='Manage Department Attributes',
                              message=message,
                              attributes=attributes,
                              meta=meta,
@@ -284,7 +284,7 @@ class Application(AppHelpers, RLAttributes):
             # To reuse the template we stuck this in 'callback'
             return self.host(host_id)
 
-        subMenu = [ ('%s Admin Panel' % short(hostname),
+        subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
                      '%s/admin/host?host_id=%s' % (url(), int(host_id)))
                   ]
 
@@ -327,7 +327,7 @@ class Application(AppHelpers, RLAttributes):
             # To reuse the template we stuck this in 'callback'
             return self.dept(int(dept_id))
 
-        subMenu = [ ('%s Admin Panel' % deptname,
+        subMenu = [ ('Manage Department Attributes: %s' % deptname,
                      '%s/admin/dept?dept_id=%s' % (url(), int(dept_id)))
                   ]
 
@@ -395,7 +395,7 @@ class Application(AppHelpers, RLAttributes):
         elif modifyKey in attributes:
             replaceValue = attributes[modifyKey]
 
-        subMenu = [ ('%s Admin Panel' % short(hostname),
+        subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
                      '%s/admin/host?host_id=%s' % (url(), host_id))
                   ]
 
@@ -453,7 +453,7 @@ class Application(AppHelpers, RLAttributes):
         elif modifyKey in attributes:
             replaceValue = attributes[modifyKey]
 
-        subMenu = [ ('%s Admin Panel' % deptname,
+        subMenu = [ ('Manage Department Attributes: %s' % deptname,
                      '%s/admin/dept?dept_id=%s' % (url(), dept_id))
                   ]
 
