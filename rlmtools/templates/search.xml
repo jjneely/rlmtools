@@ -20,7 +20,9 @@
   <form method="post" action="${baseURL}/search">
     <!--<p>Search:</p>-->
     <input type="text" name="searchBox" value="" size="15" />
-    <input type="submit" value="Search" />
+    <input type="submit" value="Search" /><br/>
+    <input type="checkbox" name="dest" value="admin"/>
+      Go to Manage Host Attributes
   </form>
 
   <div py:if="error != ''">
