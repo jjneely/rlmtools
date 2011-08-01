@@ -34,6 +34,7 @@ from constants import defaultConfFiles
 import configDragon
 import webks
 import webadmin
+import webperms
 
 config = None
 
@@ -48,6 +49,9 @@ class Application(AppHelpers):
 
         self.admin = webadmin.Application()
         self.admin.exposed = True
+
+        self.perms = webperms.Application()
+        self.perms.exposed = True
 
     def index(self):
         if not self.isAuthenticated():

@@ -12,9 +12,10 @@
 <body>
 
   <p>
-    You may search directly for Realm Linux clients here and be taken
-    directly to their Host Admin Panel.  You may create or modify departments
-    here and go directly to their Department Admin Panel.
+    Below is a summary of your Access Control Lists as Liquid Dragon
+    knows them.  ACLs are based upon AFS PTS groups.  These ACLs give you
+    access to departments.  A department has several permissions associated
+    with it, such as a Web-Kickstart directory in AFS and RHN access.
   </p>
 
   <div py:if="message != ''" class="message">
@@ -32,13 +33,8 @@
   <p py:if="len(acls) == 0">
     You have no ACL memberships.
   </p>
-  <h2>Search For Client Admin Panels</h2>
-  <form method="post" action="${baseURL}/search">
-    <input type="hidden" name="dest" value="admin"/>
-    <input type="text" name="searchBox" value="" size="15" />
-    <input type="submit" value="Search" />
-  </form>
 
+  <!--  
   <h2 style="clear:both;" >Department Admin Panels</h2>
 
   <div class="category">
@@ -123,6 +119,7 @@
       </tr>
     </table>
   </form>
+  -->
 
   <h2>Manage ACLs</h2>
 

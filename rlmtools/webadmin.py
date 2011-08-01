@@ -42,30 +42,6 @@ class Application(AppHelpers, RLAttributes):
         AppHelpers.__init__(self)
         self._admin = AdminServer()
 
-    def index(self, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
-
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/admin/aclGroups' % url()),
-                  ]
-        depts = WebServer().getDepartments()
-        a = Auth()
-        acls = self._server.memberOfACL(a.userid)
-
-        return self.render('admin.index', 
-                           dict(message=message,
-                                depts=depts,
-                                subMenu=subMenu,
-                                title="Administration",
-                                fullname=a.getName(),
-                                acls=acls,
-                                userid=a.userid,
-                               ))
-    index.exposed = True
-
     def aclGroups(self):
         # Readable by any authenticated user
         if not self.isREAD(self.getAuthZ("root")):

@@ -51,14 +51,12 @@
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/admin">Administration</a></li>
-      <!--
-      <ul py:if="defined('subMenu') and templateName[0:5] == 'admin'" class="submenu">
+    <li><a href="/rlmtools/perms">Permissions</a></li>
+      <ul py:if="defined('subMenu') and templateName[0:5] == 'perms'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-      -->
     <li><a href="/rlmtools/webKickstart">WebKickstart Tools</a></li>
       <ul py:if="defined('subMenu') and templateName[0:2] == 'wk'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
@@ -109,7 +107,7 @@
 
   <p class="space">
     <font size="-1"><i>Part of the Liquid Dragon project.<br /> 
-        &copy; Copyright 2008 - 2010 NC State University.</i></font>
+        &copy; Copyright 2008 - 2011 NC State University.</i></font>
   </p>
 
 </body>
