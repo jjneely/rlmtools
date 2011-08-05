@@ -26,6 +26,9 @@ import sys
 import logging
 import server
 
+import afs.pts
+from afs._util import AFSException
+
 from datetime import datetime, timedelta
 from resultSet import resultSet
 from rlattributes import RLAttributes
@@ -88,42 +91,6 @@ class MiscServer(server.Server):
             ret.append((row['userid'], row['sysadmin_id']))
         return ret
 
-    def getPTS(self, pts, cell):
-        sentry = re.compile(r'^[a-z][a-z0-9_\-]{1,7}$')  # matches NCSU userids
-        cmd = "/usr/bin/pts mem %s -c %s -noauth" % (pts, cell)
-        ids = []
-        #print "Executing: %s" % cmd
-        fd = os.popen(cmd, 'r')
-        blob = fd.readlines()
-        ret = fd.close()
-        #print blob
-
-        if ret is not None:
-            # Some sort of OS Error
-            log.error("'%s' failed with return code %s" % (cmd, ret))
-            return None
-
-        if len(blob) == 0:
-            # No data?  Something Bad happened
-            return None
-        if len(blob) == 1:
-            # PTS group is empty
-            return []
-        for line in blob[1:]:   # First line is header, toss it
-            user = line.strip()
-            if user == "": 
-                continue
-            if sentry.match(user):
-                ids.append(user)
-            else:
-                sys.stderr.write("Got bad data from PTS command.  User = %s\n"\
-                                 % user)
-                log.error("Got bad data from PTS command.  User = %s" % user)
-                return None
-        
-        ids.sort()
-        return ids
-
     def watchPTS(self):
         """Sync database with AFS PTS groups that we watch."""
 
@@ -140,11 +107,16 @@ class MiscServer(server.Server):
             #print "Working on ACL: %s" % str(row)
             current = self.getSysAdmins(row['acl_id'])
             #print "Current list: %s" % str(current)
-            pts = self.getPTS(row['pts'], row['cell'])
+            #pts = self.getPTS(row['pts'], row['cell'])
+
+            try:
+                ptsdb = afs.pts.PTS(cell=row['cell'])
+                group = ptsdb.getEntry(row['pts'])
+                pts = [ e.name for e in group.members ]
+            except AFSException, e:
+                print "AFS API Blew up: %s" % str(e)
+            pts.sort()
             #print "New list    : %s" % str(pts)
-            if pts is None:
-                # Error...bad PTS data...check logs
-                continue
 
             i = 0
             while i < len(pts):
