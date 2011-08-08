@@ -21,7 +21,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import os
-import re
 import sys
 import logging
 import server
@@ -137,4 +136,29 @@ class MiscServer(server.Server):
         self.cursor.execute("unlock tables")
         log.info("PTS watcher complete")
         self.conn.commit()
+
+    def insertWebKSDir(self, path, dept_id):
+        # Check if a row representing thiw webks dir exists.
+        # If not we insert it with dept_id as a guess of which department
+        # it maps too.
+        # Otherwise we ignore the request and assume the DB has the
+        # correct information.
+
+        q1 = """select wkd_id from webkickstartdirs where path = %s"""
+        q2 = """insert into webkickstartdirs (path, dept_id)
+                    values (%s, %s)"""
+
+        self.cursor.execute(q1, (path, ))
+        if self.cursor.rowcount > 1:
+            log.warning("Database inconsistancy in webkickstartdirs table")
+            log.warning("   Duplicate paths: %s" % path)
+            return
+        if self.cursor.rowcount == 1: return
+
+        self.cursor.execute(q2, (path, dept_id))
+        self.conn.commit()
+
+    def getAllWebKSDir(self):
+        q = """select * from webkickstartdirs"""
+        return resultSet(self.cursor).dump()
 

@@ -174,7 +174,15 @@ create table webkickstartkeys (
     map         VARCHAR(255),
 
     index(keyword)
-) ENGINE=InnoDB;
+);
+
+create table webkickstartdirs (
+    wkd_id      INTEGER PRIMARY KEY auto_increment,
+    path        VARCHAR(1024) not null,
+    dept_id     INTEGER,
+
+    index(path)
+);
 
 create table sessions (
     session_id     INTEGER PRIMARY KEY auto_increment,
