@@ -26,12 +26,7 @@ import server
 import ConfigParser
 
 from constants import defaultConfFiles
-
-# Use WatchedFileHandler from Python2.6 if we are there if not use ours
-try:
-    from logging.handlers import WatchedFileHandler
-except ImportError:
-    from WatchedFileHandler import WatchedFileHandler
+from logging.handlers import WatchedFileHandler
 
 config_files = None   # The files we look in for configuration
 config = None         # The main configuration object

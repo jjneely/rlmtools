@@ -28,7 +28,7 @@ Group: Applications/Internet
 Requires: mod_python, python-genshi, python-cherrypy2, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python
 Requires: webkickstart
-Requires: python >= 2.5
+Requires: python >= 2.6
 Requires(post): httpd
 Obsoletes: ncsu-rlmtools-server
 
