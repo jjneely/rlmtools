@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This maps Web-Kickstart directories to departments and other stuff.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <!--
+  <h2>Authorization Information</h2>
+
+  <p>Greetings, ${fullname}.  You are user "${userid}".</p>
+
+  <p>You are a member of the following ACL groups:</p>
+  <ul py:if="len(acls) > 0">
+    <li py:for="acl in acls" py:content="acl"/>
+  </ul>
+  <p py:if="len(acls) == 0">
+    You have no ACL memberships.
+  </p>
+  -->
+
+  <h2>Web-Kickstart Directory Listing</h2>
+
+  <p py:if="len(webksMap) == 0">
+    You do not appear to have any Web-Kickstart directories associated
+    with your department.
+  </p>
+
+  <div py:for="i in webksMap">
+    <table>
+      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'neutral'}">
+        <th class="right">Department</th>
+        <td>${i['dept']}</td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">AFS Path</th>
+        <td>${i['path']}</td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">AFS Access Permissions</th>
+        <td><p py:for="j in i['pts']">${j[0]} ${j[1]}</p></td>
+      </tr>
+    </table>
+
+    <p class="space" py:if="i is not webksMap[-1]" />
+  </div>
+
+</body>
+
+</html>
+

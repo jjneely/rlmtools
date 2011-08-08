@@ -34,6 +34,7 @@ from webcommon import *
 from adminServer import AdminServer
 from webServer import WebServer
 from rlattributes import RLAttributes
+from miscServer import MiscServer
 
 logger = logging.getLogger('xmlrpc')
 
@@ -60,10 +61,45 @@ class Application(AppHelpers, RLAttributes):
                            dict(message=message,
                                 depts=depts,
                                 subMenu=subMenu,
-                                title="Administration",
+                                title="Permissions",
                                 fullname=a.getName(),
                                 acls=acls,
                                 userid=a.userid,
                                ))
     index.exposed = True
+
+    def webkickstart(self, message=""):
+        # Readable by any authenticated user
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        m = MiscServer()
+        webksMap = m.getAllWebKSDir()
+
+        # Map AFS permissions to our admin/write/read scheme
+        rights = {'rl':      'read',
+                  'rlidwk':  'write',
+                  'rlidwka': 'admin' }
+        ptsFilter = ['system:administrators', 'admin:linux-kickstart']
+        for i in webksMap:
+            i['pts'] = []
+            i['dept'] = m.getDeptName(i['dept_id'])
+            i['bad_dept'] = i['dept'] is None
+
+            ptsacls = fsla(i['path'])
+            for pts, perms in ptsacls:
+                if pts in ptsFilter:
+                    continue
+                if perms in rights:
+                    i['pts'].append((pts, rights[perms]))
+                else:
+                    i['pts'].append((pts, 'other'))
+
+        return self.render('perms.webkickstart',
+                           dict(message=message,
+                                title="Web-Kickstart",
+                                webksMap=webksMap,
+                               ))
+    webkickstart.exposed = True
+
 

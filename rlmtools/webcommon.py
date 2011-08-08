@@ -5,6 +5,22 @@ import cherrypy
 import webServer
 import os.path
 import pwd
+import afs.acl
+import afs.fs
+
+def fsla(path):
+    # fs la <path>
+    if not afs.fs.inafs(path):
+        return None
+
+    ret = []
+    acls = afs.acl.ACL.retrieve(path)
+    # Ignore negative ACLs for now
+    for i in acls.pos.keys():
+        perm = str(afs.acl.showRights(acls.pos[i]))
+        ret.append((i, perm))
+
+    return ret
 
 def url():
     base = cherrypy.request.base + cherrypy.tree.mount_point()

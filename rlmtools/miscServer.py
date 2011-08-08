@@ -160,5 +160,6 @@ class MiscServer(server.Server):
 
     def getAllWebKSDir(self):
         q = """select * from webkickstartdirs"""
+        self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
