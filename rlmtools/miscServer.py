@@ -158,6 +158,28 @@ class MiscServer(server.Server):
         self.cursor.execute(q2, (path, dept_id))
         self.conn.commit()
 
+    def cleanWebKSDirs(self, paths):
+        """paths is a list of known current Web-Kickstart directories in
+           the absolute form.  Any directory in the database that's not in
+           this list will be removed to prune old directories."""
+
+        q1 = """delete from webkickstartdirs where wkd_id = %s"""
+        table = self.getAllWebKSDir()
+        if len(paths) < 1: return
+        if len(table) < 1: return
+
+        # Make a dict for quick compares
+        d = {}
+        commit = False
+        for i in table: d[i['path']] = i['wkd_id']
+        for i in d.keys():
+            if i not in paths:
+                self.cursor.execute(q1, (d[i],))
+                if not commit: commit = True
+
+        if commit:
+            self.conn.commit()
+
     def getAllWebKSDir(self):
         q = """select * from webkickstartdirs"""
         self.cursor.execute(q)

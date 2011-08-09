@@ -73,6 +73,7 @@ class Application(AppHelpers, RLAttributes):
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")
 
+        a = Auth()
         m = MiscServer()
         webksMap = m.getAllWebKSDir()
 
@@ -98,6 +99,8 @@ class Application(AppHelpers, RLAttributes):
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
+                                fullname=a.getName(),
+                                userid=a.userid,
                                 webksMap=webksMap,
                                ))
     webkickstart.exposed = True

@@ -19,6 +19,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import logging
 import optparse
 import os.path
 
@@ -31,43 +32,31 @@ import rlmtools.configDragon as configDragon
 import rlmtools.miscServer as miscServer
 from rlmtools.constants import defaultConfFiles
 
-def fsla(path):
-    # fs la <path>
-    if not afs.fs.inafs(path):
-        return None
-
-    ret = []
-    acls = afs.acl.ACL.retrieve(path)
-    # Ignore negative ACLs for now
-    for i in acls.pos.keys():
-        perm = str(afs.acl.showRights(acls.pos[i]))
-        ret.append((i, perm))
-
-    return ret
-
 def watchWKS(config):
     """Make a map of current WebKickstart directories to departments."""
 
+    log = logging.getLogger('xmlrpc')
+    log.info("Running watchWKS job...")
     m = miscServer.MiscServer()
     webksPath = webKSConfig(config.webks_dir).hosts
-    print "To read webkickstart dirs: %s" % webksPath
+    scrubbedPaths = []
+    if not os.path.exists(webksPath):
+        log.warning("Web-Kickstart directory %s not found. Aborting." \
+                % webksPath)
+        return
 
     for subdir in os.listdir(webksPath):
         abspath = os.path.join(webksPath, subdir)
-        print "Working on: %s" % abspath
+        log.debug("watchWKS: Working on: %s" % abspath)
         if not os.path.isdir(abspath):
             continue
 
-        print "   Department: %s" % subdir
+        scrubbedPaths.append(abspath)
         # If this doesn't match a dept it will be None - what we want
         dept_id = m.getDeptIDNoCreate(subdir)
         m.insertWebKSDir(abspath, dept_id)
 
-        acls = fsla(abspath)
-        if acls is None:
-            continue
-
-        for i in acls: print "   %s: %s" % i
+    m.cleanWebKSDirs(scrubbedPaths)
 
 def main():
     parser = optparse.OptionParser()
