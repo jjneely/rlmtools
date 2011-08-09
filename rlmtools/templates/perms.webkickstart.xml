@@ -19,7 +19,7 @@
     <p py:content="message"/>
   </div>
 
-  <p>Greetings, ${fullname}.  You are user "${userid}".</p>
+  <p>Greetings, ${name}.  You are user "${userid}".</p>
 
   <h2>Web-Kickstart Directory Listing</h2>
 
@@ -30,7 +30,7 @@
 
   <div py:for="i in webksMap">
     <table>
-      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'neutral'}">
+      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
         <th class="right">Department:</th>
         <td py:if="not i['bad_dept']">${i['dept']}</td>
         <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
@@ -42,6 +42,17 @@
       <tr class="neutral">
         <th class="right">AFS Access Permissions:</th>
         <td><p py:for="j in i['pts']">${j[0]} ${j[1]}</p></td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">RLMTools Department ACLs:</th>
+        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
+        <td py:if="not i['bad_dept']">
+          <p py:for="j in i['deptACLs']">${j[1]} ${j[2]}</p>
+        </td>
+      </tr>
+      <tr py:attrs="{'class': i['perm_misalignment'] and 'bad' or 'good'}">
+        <th class="right">Permissions Aligned:</th>
+        <td>${i['perm_misalignment'] and 'No' or 'Yes'}</td>
       </tr>
     </table>
 

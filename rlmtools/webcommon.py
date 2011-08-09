@@ -84,6 +84,12 @@ class AppHelpers(object):
     def isWRITE(self, field): return (field & self.WRITE) >> 1 == 1
     def isREAD(self, field): return (field & self.READ) >> 2 == 1
 
+    def mapPermBits(self, field):
+        if self.isADMIN(field): return "admin"
+        if self.isWRITE(field): return "write"
+        if self.isREAD(field): return "read"
+        return "unknown"
+
     def __init__(self, loader=None):
         # The DB interface is safe enough for multiple classes to
         # instantiate their own.
@@ -103,8 +109,7 @@ class AppHelpers(object):
                 == "HTTP/1.1":
             self.outEncoding = 'utf-8'
         else:
-            #self.outEncoding = 'latin-1'
-            self.outEncoding = 'utf-8'
+            self.outEncoding = 'latin-1'
 
     def render(self, tmpl, dict):
         # Add some default variables

@@ -185,3 +185,15 @@ class MiscServer(server.Server):
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
+    def getDeptACLs(self, dept_id):
+        """Return a list of dicts containing the ACLs that affect the given
+           department."""
+
+        q = """select acls.name, acls.pts, aclgroups.perms from 
+               acls, aclgroups where
+               acls.acl_id = aclgroups.acl_id and
+               aclgroups.dept_id = %s"""
+
+        self.cursor.execute(q, (dept_id,))
+        return resultSet(self.cursor).dump()
+

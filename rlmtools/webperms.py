@@ -33,16 +33,15 @@ from configDragon import config
 from webcommon import *
 from adminServer import AdminServer
 from webServer import WebServer
-from rlattributes import RLAttributes
 from miscServer import MiscServer
 
 logger = logging.getLogger('xmlrpc')
 
-class Application(AppHelpers, RLAttributes):
+class Application(AppHelpers):
 
     def __init__(self):
         AppHelpers.__init__(self)
-        self._admin = AdminServer()
+        self._misc = MiscServer()
 
     def index(self, message=""):
         # Readable by any authenticated user
@@ -52,6 +51,8 @@ class Application(AppHelpers, RLAttributes):
         subMenu = [
                     ('Manage ACLs',
                      '%s/admin/aclGroups' % url()),
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
                   ]
         depts = WebServer().getDepartments()
         a = Auth()
@@ -74,32 +75,55 @@ class Application(AppHelpers, RLAttributes):
             return self.message("You do not appear to be authenticated.")
 
         a = Auth()
-        m = MiscServer()
-        webksMap = m.getAllWebKSDir()
+        webksMap = self._misc.getAllWebKSDir()
 
         # Map AFS permissions to our admin/write/read scheme
-        rights = {'rl':      'read',
+        rights = {'l':       'look',
+                  'rl':      'read',
                   'rlidwk':  'write',
                   'rlidwka': 'admin' }
-        ptsFilter = ['system:administrators', 'admin:linux-kickstart']
         for i in webksMap:
             i['pts'] = []
-            i['dept'] = m.getDeptName(i['dept_id'])
+            i['dept'] = self._misc.getDeptName(i['dept_id'])
             i['bad_dept'] = i['dept'] is None
 
+            # Build representation of AFS PTS groups
             ptsacls = fsla(i['path'])
             for pts, perms in ptsacls:
-                if pts in ptsFilter:
+                if pts == 'system:administrators' or pts.startswith('admin:'):
                     continue
                 if perms in rights:
                     i['pts'].append((pts, rights[perms]))
                 else:
                     i['pts'].append((pts, 'other'))
 
+            # Include ACL information from LD department
+            # Look and see if AFS PTS groups match the LD ACLs
+            if i['bad_dept']:
+                i['deptACLs'] = None
+                i['perm_misalignment'] = True
+            else:
+                i['deptACLs'] = []
+                deptACLs = self._misc.getDeptACLs(i['dept_id'])
+                misalignment = len(deptACLs) != len(i['pts'])
+                for j in deptACLs:
+                    # When we only have read access in AFS and admin access
+                    # in LD -- this is correct.  As well as admin/admin
+                    if self.isADMIN(j['perms']):
+                        if not ((j['pts'], 'admin') in i['pts'] or
+                                (j['pts'], 'write') in i['pts']):
+                            misalignment = True
+                    else:
+                        if (j['pts'], self.mapPermBits(j['perms'])) not in i['pts']:
+                            misalignment = True
+
+                    i['deptACLs'].append((j['name'], j['pts'],
+                                          self.mapPermBits(j['perms']) ))
+                i['perm_misalignment'] = misalignment
+
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
-                                fullname=a.getName(),
                                 userid=a.userid,
                                 webksMap=webksMap,
                                ))
