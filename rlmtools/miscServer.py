@@ -189,11 +189,26 @@ class MiscServer(server.Server):
         """Return a list of dicts containing the ACLs that affect the given
            department."""
 
-        q = """select acls.name, acls.pts, aclgroups.perms from 
-               acls, aclgroups where
+        q = """select acls.name, acls.pts, acls.acl_id, aclgroups.perms 
+               from acls, aclgroups where
                acls.acl_id = aclgroups.acl_id and
                aclgroups.dept_id = %s"""
 
-        self.cursor.execute(q, (dept_id,))
-        return resultSet(self.cursor).dump()
+        d = dept_id
+        ret = {}
+
+        # This looping construct deals with inherited permissions
+        while d is not None:
+            self.cursor.execute(q, (d,))
+            for row in resultSet(self.cursor):
+                if row['acl_id'] in ret:
+                    ret[row['acl_id']]['perms'] = \
+                            ret[row['acl_id']]['perms'] | row['perms']
+                else:
+                    ret[row['acl_id']] = row.copy()
+            d = self.getDeptParentID(d)
+
+        keys = ret.keys()
+        keys.sort()
+        return [ ret[i] for i in keys ]
 

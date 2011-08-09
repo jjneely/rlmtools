@@ -105,8 +105,14 @@ class Application(AppHelpers):
             else:
                 i['deptACLs'] = []
                 deptACLs = self._misc.getDeptACLs(i['dept_id'])
-                misalignment = len(deptACLs) != len(i['pts'])
+                misalignment = False
                 for j in deptACLs:
+                    if not (self.isADMIN(j['perms']) or \
+                            self.isWRITE(j['perms'])):
+                        # LD READ access does not equate to AFS WKS READ
+                        # access.  We remove this ACL from consideration
+                        continue
+
                     # When we only have read access in AFS and admin access
                     # in LD -- this is correct.  As well as admin/admin
                     if self.isADMIN(j['perms']):
@@ -119,6 +125,11 @@ class Application(AppHelpers):
 
                     i['deptACLs'].append((j['name'], j['pts'],
                                           self.mapPermBits(j['perms']) ))
+
+                # Do we have the same number of ACLs in both lists now?
+                if len(i['deptACLs']) != len(i['pts']):
+                    misalignment = True
+
                 i['perm_misalignment'] = misalignment
 
         return self.render('perms.webkickstart',
