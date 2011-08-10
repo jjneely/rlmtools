@@ -34,6 +34,7 @@ from webcommon import *
 from adminServer import AdminServer
 from webServer import WebServer
 from miscServer import MiscServer
+from ldafs import *
 
 logger = logging.getLogger('xmlrpc')
 
@@ -77,25 +78,12 @@ class Application(AppHelpers):
         a = Auth()
         webksMap = self._misc.getAllWebKSDir()
 
-        # Map AFS permissions to our admin/write/read scheme
-        rights = {'l':       'look',
-                  'rl':      'read',
-                  'rlidwk':  'write',
-                  'rlidwka': 'admin' }
         for i in webksMap:
-            i['pts'] = []
             i['dept'] = self._misc.getDeptName(i['dept_id'])
             i['bad_dept'] = i['dept'] is None
 
             # Build representation of AFS PTS groups
-            ptsacls = fsla(i['path'])
-            for pts, perms in ptsacls:
-                if pts == 'system:administrators' or pts.startswith('admin:'):
-                    continue
-                if perms in rights:
-                    i['pts'].append((pts, rights[perms]))
-                else:
-                    i['pts'].append((pts, 'other'))
+            i['pts'] = fsla(i['path'])
 
             # Include ACL information from LD department
             # Look and see if AFS PTS groups match the LD ACLs
@@ -104,32 +92,9 @@ class Application(AppHelpers):
                 i['perm_misalignment'] = True
                 i['show_actions'] = False
             else:
-                i['deptACLs'] = []
-                deptACLs = self._misc.getDeptACLs(i['dept_id'])
-                misalignment = False
-                for j in deptACLs:
-                    if not (self.isADMIN(j['perms']) or \
-                            self.isWRITE(j['perms'])):
-                        # LD READ access does not equate to AFS WKS READ
-                        # access.  We remove this ACL from consideration
-                        continue
-
-                    # When we only have read access in AFS and admin access
-                    # in LD -- this is correct.  As well as admin/admin
-                    if self.isADMIN(j['perms']):
-                        if not ((j['pts'], 'admin') in i['pts'] or
-                                (j['pts'], 'write') in i['pts']):
-                            misalignment = True
-                    else:
-                        if (j['pts'], self.mapPermBits(j['perms'])) not in i['pts']:
-                            misalignment = True
-
-                    i['deptACLs'].append((j['name'], j['pts'],
-                                          self.mapPermBits(j['perms']) ))
-
-                # Do we have the same number of ACLs in both lists now?
-                if len(i['deptACLs']) != len(i['pts']):
-                    misalignment = True
+                i['deptACLs'] = matchACLToAFS(
+                        self._misc.getDeptACLs(i['dept_id']), True)
+                misalignment = not equalACLs(i['pts'], i['deptACLs'], True)
 
                 i['perm_misalignment'] = misalignment
                 i['show_actions'] = misalignment
