@@ -102,6 +102,7 @@ class Application(AppHelpers):
             if i['bad_dept']:
                 i['deptACLs'] = None
                 i['perm_misalignment'] = True
+                i['show_actions'] = False
             else:
                 i['deptACLs'] = []
                 deptACLs = self._misc.getDeptACLs(i['dept_id'])
@@ -131,6 +132,7 @@ class Application(AppHelpers):
                     misalignment = True
 
                 i['perm_misalignment'] = misalignment
+                i['show_actions'] = misalignment
 
         return self.render('perms.webkickstart',
                            dict(message=message,
