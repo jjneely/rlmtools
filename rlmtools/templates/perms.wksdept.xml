@@ -12,7 +12,8 @@
 <body>
 
   <p>
-    This maps Web-Kickstart directories to departments and other stuff.
+    This page allows you to change the department associated with a 
+    Web-Kickstart directory.
   </p>
 
   <div py:if="message != ''" class="message">
@@ -21,19 +22,20 @@
 
   <p>Greetings, ${name}.  You are user "${userid}".</p>
 
-  <h2>Web-Kickstart Directory Listing</h2>
+  <h2>Web-Kickstart Directory</h2>
 
-  <p py:if="len(webksMap) == 0">
-    You do not appear to have any Web-Kickstart directories associated
-    with your department.
-  </p>
-
-  <div py:for="i in webksMap">
+  <form py:with="i=webksMap">
     <table>
-      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
+      <tr class="neutral">
         <th class="right">Department:</th>
-        <td py:if="not i['bad_dept']">${i['dept']}</td>
-        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
+        <td>
+          <select name="newDept">
+            <option py:for="d in depts" value="${d['dept_id']}" 
+              py:attrs="d['dept_id'] == i['dept_id'] and {'selected':'selected'} or {}">
+              ${d['name']}
+            </option>
+          </select>
+        </td>
       </tr>
       <tr class="neutral">
         <th class="right">AFS Path:</th>
@@ -63,20 +65,13 @@
       <tr clas="neutral">
         <th class="right">Available Actions:</th>
         <td>
-          <button type="button" 
-            onclick="location.href='${baseURL}/perms/syncWksLD?dept_id=${i['dept_id']}'">Change RLMTools Permissions to Match AFS</button><br/>
-          <button type="button" 
-            onclick="location.href='${baseURL}/perms/syncWksAFS?dept_id=${i['dept_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/changeACLs?dept_id=${i['dept_id']}'">Change RLMTools Department ACLs</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/changeWKSDept?wkd_id=${i['wkd_id']}'">Change Department Association</button>
+          <input type="submit" value="Submit"/>
         </td>
       </tr>
     </table>
 
-    <p class="space" py:if="i is not webksMap[-1]" />
-  </div>
+    <p class="space"/>
+  </form>
 
 </body>
 

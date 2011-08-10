@@ -180,10 +180,19 @@ class MiscServer(server.Server):
         if commit:
             self.conn.commit()
 
-    def getAllWebKSDir(self):
+    def getAllWKSDir(self):
         q = """select * from webkickstartdirs"""
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
+
+    def getWKSDir(self, wkd_id):
+        q = """select * from webkickstartdirs where wkd_id = %s"""
+        self.cursor.execute(q, (wkd_id,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        
+        return ret.dump()[0]
 
     def getDeptACLs(self, dept_id):
         """Return a list of dicts containing the ACLs that affect the given

@@ -76,7 +76,7 @@ class Application(AppHelpers):
             return self.message("You do not appear to be authenticated.")
 
         a = Auth()
-        webksMap = self._misc.getAllWebKSDir()
+        webksMap = self._misc.getAllWKSDir()
 
         for i in webksMap:
             i['dept'] = self._misc.getDeptName(i['dept_id'])
@@ -97,7 +97,6 @@ class Application(AppHelpers):
                 misalignment = not equalACLs(i['pts'], i['deptACLs'], True)
 
                 i['perm_misalignment'] = misalignment
-                i['show_actions'] = misalignment
 
         return self.render('perms.webkickstart',
                            dict(message=message,
@@ -106,5 +105,49 @@ class Application(AppHelpers):
                                 webksMap=webksMap,
                                ))
     webkickstart.exposed = True
+
+    def changeWKSDept(self, wkd_id, message=""):
+        # Readable by any authenticated user
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        a = Auth()
+        wkd_id = int(wkd_id)
+        webksMap = self._misc.getWKSDir(wkd_id)
+        depts = self._misc.getAllDepts()
+        if webksMap is None:
+            message = """A Web-Kickstart directory matching ID %s does
+                         not exist.  Use the Back button and try your
+                         query again.""" % wkd_id
+            return self.message(message)
+
+        i = webksMap
+        i['dept'] = self._misc.getDeptName(i['dept_id'])
+        i['bad_dept'] = i['dept'] is None
+
+        # Build representation of AFS PTS groups
+        i['pts'] = fsla(i['path'])
+
+        # Include ACL information from LD department
+        # Look and see if AFS PTS groups match the LD ACLs
+        if i['bad_dept']:
+            i['deptACLs'] = None
+            i['perm_misalignment'] = True
+            i['show_actions'] = False
+        else:
+            i['deptACLs'] = matchACLToAFS(
+                    self._misc.getDeptACLs(i['dept_id']), True)
+            misalignment = not equalACLs(i['pts'], i['deptACLs'], True)
+
+            i['perm_misalignment'] = misalignment
+
+        return self.render('perms.wksdept',
+                           dict(message=message,
+                                title="Web-Kickstart",
+                                userid=a.userid,
+                                webksMap=webksMap,
+                                depts=depts,
+                               ))
+    changeWKSDept.exposed = True
 
 
