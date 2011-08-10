@@ -1,13 +1,19 @@
-2.1.x Road Map
+Road Map
 ============
 
 Server:
+
+3.0.x:
 
     * Solve the bazillian MySQL connections problem
     * Port away from mod_python (unmaintained)
         nginx ??
         uWSGI ??
         apache + mod_wsgi ??
+    * Celery real time and scheduled tasks?
+        http://www.celeryproject.org/
+
+2.1.x:
 
     * Re-work the UI so that all Admin Panels become "Manage Attributes"
       or similar.  Be able to drill down to all dept and client status
@@ -27,6 +33,8 @@ Server:
         * Bcfg2 Repos
 
     * Create a plugin style system for managing access permissions
+        - No.  There is a lot of variability.  Let's get working
+          cron jobs and web pages first.
     * Create -inators for cron jobs to process queue of actions to
       alter or create PTS groups, depts, web-kickstart dirs, etc.
 
