@@ -106,7 +106,7 @@ class Application(AppHelpers):
                                ))
     webkickstart.exposed = True
 
-    def changeWKSDept(self, wkd_id, message=""):
+    def changeWKSDept(self, wkd_id, setDept=None, message=""):
         # Readable by any authenticated user
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")
@@ -120,6 +120,17 @@ class Application(AppHelpers):
                          not exist.  Use the Back button and try your
                          query again.""" % wkd_id
             return self.message(message)
+        if setDept is not None:
+            dept_id = int(setDept)
+            dept = self._misc.getDeptName(dept_id)
+            if dept is None:
+                message = """Department ID %s was not found.  This 
+                             Web-Kickstart directory was not modified.""" \
+                                     % dept_id
+            else:
+                self._misc.setWKSDept(wkd_id, dept_id)
+                webksMap = self._misc.getWKSDir(wkd_id)
+                message = "Set Department to: %s" % dept
 
         i = webksMap
         i['dept'] = self._misc.getDeptName(i['dept_id'])

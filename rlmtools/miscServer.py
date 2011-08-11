@@ -194,6 +194,13 @@ class MiscServer(server.Server):
         
         return ret.dump()[0]
 
+    def setWKSDept(self, wkd_id, dept_id):
+        """Set the associated department on a Web-Kickstart directory entry"""
+
+        q = """update webkickstartdirs set dept_id = %s where wkd_id = %s"""
+        self.cursor.execute(q, (dept_id, wkd_id))
+        self.conn.commit()
+
     def getDeptACLs(self, dept_id):
         """Return a list of dicts containing the ACLs that affect the given
            department."""

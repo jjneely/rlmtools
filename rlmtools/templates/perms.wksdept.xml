@@ -24,12 +24,13 @@
 
   <h2>Web-Kickstart Directory</h2>
 
-  <form py:with="i=webksMap">
+  <form method="post" action="${baseURL}/perms/changeWKSDept" 
+    py:with="i=webksMap">
     <table>
       <tr class="neutral">
         <th class="right">Department:</th>
         <td>
-          <select name="newDept">
+          <select name="setDept">
             <option py:for="d in depts" value="${d['dept_id']}" 
               py:attrs="d['dept_id'] == i['dept_id'] and {'selected':'selected'} or {}">
               ${d['name']}
@@ -65,6 +66,7 @@
       <tr clas="neutral">
         <th class="right">Available Actions:</th>
         <td>
+          <input type="hidden" name="wkd_id" value="${i['wkd_id']}"/>
           <input type="submit" value="Submit"/>
         </td>
       </tr>
