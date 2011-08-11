@@ -30,17 +30,17 @@ import re
 
 from configDragon import config
 from webcommon import *
-from adminServer import AdminServer
+from permServer import PermServer
 from webServer import WebServer
 from rlattributes import RLAttributes
 
 logger = logging.getLogger('xmlrpc')
 
-class Application(AppHelpers, RLAttributes):
+class Application(AppHelpers):
 
     def __init__(self):
         AppHelpers.__init__(self)
-        self._admin = AdminServer()
+        self._admin = PermServer()
 
     def index(self):
         # Readable by any authenticated user

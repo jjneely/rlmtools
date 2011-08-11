@@ -183,64 +183,6 @@ class AdminServer(server.Server):
         result = resultSet(self.cursor)
         return [ r['akey'] for r in result ]
 
-    def createACL(self, name, pts, cell):
-        "Create a PTS based ACL"
-        q = "insert into acls (name, pts, cell) values (%s, %s, %s)"
-        self.cursor.execute(q, (name, pts, cell))
-        self.conn.commit()
-
-    def removeACL(self, acl_id):
-        "Wipe her out, Scotty!"
-        q1 = "delete from acls where acl_id = %s"
-        q2 = "delete from sysadmins where acl_id = %s"
-        q3 = "delete from aclgroups where acl_id = %s"
-
-        self.cursor.execute(q1, (acl_id,))
-        self.cursor.execute(q2, (acl_id,))
-        self.cursor.execute(q3, (acl_id,))
-        self.conn.commit()
-
-    def getACL(self, acl_id):
-        "Return basic information about an ACL"
-        q = "select name, pts, cell from acls where acl_id = %s"
-        self.cursor.execute(q, (acl_id,))
-        return resultSet(self.cursor).dump()[0]
-
-    def getPTSGroups(self):
-        """Returns a list of dicts"""
-
-        q = "select acl_id, name, pts, cell from acls"
-        self.cursor.execute(q)
-        return resultSet(self.cursor).dump()
-
-    def getSysAdmins(self, acl_id):
-        q = """select distinct userid, sysadmin_id from sysadmins 
-               where acl_id = %s order by userid"""
-
-        self.cursor.execute(q, (acl_id,))
-        result = resultSet(self.cursor)
-        return [ row['userid'] for row in result ]
-
-    def getPermsForACL(self, acl_id):
-        q = """select d.dept_id, d.name, a.perms, a.aclg_id 
-               from dept as d, aclgroups as a
-               where d.dept_id = a.dept_id and
-               a.acl_id = %s"""
-
-        self.cursor.execute(q, (acl_id,))
-        return resultSet(self.cursor).dump()
-
-    def setPerm(self, acl_id, dept_id, bitfield):
-        "Add permissions to an ACL group"
-        q = "insert into aclgroups (acl_id, dept_id, perms) values (%s, %s, %s)"
-        self.cursor.execute(q, (acl_id, dept_id, bitfield))
-        self.conn.commit()
-
-    def removePerm(self, aclg_id):
-        q = "delete from aclgroups where aclg_id = %s"
-        self.cursor.execute(q, (aclg_id,))
-        self.conn.commit()
-
     def getImportantKeys(self):
         q = "select keyword, map from webkickstartkeys"
         self.cursor.execute(q)

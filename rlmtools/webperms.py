@@ -33,7 +33,7 @@ from configDragon import config
 from webcommon import *
 from adminServer import AdminServer
 from webServer import WebServer
-from miscServer import MiscServer
+from permServer import PermServer
 from ldafs import *
 
 logger = logging.getLogger('xmlrpc')
@@ -42,7 +42,7 @@ class Application(AppHelpers):
 
     def __init__(self):
         AppHelpers.__init__(self)
-        self._misc = MiscServer()
+        self._misc = PermServer()
 
     def index(self, message=""):
         # Readable by any authenticated user
