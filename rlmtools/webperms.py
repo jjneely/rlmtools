@@ -78,31 +78,12 @@ class Application(AppHelpers):
         a = Auth()
         webksMap = self._misc.getAllWKSDir()
 
-        for i in webksMap:
-            i['dept'] = self._misc.getDeptName(i['dept_id'])
-            i['bad_dept'] = i['dept'] is None
-
-            # Build representation of AFS PTS groups
-            i['pts'] = fsla(i['path'])
-
-            # Include ACL information from LD department
-            # Look and see if AFS PTS groups match the LD ACLs
-            if i['bad_dept']:
-                i['deptACLs'] = None
-                i['perm_misalignment'] = True
-                i['show_actions'] = False
-            else:
-                i['deptACLs'] = matchACLToAFS(
-                        self._misc.getDeptACLs(i['dept_id']), True)
-                misalignment = not equalACLs(i['pts'], i['deptACLs'], True)
-
-                i['perm_misalignment'] = misalignment
-
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
                                 userid=a.userid,
-                                webksMap=webksMap,
+                                webksMap=[self.completeWKSInfo(i) \
+                                          for i in webksMap ],
                                ))
     webkickstart.exposed = True
 
@@ -132,7 +113,21 @@ class Application(AppHelpers):
                 webksMap = self._misc.getWKSDir(wkd_id)
                 message = "Set Department to: %s" % dept
 
-        i = webksMap
+        return self.render('perms.wksdept',
+                           dict(message=message,
+                                title="Web-Kickstart",
+                                userid=a.userid,
+                                webksMap=self.completeWKSInfo(webksMap),
+                                depts=depts,
+                               ))
+    changeWKSDept.exposed = True
+
+    def completeWKSInfo(self, webks):
+        # Complete the dict for the perm pages that deal with web-kickstarts
+        # webks should be the output from _misc.getWKSDir() or one entry
+        # from _misc.getAllWKSDir()
+
+        i = webks.copy()
         i['dept'] = self._misc.getDeptName(i['dept_id'])
         i['bad_dept'] = i['dept'] is None
 
@@ -152,13 +147,5 @@ class Application(AppHelpers):
 
             i['perm_misalignment'] = misalignment
 
-        return self.render('perms.wksdept',
-                           dict(message=message,
-                                title="Web-Kickstart",
-                                userid=a.userid,
-                                webksMap=webksMap,
-                                depts=depts,
-                               ))
-    changeWKSDept.exposed = True
-
+        return i
 
