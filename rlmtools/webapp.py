@@ -35,6 +35,7 @@ import configDragon
 import webks
 import webadmin
 import webperms
+import webacl
 
 config = None
 
@@ -52,6 +53,9 @@ class Application(AppHelpers):
 
         self.perms = webperms.Application()
         self.perms.exposed = True
+
+        self.perms.acl = webacl.Application()
+        self.perms.acl.exposed = True
 
     def index(self):
         if not self.isAuthenticated():

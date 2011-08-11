@@ -125,7 +125,7 @@
 
   <p>
     You may also manage access permissions for each department and their
-    children on the <a href="${baseURL}/admin/aclGroups">ACL Groups</a>
+    children on the <a href="${baseURL}/perms/acl/">ACL Groups</a>
     page.
   </p>
 

@@ -21,7 +21,7 @@
   <table>
     <tr class="neutral">
       <td>
-        <form method="get" action="${baseURL}/admin/removeACL"
+        <form method="get" action="${baseURL}/perms/acl/removeACL"
               style="margin-bottom: 0">
           <input type="hidden" name="acl_id" value="${acl_id}"/>
           <input type="hidden" name="consent" value="yes"/>
@@ -29,7 +29,7 @@
         </form>
       </td>
       <td>
-        <form method="get" action="${baseURL}/admin/removeACL"
+        <form method="get" action="${baseURL}/perms/acl/removeACL"
               style="margin-bottom: 0">
           <input type="hidden" name="acl_id" value="${acl_id}"/>
           <input type="hidden" name="consent" value="no"/>

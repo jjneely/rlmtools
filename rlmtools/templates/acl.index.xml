@@ -27,7 +27,7 @@
     </tr>
     <tr class="neutral" py:for="g in ptsgroups">
       <td>
-        <a href="${baseURL}/admin/permissions?acl_id=${g['acl_id']}"
+        <a href="${baseURL}/perms/acl/permissions?acl_id=${g['acl_id']}"
            py:content="g['name']" />
       </td>
       <td py:content="g['pts']" />
@@ -43,7 +43,7 @@
     to it.
   </p>
 
-  <form method="get" action="${baseURL}/admin/newACL">
+  <form method="get" action="${baseURL}/perms/acl/newACL">
     <table>
       <tr>
         <td class="right">

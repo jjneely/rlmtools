@@ -40,7 +40,7 @@
       <td py:content="i['write'] > 0"/>
       <td py:content="i['admin'] > 0"/>
       <td>
-        <a href="${baseURL}/admin/removePerm?aclg_id=${i['aclg_id']}&amp;acl_id=${acl_id}">
+        <a href="${baseURL}/perms/acl/removePerm?aclg_id=${i['aclg_id']}&amp;acl_id=${acl_id}">
           Delete
         </a>
       </td>
@@ -55,7 +55,7 @@
     access to the "oit-iso" department.
   </p>
 
-  <form method="get" action="${baseURL}/admin/addPerm">
+  <form method="get" action="${baseURL}/perms/acl/addPerm">
     <input type="hidden" name="acl_id" value="${acl_id}"/>
     <table>
       <tr class="neutral">
@@ -106,7 +106,7 @@
   <table>
     <tr class="neutral">
       <td>
-        <a href="${baseURL}/admin/removeACL?acl_id=${acl_id}">
+        <a href="${baseURL}/perms/acl/removeACL?acl_id=${acl_id}">
           Delete ACL "${aclname}"
         </a>
       </td>

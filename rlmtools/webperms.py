@@ -51,7 +51,7 @@ class Application(AppHelpers):
 
         subMenu = [
                     ('Manage ACLs',
-                     '%s/admin/aclGroups' % url()),
+                     '%s/perms/acl/' % url()),
                     ('Manage Web-Kickstart Directories',
                      '%s/perms/webkickstart' % url()),
                   ]
