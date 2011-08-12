@@ -100,6 +100,11 @@ class Application(AppHelpers):
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")
 
+        subMenu = [
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                  ]
+
         a = Auth()
         wkd_id = int(wkd_id)
         webksMap = self._misc.getWKSDir(wkd_id)
@@ -125,6 +130,7 @@ class Application(AppHelpers):
         return self.render('perms.wksdept',
                            dict(message=message,
                                 title="Web-Kickstart",
+                                subMenu=subMenu,
                                 userid=a.userid,
                                 webksMap=self.completeWKSInfo(webksMap),
                                 depts=depts,
