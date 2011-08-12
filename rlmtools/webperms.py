@@ -78,10 +78,18 @@ class Application(AppHelpers):
         a = Auth()
         webksMap = self._misc.getAllWKSDir()
 
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/perms/acl/' % url()),
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                  ]
+
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
                                 userid=a.userid,
+                                subMenu=subMenu,
                                 webksMap=[self.completeWKSInfo(i) \
                                           for i in webksMap ],
                                ))
@@ -110,8 +118,9 @@ class Application(AppHelpers):
                                      % dept_id
             else:
                 self._misc.setWKSDept(wkd_id, dept_id)
-                webksMap = self._misc.getWKSDir(wkd_id)
-                message = "Set Department to: %s" % dept
+                message = """Set department association to %s for
+                Web-Kickstart directory %s.""" % (dept, webksMap['path'])
+                return self.webkickstart(message)
 
         return self.render('perms.wksdept',
                            dict(message=message,
