@@ -206,6 +206,12 @@ class PermServer(server.Server):
         self.cursor.execute(q, (acl_id,))
         return resultSet(self.cursor).dump()[0]
 
+    def isACL(self, acl):
+        "Return True if acl exists"
+        q = "select acl_id from acls where pts = %s"
+        self.cursor.execute(q, (acl,))
+        return self.cursor.rowcount > 0
+
     def getPTSGroups(self):
         """Returns a list of dicts"""
 

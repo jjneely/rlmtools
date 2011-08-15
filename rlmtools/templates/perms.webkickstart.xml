@@ -64,11 +64,11 @@
         <th class="right">Available Actions:</th>
         <td>
           <button type="button" 
-            onclick="location.href='${baseURL}/perms/syncWksLD?dept_id=${i['dept_id']}'">Change RLMTools Permissions to Match AFS</button><br/>
+            onclick="location.href='${baseURL}/perms/modLDACLs?wkd_id=${i['wkd_id']}'">Change RLMTools Permissions to Match AFS</button><br/>
           <button type="button" 
             onclick="location.href='${baseURL}/perms/syncWksAFS?dept_id=${i['dept_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
           <button type="button"
-            onclick="location.href='${baseURL}/perms/changeACLs?dept_id=${i['dept_id']}'">Change RLMTools Department ACLs</button><br/>
+            onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
           <button type="button"
             onclick="location.href='${baseURL}/perms/changeWKSDept?wkd_id=${i['wkd_id']}'">Change Department Association</button>
         </td>

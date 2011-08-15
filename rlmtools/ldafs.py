@@ -79,3 +79,29 @@ def equalACLs(afs, ld, acceptWrite=False):
 
     return True
 
+def LDtoAFS(acl):
+    # Translate LD ACL to its equivallent AFS PTS permission
+    if acl[2] == 'admin':
+        return (acl[1], 'write')
+    if acl[2] == 'write':
+        return (acl[1], acl[2])
+    if acl[2] == 'read':
+        return (acl[1], acl[2])
+    return None
+
+def AFStoLD(acl):
+    # Translate AFS PTS permission to LD ACL equivallent
+    if acl[1] == 'admin':
+        return (acl[0], acl[0], 'admin')
+    if acl[1] == 'write':
+        return (acl[0], acl[0], 'admin')
+    if acl[1] == 'read':
+        return (acl[0], acl[0], 'read')
+    return None
+
+def LDinLDs(ld, lds):
+    # Is the LD ACL 'ld' in the list of LD ACLs 'lds'?
+    for i in lds:
+        if (ld[1], ld[2]) == (i[1], i[2]): return True
+    return False
+

@@ -137,6 +137,74 @@ class Application(AppHelpers):
                                ))
     changeWKSDept.exposed = True
 
+    def modLDACLs(self, wkd_id, setIt=None, message=""):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        subMenu = [
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                  ]
+
+        a = Auth()
+        wkd_id = int(wkd_id)
+        webksMap = self._misc.getWKSDir(wkd_id)
+        if webksMap is None:
+            message = """A Web-Kickstart directory matching ID %s does
+                         not exist.  Use the Back button and try your
+                         query again.""" % wkd_id
+            return self.message(message)
+
+        webksMap = self.completeWKSInfo(webksMap)
+        if webksMap['bad_dept']:
+            message = """The Web-Kickstart directory %s is not associated
+                         with a department.  Setting a department must be
+                         completed before setting ACLs.""" % webksMap['path']
+            return self.webkickstart(message)
+
+        webksMap['todo'] = {}
+        ptsGroups = []
+        for p in webksMap['pts']:
+            ptsGroups.append(p[0])
+            if p[0] in ['installer:common']:
+                # Ignore installer:common - should have no rights 
+                continue
+            ld = AFStoLD(p)
+            if ld is None:
+                log.warning("modLDACL: Can't deal with AFS PTS permission %s" % str(p))
+                continue
+            if not self._misc.isACL(ld[0]):
+                # Need to create and set
+                webksMap['todo'][ld[0]] = (1, ld[2])
+            elif not LDinLDs(ld, webksMap['deptACLs']):
+                print "%s not in %s" % (str(ld), str(webksMap['deptACLs']))
+                # Need to set ACL on this dept
+                webksMap['todo'][ld[0]] = (2, ld[2])
+            else:
+                # ACLs are equal, we do nothing
+                continue
+        for p in webksMap['deptACLs']:
+            pts = LDtoAFS(p)
+            if pts is None:
+                log.warning("modLDACL: Can't deal with LD ACL permission %s" % str(p))
+                continue
+            if pts[0] in ['linux']:
+                # Refuse to remove the linux PTS or ACL
+                continue
+            if pts[0] not in ptsGroups:
+                # We need to delete this group from the LD dept
+                webksMap['todo'][pts[0]] = (3, None)
+
+        return self.render('perms.modLDACLs',
+                           dict(message=message,
+                                title="Web-Kickstart ACL Sync",
+                                subMenu=subMenu,
+                                userid=a.userid,
+                                webksMap=webksMap,
+                               ))
+    modLDACLs.exposed = True
+         
+
     def completeWKSInfo(self, webks):
         # Complete the dict for the perm pages that deal with web-kickstarts
         # webks should be the output from _misc.getWKSDir() or one entry
