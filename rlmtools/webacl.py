@@ -62,6 +62,8 @@ class Application(AppHelpers):
             return self.message("You need root level admin access to modify "
                                 "ACLs.")
 
+        if "" in [cell.strip(), ptsGroup.strip(), aclName.strip()]:
+            return self.message("All fields are required.  Not creating an ACL without complete data.")
         self._admin.createACL(aclName, ptsGroup, cell)
         return self.index()
     newACL.exposed = True
