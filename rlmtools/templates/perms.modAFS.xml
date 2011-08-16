@@ -12,7 +12,8 @@
 <body>
 
   <p>
-    Sync some AFS PTS groups to yo' Liquid Dragon ACLs man!
+    Setup the permssions on your AFS Web-Kickstart directory so that they
+    actually make since.
   </p>
 
   <div py:if="message != ''" class="message">
@@ -21,9 +22,9 @@
 
   <p>Greetings, ${name}.  You are user "${userid}".</p>
 
-  <h2>Web-Kickstart Syncronizing ACLs to AFS PTS Groups</h2>
+  <h2>Syncronizing AFS PTS Groups To RLMTools</h2>
 
-  <form method="post" action="${baseURL}/perms/modLDACLs" 
+  <form method="post" action="${baseURL}/perms/modAFSs" 
     py:with="i=webksMap">
     <table>
       <tr class="neutral">
@@ -57,12 +58,10 @@
           <i py:if="len(i['todo']) == 0">No Action Required</i>
           <ul class="plain" py:if="len(i['todo']) > 0">
             <li py:for="acl, perm in i['todo'].items()">
-              <div py:if="perm[0] == 1" py:replace="'Create ACL %s and 
-                set department permissions to %s.' % (acl, perm[1])"/>
-              <div py:if="perm[0] == 2" py:replace="'Set ACL %s to
-                this department and set permissions to %s.' % (acl, perm[1])"/>
-              <div py:if="perm[0] == 3" py:replace="'Remove ACL %s from
-                this department.' % acl"/> 
+              <div py:if="perm[0] == 2" py:replace="'Set PTS group %s on
+                this directory to %s.' % (acl, perm[1])"/>
+              <div py:if="perm[0] == 3" py:replace="'Remove PTS group %s from
+                this directory.' % acl"/> 
             </li>
           </ul>
         </td>
