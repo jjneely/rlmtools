@@ -224,7 +224,7 @@ class PermServer(server.Server):
     def getPTSGroups(self):
         """Returns a list of dicts"""
 
-        q = "select acl_id, name, pts, cell from acls"
+        q = "select acl_id, name, pts, cell from acls order by pts"
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
