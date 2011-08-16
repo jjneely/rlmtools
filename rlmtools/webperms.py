@@ -162,38 +162,8 @@ class Application(AppHelpers):
                          completed before setting ACLs.""" % webksMap['path']
             return self.webkickstart(message)
 
-        webksMap['todo'] = {}
-        ptsGroups = []
-        for p in webksMap['pts']:
-            ptsGroups.append(p[0])
-            if p[0] in ['installer:common']:
-                # Ignore installer:common - should have no rights 
-                continue
-            ld = AFStoLD(p)
-            if ld is None:
-                log.warning("modLDACL: Can't deal with AFS PTS permission %s" % str(p))
-                continue
-            if not self._misc.isACL(ld[0]):
-                # Need to create and set
-                webksMap['todo'][ld[0]] = (1, ld[2])
-            elif not LDinLDs(ld, webksMap['deptACLs']):
-                print "%s not in %s" % (str(ld), str(webksMap['deptACLs']))
-                # Need to set ACL on this dept
-                webksMap['todo'][ld[0]] = (2, ld[2])
-            else:
-                # ACLs are equal, we do nothing
-                continue
-        for p in webksMap['deptACLs']:
-            pts = LDtoAFS(p)
-            if pts is None:
-                log.warning("modLDACL: Can't deal with LD ACL permission %s" % str(p))
-                continue
-            if pts[0] in ['linux']:
-                # Refuse to remove the linux PTS or ACL
-                continue
-            if pts[0] not in ptsGroups:
-                # We need to delete this group from the LD dept
-                webksMap['todo'][pts[0]] = (3, None)
+        webksMap['todo'] = self.diffPermissions(webksMap['pts'], 
+                                                webksMap['deptACLs'])
 
         if setIt is not None:
             # Do the work
@@ -229,7 +199,60 @@ class Application(AppHelpers):
                                 webksMap=webksMap,
                                ))
     modLDACLs.exposed = True
-         
+        
+    def diffPermissions(self, pts, deptACLs, reverse=False):
+        # Return a dict of tasks to change the LD ACLs on this department
+        # to match what's indicated by the given AFS PTS permissions.
+        # reverse set to True will return changes needed to AFS based on
+        # LD's ACLs.
+        # This applies to WKD directories in the BP cell only!!
+        tasks = {}
+        ptsGroups = []
+        for p in pts:
+            ptsGroups.append(p[0])
+            if p[0] in ['installer:common']:
+                # should have no rights in WKS or LD
+                if reverse: tasks[p[0]] = (3, None) # Remove from AFS
+                continue
+            ld = AFStoLD(p)
+            if ld is None:
+                msg = "Can't deal with AFS PTS permission %s" % str(p)
+                log.warning("diffPermissions: " + msg)
+                continue
+            if not self._misc.isACL(ld[0]):
+                if reverse:
+                    tasks[ld[0]] = (3, None)
+                else:
+                    # Need to create and set
+                    tasks[ld[0]] = (1, ld[2])
+            elif not LDinLDs(ld, deptACLs):
+                if reverse:
+                    tasks[ld[0]] = (3, None)
+                else:
+                    # Need to set ACL on this dept
+                    tasks[ld[0]] = (2, ld[2])
+            else:
+                # ACLs are equal, we do nothing
+                continue
+        for p in deptACLs:
+            pts = LDtoAFS(p)
+            if pts is None:
+                msg = "Can't deal with LD ACL permission %s" % str(p)
+                log.warning("diffPermissions: " + msg)
+                continue
+            if pts[0] in ['linux']:
+                # Refuse to remove the linux PTS or ACL
+                continue
+            if pts[0] not in ptsGroups:
+                if reverse:
+                    tasks[pts[0]] = (2, pts[1])
+                else:
+                    # We need to delete this group from the LD dept
+                    tasks[pts[0]] = (3, None)
+        if reverse and ('linux', 'admin')  not in pts:
+            tasks['linux'] = (2, 'admin')
+
+        return tasks
 
     def completeWKSInfo(self, webks):
         # Complete the dict for the perm pages that deal with web-kickstarts
