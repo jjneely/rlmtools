@@ -50,9 +50,17 @@ class Application(AppHelpers):
 
         ptsgroups = self._admin.getPTSGroups()
 
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/perms/acl/' % url()),
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                  ]
+
         return self.render('acl.index', 
                            dict(ptsgroups=ptsgroups,
                                 title="Manage ACLs",
+                                subMenu=subMenu,
                                ))
     index.exposed = True
 
