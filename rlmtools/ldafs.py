@@ -22,6 +22,12 @@ LDBitMap = {
     0x7: 'admin',
         }
 
+rLDBitMap = {
+    'admin': 0x7,
+    'write': 0x6,
+    'read' : 0x1,
+    }
+
 def fsla(path):
     # fs la <path>
     if not afs.fs.inafs(path):

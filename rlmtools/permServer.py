@@ -206,6 +206,15 @@ class PermServer(server.Server):
         self.cursor.execute(q, (acl_id,))
         return resultSet(self.cursor).dump()[0]
 
+    def getACLbyName(self, pts, cell):
+        "Return the acl_id or None that matches the given ACL"
+        q = "select acl_id from acls where pts = %s and cell = %s"
+        self.cursor.execute(q, (pts, cell))
+        if self.cursor.rowcount > 0:
+            return self.cursor.fetchone()[0]
+        else:
+            return None
+
     def isACL(self, acl):
         "Return True if acl exists"
         q = "select acl_id from acls where pts = %s"

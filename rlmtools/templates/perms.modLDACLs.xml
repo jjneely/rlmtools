@@ -70,6 +70,7 @@
         <th class="right">Available Actions:</th>
         <td>
           <input type="hidden" name="wkd_id" value="${i['wkd_id']}"/>
+          <input type="hidden" name="setIt" value="True"/>
           <input type="submit" value="Submit"/>
         </td>
       </tr>
