@@ -66,7 +66,7 @@ def matchACLToAFS(ldacls, restrictive=False):
 
     return ret
 
-def equalACLs(afs, ld, acceptWrite=False):
+def equalACLs(ld, afs):
     # Return true if the list of afs (pts, perms) tuples matches
     # the given list of ld (name, pts, perms) tuples.  Ment to work
     # with the above two functions
@@ -77,7 +77,7 @@ def equalACLs(afs, ld, acceptWrite=False):
     if len(afs) != len(ld): return False
 
     for acl in ld:
-        if acceptWrite and acl[2] == 'admin':
+        if acl[2] == 'admin':
             if not( (acl[1], 'admin') in afs or (acl[1], 'write') in afs):
                 return False
         else:
@@ -87,27 +87,29 @@ def equalACLs(afs, ld, acceptWrite=False):
 
 def LDtoAFS(acl):
     # Translate LD ACL to its equivallent AFS PTS permission
-    if acl[2] == 'admin':
-        return (acl[1], 'write')
-    if acl[2] == 'write':
-        return (acl[1], acl[2])
-    if acl[2] == 'read':
-        return (acl[1], acl[2])
-    return None
+    if acl[1] == 'linux':
+        # The linux ACL always has admin even in AFS
+        return ('linux', 'admin')
+    return (acl[1], acl[2])
 
-def AFStoLD(acl):
+def AFSpermLD(perm):
     # Translate AFS PTS permission to LD ACL equivallent
-    if acl[1] == 'admin':
-        return (acl[0], acl[0], 'admin')
-    if acl[1] == 'write':
-        return (acl[0], acl[0], 'admin')
-    if acl[1] == 'read':
-        return (acl[0], acl[0], 'read')
-    return None
+    if perm == 'admin':
+        ret = 'admin'
+    elif perm == 'write':
+        ret = 'admin'
+    elif perm == 'read':
+        ret = 'read'
+    else:
+        ret = 'unknown'
+        
+    return ret
 
-def LDinLDs(ld, lds):
-    # Is the LD ACL 'ld' in the list of LD ACLs 'lds'?
-    for i in lds:
-        if (ld[1], ld[2]) == (i[1], i[2]): return True
-    return False
+def equalPerm(ld, afs):
+    # Compare this LD permission (like read, write, admin) to the AFS perm
+    # Return True if equal, False otherwise
+    # ld is part of the result from LDtoAFS()
+    if afs not in rLDBitMap.keys():
+        return False
+    return ld == AFSpermLD(afs)
 

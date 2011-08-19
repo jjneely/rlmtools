@@ -162,8 +162,8 @@ class Application(AppHelpers):
                          completed before setting ACLs.""" % webksMap['path']
             return self.webkickstart(message)
 
-        webksMap['todo'] = self.diffPermissions(webksMap['pts'], 
-                                                webksMap['deptACLs'])
+        webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
+                                                webksMap['pts'])
 
         if setIt is not None:
             # Do the work
@@ -225,8 +225,8 @@ class Application(AppHelpers):
                          completed before setting ACLs.""" % webksMap['path']
             return self.webkickstart(message)
 
-        webksMap['todo'] = self.diffPermissions(webksMap['pts'], 
-                                                webksMap['deptACLs'],
+        webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
+                                                webksMap['pts'],
                                                 reverse=True)
 
         if False:
@@ -263,8 +263,69 @@ class Application(AppHelpers):
                                 webksMap=webksMap,
                                ))
     modAFS.exposed = True
-        
-    def diffPermissions(self, pts, deptACLs, reverse=False):
+    
+    def diffPermissions(self, deptACLs, pts, reverse=False):
+        """Return a dict of ACL -> (code, data) that indicates what
+           actions need to be performed to change the deptACLs to 
+           match AFS.  If reverse is True the dict will indicate what
+           needs to be done to AFS to match LD."""
+        # There are some caveats here that make this algorythm 
+        # assume WKD directories in the BP cell
+
+        # Return dict
+        tasks = {}
+
+        # Translated deptACLs into the same format as the PTS tuples
+        LD = [ LDtoAFS(i) for i in deptACLs ]
+        AFS = pts
+
+        # Sort everybody
+        LD.sort(cmp=lambda x,y: cmp(x[0], y[0]))
+        AFS.sort(cmp=lambda x,y: cmp(x[0], y[0]))
+
+        print "LD ACLs: " + str(LD)
+        print "AFS PTS: " + str(AFS)
+        i = 0
+        while len(AFS) > i:
+            print "Comparing: %s, %s" % (str(LD[i]), str(AFS[i]))
+            if len(LD) <= i or LD[i][0] > AFS[i][0]:
+                # Add ACL to LD
+                print "X: %s > %s" % (LD[i][0], AFS[i][0])
+
+                if not self._misc.isACL(AFS[i][0]):
+                    tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
+                else:
+                    tasks[AFS[i][0]] = (2, AFSpermLD(AFS[i][1]))
+                LD.insert(i, AFS[i])
+                i = i + 1
+            elif LD[i][0] < AFS[i][0]:
+                # del from LD
+                print "X: %s < %s" % (LD[i][0], AFS[i][0])
+                tasks[LD[i][0]] = (3, None)
+                del LD[i]
+            else: # equal
+                # check permission
+                print "X: %s == %s" % (LD[i][0], AFS[i][0])
+                print "A: %s =? %s" % (LD[i][1], AFS[i][1])
+                if not equalPerm(LD[i][1], AFS[i][1]):
+                    print "X:   Setting %s to %s" % (LD[i][0], AFS[i][1])
+                    tasks[LD[i][0]] = (2, AFS[i][1])
+                i = i + 1
+
+        while len(LD) > len(AFS):
+            tasks[LD[i][0]] = (3, None)
+            del LD[i]
+
+        # Extra special rules
+        if 'installer:common' in tasks and \
+                tasks['installer:common'][0] in [1, 2]:
+            del tasks['installer:common']
+        if 'linux' in tasks and tasks['linux'][0] == 3:
+            del tasks['linux']
+
+        return tasks
+
+    def diffPermissions1(self, pts, deptACLs, reverse=False):
         # Return a dict of tasks to change the LD ACLs on this department
         # to match what's indicated by the given AFS PTS permissions.
         # reverse set to True will return changes needed to AFS based on
@@ -272,8 +333,6 @@ class Application(AppHelpers):
         # This applies to WKD directories in the BP cell only!!
         tasks = {}
         ptsGroups = []
-        print pts
-        print deptACLs
         for p in pts:
             ptsGroups.append(p[0])
             if p[0] in ['installer:common']:
@@ -292,9 +351,7 @@ class Application(AppHelpers):
                     # Need to create and set
                     tasks[ld[0]] = (1, ld[2])
             elif not LDinLDs(ld, deptACLs):
-                if reverse:
-                    tasks[ld[0]] = (3, None)
-                else:
+                if not reverse:
                     # Need to set ACL on this dept
                     tasks[ld[0]] = (2, ld[2])
             else:
@@ -315,6 +372,11 @@ class Application(AppHelpers):
                 else:
                     # We need to delete this group from the LD dept
                     tasks[ld[0]] = (3, None)
+            elif reverse and ld not in pts:
+                # We have the PTS assinged to AFS but with the wrong perms
+                if not (ld[1] == 'write' and (ld[0], 'admin') in pts):
+                    tasks[ld[0]] = (2, ld[1])
+
         if reverse and ('linux', 'admin')  not in pts:
             tasks['linux'] = (2, 'admin')
 
@@ -341,7 +403,7 @@ class Application(AppHelpers):
         else:
             i['deptACLs'] = matchACLToAFS(
                     self._misc.getDeptACLs(i['dept_id']), True)
-            misalignment = not equalACLs(i['pts'], i['deptACLs'], True)
+            misalignment = not equalACLs(i['deptACLs'], i['pts'])
 
             i['perm_misalignment'] = misalignment
 
