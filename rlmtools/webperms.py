@@ -329,63 +329,6 @@ class Application(AppHelpers):
 
         return tasks
 
-    def diffPermissions1(self, pts, deptACLs, reverse=False):
-        # Return a dict of tasks to change the LD ACLs on this department
-        # to match what's indicated by the given AFS PTS permissions.
-        # reverse set to True will return changes needed to AFS based on
-        # LD's ACLs.
-        # This applies to WKD directories in the BP cell only!!
-        tasks = {}
-        ptsGroups = []
-        for p in pts:
-            ptsGroups.append(p[0])
-            if p[0] in ['installer:common']:
-                # should have no rights in WKS or LD
-                if reverse: tasks[p[0]] = (3, None) # Remove from AFS
-                continue
-            ld = AFStoLD(p)
-            if ld is None:
-                msg = "Can't deal with AFS PTS permission %s" % str(p)
-                log.warning("diffPermissions: " + msg)
-                continue
-            if not self._misc.isACL(ld[0]):
-                if reverse:
-                    tasks[ld[0]] = (3, None)
-                else:
-                    # Need to create and set
-                    tasks[ld[0]] = (1, ld[2])
-            elif not LDinLDs(ld, deptACLs):
-                if not reverse:
-                    # Need to set ACL on this dept
-                    tasks[ld[0]] = (2, ld[2])
-            else:
-                # ACLs are equal, we do nothing
-                continue
-        for p in deptACLs:
-            ld = LDtoAFS(p)
-            if ld is None:
-                msg = "Can't deal with LD ACL permission %s" % str(p)
-                log.warning("diffPermissions: " + msg)
-                continue
-            if ld[0] in ['linux']:
-                # Refuse to remove the linux PTS or ACL
-                continue
-            if ld[0] not in ptsGroups:
-                if reverse:
-                    tasks[ld[0]] = (2, ld[1])
-                else:
-                    # We need to delete this group from the LD dept
-                    tasks[ld[0]] = (3, None)
-            elif reverse and ld not in pts:
-                # We have the PTS assinged to AFS but with the wrong perms
-                if not (ld[1] == 'write' and (ld[0], 'admin') in pts):
-                    tasks[ld[0]] = (2, ld[1])
-
-        if reverse and ('linux', 'admin')  not in pts:
-            tasks['linux'] = (2, 'admin')
-
-        return tasks
-
     def completeWKSInfo(self, webks):
         # Complete the dict for the perm pages that deal with web-kickstarts
         # webks should be the output from _misc.getWKSDir() or one entry
