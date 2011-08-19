@@ -287,10 +287,14 @@ class Application(AppHelpers):
         print "AFS PTS: " + str(AFS)
         i = 0
         while len(AFS) > i:
-            print "Comparing: %s, %s" % (str(LD[i]), str(AFS[i]))
+            if len(LD) > i:
+                print "Comparing: %s, %s" % (str(LD[i]), str(AFS[i]))
+            else:
+                print "Comparing: %s, %s" % ("(EMPTY)", str(AFS[i]))
             if len(LD) <= i or LD[i][0] > AFS[i][0]:
                 # Add ACL to LD
-                print "X: %s > %s" % (LD[i][0], AFS[i][0])
+                if len(LD) > i:
+                    print "X: %s > %s" % (LD[i][0], AFS[i][0])
 
                 if not self._misc.isACL(AFS[i][0]):
                     tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
