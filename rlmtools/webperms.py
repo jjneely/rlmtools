@@ -277,7 +277,7 @@ class Application(AppHelpers):
 
         # Translated deptACLs into the same format as the PTS tuples
         LD = [ LDtoAFS(i) for i in deptACLs ]
-        AFS = pts
+        AFS = [ i for i in pts ] # weak copy
 
         # Sort everybody
         LD.sort(cmp=lambda x,y: cmp(x[0], y[0]))
@@ -292,33 +292,51 @@ class Application(AppHelpers):
             else:
                 print "Comparing: %s, %s" % ("(EMPTY)", str(AFS[i]))
             if len(LD) <= i or LD[i][0] > AFS[i][0]:
-                # Add ACL to LD
+                # Add ACL to LD or remove from AFS
                 if len(LD) > i:
                     print "X: %s > %s" % (LD[i][0], AFS[i][0])
-
-                if not self._misc.isACL(AFS[i][0]):
-                    tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
+                if reverse:
+                    tasks[AFS[i][0]] = (3, None)
+                    del AFS[i]
                 else:
-                    tasks[AFS[i][0]] = (2, AFSpermLD(AFS[i][1]))
-                LD.insert(i, AFS[i])
-                i = i + 1
+                    if not self._misc.isACL(AFS[i][0]):
+                        tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
+                    else:
+                        tasks[AFS[i][0]] = (2, AFSpermLD(AFS[i][1]))
+                    LD.insert(i, AFS[i])
+                    i = i + 1
             elif LD[i][0] < AFS[i][0]:
-                # del from LD
+                # del from LD or add to AFS
                 print "X: %s < %s" % (LD[i][0], AFS[i][0])
-                tasks[LD[i][0]] = (3, None)
-                del LD[i]
+                if reverse:
+                    tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))
+                    AFS.insert(i, LD[i])
+                    i = i + 1
+                else:
+                    tasks[LD[i][0]] = (3, None)
+                    del LD[i]
             else: # equal
                 # check permission
                 print "X: %s == %s" % (LD[i][0], AFS[i][0])
                 print "A: %s =? %s" % (LD[i][1], AFS[i][1])
                 if not equalPerm(LD[i][1], AFS[i][1]):
-                    print "X:   Setting %s to %s" % (LD[i][0], AFS[i][1])
-                    tasks[LD[i][0]] = (2, AFS[i][1])
+                    if reverse:
+                        print "X:   Setting %s to %s" % (AFS[i][0], LDpermAFS(LD[i][1]))
+                        tasks[AFS[i][0]] = (2, LDpermAFS(LD[i][1]))
+                    else:
+                        print "X:   Setting %s to %s" % (LD[i][0], AFS[i][1])
+                        tasks[LD[i][0]] = (2, AFS[i][1])
                 i = i + 1
 
         while len(LD) > len(AFS):
-            tasks[LD[i][0]] = (3, None)
-            del LD[i]
+            if reverse:
+                print "X: adding %s %s" %(LD[i][0], LDpermAFS(LD[i][1]))
+                tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))  
+                AFS.insert(i, LD[i])
+                i = i + 1
+            else:
+                tasks[LD[i][0]] = (3, None)
+                del LD[i]
 
         # Extra special rules
         if 'installer:common' in tasks and \
@@ -326,6 +344,8 @@ class Application(AppHelpers):
             del tasks['installer:common']
         if 'linux' in tasks and tasks['linux'][0] == 3:
             del tasks['linux']
+        if 'linux' in tasks and tasks['linux'][0] == 2:
+            tasks['linux'] = (2, 'admin')
 
         return tasks
 

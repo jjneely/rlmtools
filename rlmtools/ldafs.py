@@ -105,6 +105,19 @@ def AFSpermLD(perm):
         
     return ret
 
+def LDpermAFS(perm):
+    # Translate LD permission to AFS PTS equivallent
+    if perm == 'admin':
+        ret = 'write'
+    elif perm == 'write':
+        ret = 'write'
+    elif perm == 'read':
+        ret = 'read'
+    else:
+        ret = 'unknown'
+        
+    return ret
+
 def equalPerm(ld, afs):
     # Compare this LD permission (like read, write, admin) to the AFS perm
     # Return True if equal, False otherwise
