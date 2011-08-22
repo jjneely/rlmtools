@@ -44,8 +44,9 @@ requiredConfig = {
         'secret': ["Set an authentication secret for the XMLRPC API.", False],
         'defaultkey': ["Set default blowfish key for root password crypts.", False],
         'rrd_dir': ["Directory round robin databases will live.", False],
-        #'graphs_dir': ["Directory where auto-generated graphics will live.", False],
-        #'graphs_url': ["Web URL where graphs_dir can be accessed.", False],
+        'rhnurl': ["URL to the RHN XMLRPC API Interface.", False],
+        'rhnuser': ["RHN administrative user to issue commands.", False],
+        'rhnpasswd': ["Password for RHN admin user.", False],
         }
 
 def initLogging():
@@ -169,7 +170,7 @@ def initConfig(files):
 def checkConfig(config):
     for key in requiredConfig.keys():
         value = getattr(config, key)
-        if key in ['privatekey', 'secret', 'defaultkey'] and value != None:
+        if key in ['privatekey', 'secret', 'defaultkey', 'rhnpasswd'] and value != None:
             print "%s: <Sensitive data not printed>" % key
         else:
             print "%s: %s" % (key, value)

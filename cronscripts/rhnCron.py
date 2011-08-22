@@ -32,17 +32,8 @@ import rlmtools.configDragon as configDragon
 import rlmtools.miscServer as miscServer
 from rlmtools.constants import defaultConfFiles
 
-def auth():
-    sys.stdout.write("RHN User Name: ")
-    id = sys.stdin.readline()
-    id = id.strip()
-    pw = getpass.getpass("RHN Password: ")
-
-    return id, pw
-
-def getRHN():
-    server = xmlrpclib.ServerProxy("https://rhn.linux.ncsu.edu/rpc/api")
-    user, passwd = auth()
+def getRHN(rhnurl, user, passwd):
+    server = xmlrpclib.ServerProxy(rhnurl)
     session = server.auth.login(user, passwd, 3600)
 
     return server, session
@@ -78,7 +69,7 @@ def watchRHN(config):
     log.info("Running watchRHN job...")
     m = miscServer.MiscServer()
 
-    server, session = getRHN()
+    server, session = getRHN(config.rhnurl, config.rhnuser, config.rhnpasswd)
     groups = server.systemgroup.listAllGroups(session)
 
     # Build a dict hashed on the RHN Group ID
