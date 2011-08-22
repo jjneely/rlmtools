@@ -184,6 +184,13 @@ create table webkickstartdirs (
     index(path)
 );
 
+create table rhngroups (
+    rg_id       INTEGER PRIMARY KEY auto_increment,
+    dept_id     INTEGER,
+    rhng_id     INTEGER not null,
+    rhnname     VARCHAR(1024) not null
+);
+
 create table sessions (
     session_id     INTEGER PRIMARY KEY auto_increment,
     sid            varchar(255) unique not null,
