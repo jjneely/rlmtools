@@ -163,9 +163,4 @@ class MiscServer(server.Server):
         self.cursor.execute(q, (rg_id,))
         self.conn.commit()
 
-    def setRHNGroupDept(self, rg_id, dept_id):
-        "Set the department <=> RHN Group mapping."
-        q = """update rhngroups set dept_id = %s where rg_id = %s"""
-        self.cursor.execute(q, (dept_id, rg_id))
-        self.conn.commit()
 

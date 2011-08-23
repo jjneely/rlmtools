@@ -256,3 +256,22 @@ class PermServer(server.Server):
         self.cursor.execute(q, (aclg_id,))
         self.conn.commit()
 
+    def setRHNGroupDept(self, rg_id, dept_id):
+        "Set the department <=> RHN Group mapping."
+        q = """update rhngroups set dept_id = %s where rg_id = %s"""
+        self.cursor.execute(q, (dept_id, rg_id))
+        self.conn.commit()
+
+    def getRHNGroups(self):
+        "Return a list of dicts of all RHN groups known to LD."""
+
+        q = """select rhnname, rhng_id, dept_id, rg_id from rhngroups"""
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
+    def getRHNGroup(self, rg_id):
+        "Return a dict of an RHN group from the LD DB"
+        q = """select * from rhngroups where rg_id = %s"""
+        self.cursor.execute(q, (rg_id,))
+        return resultSet(self.cursor).dump()[0]
+

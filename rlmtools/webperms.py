@@ -70,6 +70,25 @@ class Application(AppHelpers):
                                ))
     index.exposed = True
 
+    def rhngroups(self, message=""):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        a = Auth()
+
+        rhnMap = self._misc.getRHNGroups()
+        for i in rhnMap:
+            i['class'] = i['dept_id'] is None and 'bad' or 'good'
+            i['dept'] = self._misc.getDeptName(i['dept_id'])
+
+        return self.render('perms.rhngroups',
+                dict(message=message,
+                     title='RHN Group to Department Map',
+                     userid=a.userid,
+                     rhnMap=rhnMap,
+                    ))
+    rhngroups.exposed = True
+
     def webkickstart(self, message=""):
         # Readable by any authenticated user
         if not self.isAuthenticated():

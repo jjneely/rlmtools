@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This maps RHN Groups to Departments and other stuff.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <p>Greetings, ${name}.  You are user "${userid}".</p>
+
+  <h2>RHN Group Listing</h2>
+
+  <p py:if="len(rhnMap) == 0">
+    You do not appear to have any RHN Groups associated
+    with your department.
+  </p>
+
+  <table py:if="len(rhnMap) != 0">
+    <tr class="neutral">
+      <th>RHN Group Name</th>
+      <th>Actions</th>
+      <th>Associated Department</th>
+    </tr>
+    <tr py:for="i in rhnMap" py:attrs="{'class':i['class']}">
+      <td>${i['rhnname']}</td>
+      <td>
+        <button type="button" 
+          onclick="location.href='${baseURL}/perms/rhnDetailt?rg_id=${i['rg_id']}'">View Detail</button>
+      </td>
+      <td py:if="i['dept'] is not None">${i['dept']}</td>
+      <td py:if="i['dept'] is None"><i>Not Set</i></td>
+    </tr>
+  </table>
+
+  <p class="space" />
+
+</body>
+
+</html>
+
