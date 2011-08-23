@@ -273,5 +273,7 @@ class PermServer(server.Server):
         "Return a dict of an RHN group from the LD DB"
         q = """select * from rhngroups where rg_id = %s"""
         self.cursor.execute(q, (rg_id,))
+        if self.cursor.rowcount == 0:
+            return None
         return resultSet(self.cursor).dump()[0]
 

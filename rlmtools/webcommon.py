@@ -97,7 +97,9 @@ class AppHelpers(object):
 
     def render(self, tmpl, dict):
         # Add some default variables
-        dict['name'] = Auth().getName()
+        a = Auth()
+        dict['name'] = a.getName()
+        dict['userid'] = a.userid
         dict['baseURL'] = url()
         dict['templateName'] = tmpl
 

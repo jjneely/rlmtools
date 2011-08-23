@@ -38,7 +38,7 @@
       <td>${i['rhnname']}</td>
       <td>
         <button type="button" 
-          onclick="location.href='${baseURL}/perms/rhnDetailt?rg_id=${i['rg_id']}'">View Detail</button>
+          onclick="location.href='${baseURL}/perms/rhnDetail?rg_id=${i['rg_id']}'">View Detail</button>
       </td>
       <td py:if="i['dept'] is not None">${i['dept']}</td>
       <td py:if="i['dept'] is None"><i>Not Set</i></td>

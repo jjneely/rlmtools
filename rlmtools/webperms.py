@@ -54,47 +54,84 @@ class Application(AppHelpers):
                      '%s/perms/acl/' % url()),
                     ('Manage Web-Kickstart Directories',
                      '%s/perms/webkickstart' % url()),
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
                   ]
         depts = WebServer().getDepartments()
-        a = Auth()
-        acls = self._server.memberOfACL(a.userid)
+        acls = self._server.memberOfACL(Auth().userid)
 
         return self.render('perms.index',
                            dict(message=message,
                                 depts=depts,
                                 subMenu=subMenu,
                                 title="Permissions",
-                                fullname=a.getName(),
                                 acls=acls,
-                                userid=a.userid,
                                ))
     index.exposed = True
 
-    def rhngroups(self, message=""):
+    def rhnGroups(self, message=""):
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")
 
-        a = Auth()
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/perms/acl/' % url()),
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
+                  ]
 
         rhnMap = self._misc.getRHNGroups()
-        for i in rhnMap:
-            i['class'] = i['dept_id'] is None and 'bad' or 'good'
-            i['dept'] = self._misc.getDeptName(i['dept_id'])
 
         return self.render('perms.rhngroups',
                 dict(message=message,
                      title='RHN Group to Department Map',
-                     userid=a.userid,
-                     rhnMap=rhnMap,
+                     rhnMap=[ self.completeRHNGroup(i) for i in rhnMap ],
+                     subMenu=subMenu,
                     ))
-    rhngroups.exposed = True
+    rhnGroups.exposed = True
+
+    def rhnDetail(self, rg_id, setDept=None, message=""):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        subMenu = [
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
+                  ]
+
+        rg_id = int(rg_id)
+        if setDept is not None:
+            setDept = int(setDept)
+            deptName = self._misc.getDeptName(setDept)
+            if deptName is None:
+                message = "Department ID %s does not exist." % setDept
+            else:
+                self._misc.setRHNGroupDept(rg_id, setDept)
+                message = "Department association set to %s" % deptName
+
+        rhnMap = self._misc.getRHNGroup(rg_id)
+        if rhnMap is None:
+            return self.message("Unknown RHN Group ID %s" % rg_id)
+
+        rhnMap = self.completeRHNGroup(rhnMap)
+        depts = self._misc.getAllDepts()
+
+        return self.render('perms.rhndetail',
+                dict(message=message,
+                     rhnMap=rhnMap,
+                     subMenu=subMenu,
+                     title="RHN Group Detail",
+                     depts=depts,
+                    ))
+    rhnDetail.exposed = True
 
     def webkickstart(self, message=""):
         # Readable by any authenticated user
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")
 
-        a = Auth()
         webksMap = self._misc.getAllWKSDir()
 
         subMenu = [
@@ -102,12 +139,13 @@ class Application(AppHelpers):
                      '%s/perms/acl/' % url()),
                     ('Manage Web-Kickstart Directories',
                      '%s/perms/webkickstart' % url()),
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
                   ]
 
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
-                                userid=a.userid,
                                 subMenu=subMenu,
                                 webksMap=[self.completeWKSInfo(i) \
                                           for i in webksMap ],
@@ -124,7 +162,6 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                   ]
 
-        a = Auth()
         wkd_id = int(wkd_id)
         webksMap = self._misc.getWKSDir(wkd_id)
         depts = self._misc.getAllDepts()
@@ -150,7 +187,6 @@ class Application(AppHelpers):
                            dict(message=message,
                                 title="Web-Kickstart",
                                 subMenu=subMenu,
-                                userid=a.userid,
                                 webksMap=self.completeWKSInfo(webksMap),
                                 depts=depts,
                                ))
@@ -165,7 +201,6 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                   ]
 
-        a = Auth()
         wkd_id = int(wkd_id)
         webksMap = self._misc.getWKSDir(wkd_id)
         if webksMap is None:
@@ -214,7 +249,6 @@ class Application(AppHelpers):
                            dict(message=message,
                                 title="Web-Kickstart ACL Sync",
                                 subMenu=subMenu,
-                                userid=a.userid,
                                 webksMap=webksMap,
                                ))
     modLDACLs.exposed = True
@@ -228,7 +262,6 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                   ]
 
-        a = Auth()
         wkd_id = int(wkd_id)
         webksMap = self._misc.getWKSDir(wkd_id)
         if webksMap is None:
@@ -278,7 +311,6 @@ class Application(AppHelpers):
                            dict(message=message,
                                 title="Web-Kickstart AFS Sync",
                                 subMenu=subMenu,
-                                userid=a.userid,
                                 webksMap=webksMap,
                                ))
     modAFS.exposed = True
@@ -394,4 +426,12 @@ class Application(AppHelpers):
             i['perm_misalignment'] = misalignment
 
         return i
+
+    def completeRHNGroup(self, rhnMap):
+        i = rhnMap.copy()
+        i['class'] = i['dept_id'] is None and 'bad' or 'good'
+        i['dept'] = self._misc.getDeptName(i['dept_id'])
+
+        return i
+
 

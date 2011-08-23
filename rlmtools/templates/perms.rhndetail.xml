@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This page lets you set the department association for this RHN Group
+    and see if the user access for the LD department match the RHN
+    Groups.  Hopefully, this will let you correct the RHN access to keep 
+    things more up to date.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <p>Greetings, ${name}.  You are user "${userid}".</p>
+
+  <h2>RHN Group Detail</h2>
+
+  <table py:with="i = rhnMap">
+    <tr class="neutral">
+      <th class="right">RHN Group Name:</th>
+      <td>${i['rhnname']}</td>
+    </tr>
+    <tr py:attrs="{'class':i['class']}">
+      <th class="right">Department:</th>
+      <td py:if="i['dept'] is not None">${i['dept']}</td>
+      <td py:if="i['dept'] is None"><i>Not Set</i></td>
+    </tr>
+    <tr class="bad">
+      <th class="right">Users Sync'd:</th>
+      <td>God if I know</td>
+    </tr>
+  </table>
+
+  <h2>Change Department Association</h2>
+
+  <form py:with="i = rhnMap" method="post" action="${baseURL}/perms/rhnDetail">
+    <input type="hidden" name="rg_id" value="${i['rg_id']}"/>
+    <table>
+      <tr class="neutral">
+        <th class="right">New Department:</th>
+        <td>
+          <select name="setDept">
+            <option py:for="d in depts" value="${d['dept_id']}" 
+              py:attrs="d['dept_id'] == i['dept_id'] and {'selected':'selected'} or {}">
+              ${d['name']}
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">Actions:</th>
+        <td>
+          <input type="submit" value="Submit"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <p class="space" />
+
+</body>
+
+</html>
+
