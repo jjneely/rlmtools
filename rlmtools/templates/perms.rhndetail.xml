@@ -40,6 +40,15 @@
       <th class="right">Users Sync'd:</th>
       <td>God if I know</td>
     </tr>
+    <tr class="neutral">
+      <th class="right">RHN Group Administrators:</th>
+      <td>
+        <ul class="plain" py:if="rhnAdmins is not None">
+          <li py:for="j in rhnAdmins">${j}</li>
+        </ul>
+        <i py:if="rhnAdmins is None">Error Communicating with RHN</i>
+      </td>
+    </tr>
   </table>
 
   <h2>Change Department Association</h2>

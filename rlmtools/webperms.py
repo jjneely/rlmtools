@@ -19,6 +19,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import xmlrpclib
 import optparse
 import cherrypy
 import sys
@@ -29,7 +30,8 @@ import cPickle as pickle
 import logging
 import re
 
-from configDragon import config
+import configDragon
+
 from webcommon import *
 from adminServer import AdminServer
 from webServer import WebServer
@@ -117,6 +119,7 @@ class Application(AppHelpers):
 
         rhnMap = self.completeRHNGroup(rhnMap)
         depts = self._misc.getAllDepts()
+        rhnAdmins = self.getRHNGroupAdmins(rhnMap['rhnname'])
 
         return self.render('perms.rhndetail',
                 dict(message=message,
@@ -124,6 +127,7 @@ class Application(AppHelpers):
                      subMenu=subMenu,
                      title="RHN Group Detail",
                      depts=depts,
+                     rhnAdmins=rhnAdmins,
                     ))
     rhnDetail.exposed = True
 
@@ -434,4 +438,18 @@ class Application(AppHelpers):
 
         return i
 
+    def getRHNGroupAdmins(self, group):
+        # group is a string that matches the RHN group name
+        config = configDragon.config
+        server = xmlrpclib.ServerProxy(config.rhnurl)
+
+        try:
+            session = server.auth.login(config.rhnuser, config.rhnpasswd, 30)
+            ret = server.systemgroup.listAdministrators(session, group)
+        except Exception, e:
+            print "RHN Exception: %s" % str(e)
+            ret = None
+
+        if ret is None: return None
+        return [ i['login'] for i in ret if i['enabled'] ]
 
