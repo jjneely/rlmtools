@@ -119,7 +119,7 @@ class PermServer(server.Server):
            this list will be removed to prune old directories."""
 
         q1 = """delete from webkickstartdirs where wkd_id = %s"""
-        table = self.getAllWebKSDir()
+        table = self.getAllWKSDir()
         if len(paths) < 1: return
         if len(table) < 1: return
 

@@ -29,7 +29,7 @@ import afs.acl
 from webKickstart.configtools import Configuration as webKSConfig
 
 import rlmtools.configDragon as configDragon
-import rlmtools.miscServer as miscServer
+import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles
 
 def watchWKS(config):
@@ -37,7 +37,7 @@ def watchWKS(config):
 
     log = logging.getLogger('xmlrpc')
     log.info("Running watchWKS job...")
-    m = miscServer.MiscServer()
+    m = permServer.PermServer()
     webksPath = webKSConfig(config.webks_dir).hosts
     scrubbedPaths = []
     if not os.path.exists(webksPath):
