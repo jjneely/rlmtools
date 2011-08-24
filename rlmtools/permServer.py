@@ -277,3 +277,16 @@ class PermServer(server.Server):
             return None
         return resultSet(self.cursor).dump()[0]
 
+    def insertRHNGroup(self, rhnname, rhng_id, dept_id):
+        "Insert a new RHN group into the LD DB"
+        q = """insert into rhngroups (rhnname, rhng_id, dept_id) values
+               (%s, %s, %s)"""
+
+        self.cursor.execute(q, (rhnname, rhng_id, dept_id))
+        self.conn.commit()
+
+    def rmRHNGroup(self, rg_id):
+        q = """delete from rhngroups where rg_id = %s"""
+        self.cursor.execute(q, (rg_id,))
+        self.conn.commit()
+

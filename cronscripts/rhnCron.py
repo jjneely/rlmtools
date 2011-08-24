@@ -29,7 +29,7 @@ import getpass
 from webKickstart.configtools import Configuration as webKSConfig
 
 import rlmtools.configDragon as configDragon
-import rlmtools.miscServer as miscServer
+import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles
 
 def getRHN(rhnurl, user, passwd):
@@ -67,7 +67,7 @@ def watchRHN(config):
 
     log = logging.getLogger('xmlrpc')
     log.info("Running watchRHN job...")
-    m = miscServer.MiscServer()
+    m = permServer.PermServer()
 
     server, session = getRHN(config.rhnurl, config.rhnuser, config.rhnpasswd)
     groups = server.systemgroup.listAllGroups(session)
@@ -83,6 +83,12 @@ def watchRHN(config):
         knownGroups[g['rhng_id']] = g
 
     diffAndInsert(m, rhnGroups, knownGroups)
+
+    try:
+        server.auth.logout(session)
+    except Exception, e:
+        # If we blow up during logout just ignore it
+        pass
 
 def main():
     parser = optparse.OptionParser()

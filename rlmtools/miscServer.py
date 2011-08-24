@@ -137,30 +137,5 @@ class MiscServer(server.Server):
         log.info("PTS watcher complete")
         self.conn.commit()
 
-    def getRHNGroups(self):
-        "Return a list of dicts of all RHN groups known to LD."""
-
-        q = """select rhnname, rhng_id, dept_id, rg_id from rhngroups"""
-        self.cursor.execute(q)
-        return resultSet(self.cursor).dump()
-
-    def getRHNGroup(self, rg_id):
-        "Return a dict of an RHN group from the LD DB"
-        q = """select * from rhngroups where rg_id = %s"""
-        self.cursor.execute(q, (rg_id,))
-        return resultSet(self.cursor).dump()[0]
-
-    def insertRHNGroup(self, rhnname, rhng_id, dept_id):
-        "Insert a new RHN group into the LD DB"
-        q = """insert into rhngroups (rhnname, rhng_id, dept_id) values
-               (%s, %s, %s)"""
-
-        self.cursor.execute(q, (rhnname, rhng_id, dept_id))
-        self.conn.commit()
-
-    def rmRHNGroup(self, rg_id):
-        q = """delete from rhngroups where rg_id = %s"""
-        self.cursor.execute(q, (rg_id,))
-        self.conn.commit()
 
 
