@@ -122,14 +122,22 @@ class Application(AppHelpers):
         rhnAdmins = self.getRHNGroupAdmins(rhnMap['rhnname'])
 
         ldadmins = []
+        ldacls = []
         if rhnMap['dept_id'] is not None:
             # For RHN we want LD admin permissions
             acls = self._misc.getDeptACLs(rhnMap['dept_id'])
             for acl in acls:
+                p = ""
+                if self.isREAD(acl['perms']):
+                    p = "read" 
+                if self.isWRITE(acl['perms']):
+                    p = p and "%s|write"%p or "write"
                 if self.isADMIN(acl['perms']):
+                    p = p and "%s|admin"%p or "admin"
                     for i in self._misc.getSysAdmins(acl['acl_id']):
                         if i not in ldadmins:
                             ldadmins.append(i)
+                ldacls.append((acl['name'], p))
 
         rhnAdmins.sort()
         ldadmins.sort()
@@ -142,6 +150,7 @@ class Application(AppHelpers):
                      depts=depts,
                      rhnAdmins=rhnAdmins,
                      ldadmins=ldadmins,
+                     ldacls=ldacls,
                     ))
     rhnDetail.exposed = True
 

@@ -41,6 +41,18 @@
       <td>God if I know</td>
     </tr>
     <tr class="neutral">
+      <th class="right">RLMTools ACLs:</th>
+      <td>
+        <i py:if="ldacls == []">No ACLs</i>
+        <table class="noborder" py:if="ldacls != []">
+          <tr py:for="j in ldacls">
+            <td style="padding:0px;padding-right:3px">${j[0]}</td>
+            <td style="padding:0px">${j[1]}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr class="neutral">
       <th class="right">Administrators:</th>
       <td>
         <table class="noborder">
