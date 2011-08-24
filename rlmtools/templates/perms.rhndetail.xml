@@ -41,12 +41,28 @@
       <td>God if I know</td>
     </tr>
     <tr class="neutral">
-      <th class="right">RHN Group Administrators:</th>
+      <th class="right">Administrators:</th>
       <td>
-        <ul class="plain" py:if="rhnAdmins is not None">
-          <li py:for="j in rhnAdmins">${j}</li>
-        </ul>
-        <i py:if="rhnAdmins is None">Error Communicating with RHN</i>
+        <table class="noborder">
+          <tr>
+            <th class="bottom">RHN Access</th>
+            <th class="bottom">Dept. Access</th>
+          </tr>
+          <tr>
+            <td style="vertical-align: top">
+              <i py:if="rhnAdmins is None">Error Communicating with RHN</i>
+              <ul class="plain" py:if="rhnAdmins is not None">
+                <li py:for="j in rhnAdmins">${j}</li>
+              </ul>
+            </td>
+            <td style="vertical-align: top">
+              <i py:if="ldadmins == []">No Administrators</i>
+              <ul class="plain" py:if="ldadmins != []">
+                <li py:for="j in ldadmins">${j}</li>
+              </ul>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   </table>

@@ -121,6 +121,14 @@ class Application(AppHelpers):
         depts = self._misc.getAllDepts()
         rhnAdmins = self.getRHNGroupAdmins(rhnMap['rhnname'])
 
+        ldusers = []
+        if rhnMap['dept_id'] is not None:
+            # For RHN we want LD admin permissions
+            acls = self._misc.getDeptACLs(rhnMap['dept_id'])
+            for acl in acls:
+                if self.isADMIN(acl['perms']):
+                    ldusers.extend(self._misc.getSysAdmins(acl['acl_id']))
+
         return self.render('perms.rhndetail',
                 dict(message=message,
                      rhnMap=rhnMap,
@@ -128,6 +136,7 @@ class Application(AppHelpers):
                      title="RHN Group Detail",
                      depts=depts,
                      rhnAdmins=rhnAdmins,
+                     ldadmins=ldusers,
                     ))
     rhnDetail.exposed = True
 

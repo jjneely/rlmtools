@@ -34,17 +34,6 @@ log = logging.getLogger("xmlrpc")
 
 class PermServer(server.Server):
 
-    def getSysAdmins(self, acl_id):
-        q = """select userid, sysadmin_id from sysadmins 
-               where acl_id = %s order by userid asc"""
-
-        self.cursor.execute(q, (acl_id,))
-        result = resultSet(self.cursor)
-        ret = []
-        for row in result:
-            ret.append((row['userid'], row['sysadmin_id']))
-        return ret
-
     def watchPTS(self):
         """Sync database with AFS PTS groups that we watch."""
 
