@@ -6,6 +6,17 @@ create table webkickstartdirs (
     index(path)
 );
 
+create table rhnprotectedusers (
+    id          INTEGER PRIMARY KEY auto_increment,
+    userid      VARCHAR(256) not null unique,
+
+    index(userid)
+);
+
+insert into rhnprotectedusers (userid) values ('tkl-admin');
+insert into rhnprotectedusers (userid) values ('slack');
+insert into rhnprotectedusers (userid) values ('ece-scripts');
+
 create table rhngroups (
     rg_id       INTEGER PRIMARY KEY auto_increment,
     dept_id     INTEGER,

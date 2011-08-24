@@ -290,3 +290,19 @@ class PermServer(server.Server):
         self.cursor.execute(q, (rg_id,))
         self.conn.commit()
 
+    def getRHNProtectedUsers(self):
+        """Return a list of protected RHN users that are not to be
+           deleted, removed, or altered.  This list also includes
+           RHN OrgAdmins who we treat a little differently in
+           determining ACLs for RHN Groups."""
+
+        q = """select userid from rhnprotectedusers"""
+        self.cursor.execute(q)
+        result = resultSet(self.cursor)
+        return [ r['userid'] for r in result ]
+
+    def addRHNProtectedUser(self, userid):
+        q = """insert into rhnprotectedusers (userid) values (%s)"""
+        self.cursor.execute(q, (userid,))
+        self.conn.commit()
+

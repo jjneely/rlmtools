@@ -191,6 +191,17 @@ create table rhngroups (
     rhnname     VARCHAR(1024) not null
 );
 
+create table rhnprotectedusers (
+    id          INTEGER PRIMARY KEY auto_increment,
+    userid      VARCHAR(256) not null unique,
+
+    index(userid)
+);
+
+insert into rhnprotectedusers (userid) values ('tkl-admin');
+insert into rhnprotectedusers (userid) values ('slack');
+insert into rhnprotectedusers (userid) values ('ece-scripts');
+
 create table sessions (
     session_id     INTEGER PRIMARY KEY auto_increment,
     sid            varchar(255) unique not null,

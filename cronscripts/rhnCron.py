@@ -24,6 +24,7 @@ import logging
 import optparse
 import os.path
 import sys
+import pwd
 import getpass
 
 from webKickstart.configtools import Configuration as webKSConfig
@@ -62,6 +63,33 @@ def diffAndInsert(m, rhnGroups, knownGroups):
         m.rmRHNGroup(knownGroups[knownKeys[i]]['rg_id'])
         del knownKeys[i]                # Keep our index numbers intact
 
+def findRHNAdmins(m, server, session):
+    """Identify and store folks configured as an RHN Orgizational Admin
+       or higher privleged role."""
+
+    data = server.user.listUsers(session)
+    users = [ i['login'] for i in data if i['enabled'] ]
+    rhnProtectedUsers = m.getRHNProtectedUsers()
+
+    for i in users:
+        try:
+            pwd.getpwnam(i)
+            realm = True
+        except KeyError:
+            realm = False
+
+        if i not in rhnProtectedUsers and not realm:
+            print "DISABLING %s: not a current realm account" % i
+            try:
+                #server.user.disable(session, i)
+                raise Exception("testing")
+            except Exception, e:
+                print "ERROR: Could not disable user %s" % i
+
+        roles = server.user.listRoles(session, i)
+        if 'org_admin' in roles and i not in rhnProtectedUsers:
+            m.addRHNProtectedUser(i)
+
 def watchRHN(config):
     """Make a map of current WebKickstart directories to departments."""
 
@@ -83,6 +111,7 @@ def watchRHN(config):
         knownGroups[g['rhng_id']] = g
 
     diffAndInsert(m, rhnGroups, knownGroups)
+    findRHNAdmins(m, server, session)
 
     try:
         server.auth.logout(session)
