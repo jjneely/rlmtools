@@ -36,9 +36,10 @@
       <td py:if="i['dept'] is not None">${i['dept']}</td>
       <td py:if="i['dept'] is None"><i>Not Set</i></td>
     </tr>
-    <tr class="bad">
-      <th class="right">Users Sync'd:</th>
-      <td>God if I know</td>
+    <tr py:attrs="{'class':i['synced']}">
+      <th>Users Sync'd:</th>
+      <td py:if="len(tasks) == 0">Whew!</td>
+      <td py:if="len(tasks) != 0">God if I know</td>
     </tr>
     <tr class="neutral">
       <th class="right">RLMTools ACLs:</th>
@@ -75,6 +76,18 @@
             </td>
           </tr>
         </table>
+      </td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Syncronization Process:</th>
+      <td>
+        <i py:if="len(tasks) == 0">No Corrections Needed</i>
+        <ul class="plain" py:if="len(tasks) > 0">
+          <li py:for="k in tasks.keys()">
+            <div py:if="tasks[k] == 2">Add ${k} to this RHN Group.</div>
+            <div py:if="tasks[k] == 3">Remove ${k} from this RHN Group.</div>
+          </li>
+        </ul>
       </td>
     </tr>
   </table>

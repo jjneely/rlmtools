@@ -139,8 +139,8 @@ class Application(AppHelpers):
                             ldadmins.append(i)
                 ldacls.append((acl['name'], p))
 
-        rhnAdmins.sort()
-        ldadmins.sort()
+        tasks = self.diffAdmins(ldadmins, rhnAdmins)
+        rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
 
         return self.render('perms.rhndetail',
                 dict(message=message,
@@ -151,6 +151,7 @@ class Application(AppHelpers):
                      rhnAdmins=rhnAdmins,
                      ldadmins=ldadmins,
                      ldacls=ldacls,
+                     tasks=tasks,
                     ))
     rhnDetail.exposed = True
 
@@ -341,7 +342,45 @@ class Application(AppHelpers):
                                 webksMap=webksMap,
                                ))
     modAFS.exposed = True
-    
+   
+    def diffAdmins(self, ldAdmins, rhnAdmins):
+        """Return a dict of userid => code which is a list of tasks
+           that should be done to make the list of rhnAdmins match
+           our understanding in LD."""
+
+        # Return values
+        tasks = {}
+
+        # Everyone must be sorted
+        ldAdmins.sort()
+        rhnAdmins.sort()
+
+        # Copies that we can modify
+        LD  = [ i for i in ldAdmins ]
+        RHN = [ i for i in rhnAdmins ]
+
+        i = 0
+        while len(LD) > i:
+            if len(RHN) <= i or RHN[i] > LD[i]:
+                # Add to RHN
+                RHN.insert(i, LD[i])
+                tasks[LD[i]] = 2
+                i = i + 1
+            elif RHN[i] < LD[i]:
+                # remove from RHN
+                tasks[RHN[i]] = 3
+                del RHN[i]
+            else:
+                # equal
+                i = i + 1
+        while len(RHN) > len(LD):
+            tasks[RHN[i]] = 3
+            del RHN[i]
+
+        print LD
+        print RHN
+        return tasks
+
     def diffPermissions(self, deptACLs, pts, reverse=False):
         """Return a dict of ACL -> (code, data) that indicates what
            actions need to be performed to change the deptACLs to 
