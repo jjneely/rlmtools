@@ -43,12 +43,12 @@ import time
 import rrdtool
 import optparse
 
-from datetime     import datetime, timedelta
-from statsServer  import StatsServer
-from rrdconstants import *
-from constants    import defaultConfFiles
+from datetime              import datetime, timedelta
+from rlmtools.statsServer  import StatsServer
+from rlmtools.rrdconstants import *
+from rlmtools.constants    import defaultConfFiles
 
-import configDragon
+import rlmtools.configDragon as configDragon
 
 log = logging.getLogger("xmlrpc")
 

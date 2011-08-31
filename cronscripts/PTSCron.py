@@ -1,8 +1,8 @@
-import miscServer
-import configDragon
+import rlmtools.miscServer as miscServer
+import rlmtools.configDragon as configDragon
 import optparse
 
-from constants import defaultConfFiles
+from rlmtools.constants import defaultConfFiles
 
 def main():
     parser = optparse.OptionParser()
