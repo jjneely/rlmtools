@@ -139,7 +139,11 @@ class Application(AppHelpers):
                             ldadmins.append(i)
                 ldacls.append((acl['name'], p))
 
-        tasks = self.diffAdmins(ldadmins, rhnAdmins)
+            tasks = self.diffAdmins(ldadmins, rhnAdmins)
+        else:
+            tasks = {}
+            rhnAdmins.sort() # Sorted by side effect in if clause
+
         rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
 
         return self.render('perms.rhndetail',
@@ -358,6 +362,7 @@ class Application(AppHelpers):
         # Copies that we can modify
         LD  = [ i for i in ldAdmins ]
         RHN = [ i for i in rhnAdmins ]
+        protected = self._misc.getRHNProtectedUsers()
 
         i = 0
         while len(LD) > i:
@@ -368,17 +373,17 @@ class Application(AppHelpers):
                 i = i + 1
             elif RHN[i] < LD[i]:
                 # remove from RHN
-                tasks[RHN[i]] = 3
+                if RHN[i] not in protected:
+                    tasks[RHN[i]] = 3
                 del RHN[i]
             else:
                 # equal
                 i = i + 1
         while len(RHN) > len(LD):
-            tasks[RHN[i]] = 3
+            if RHN[i] not in protected:
+                tasks[RHN[i]] = 3
             del RHN[i]
 
-        print LD
-        print RHN
         return tasks
 
     def diffPermissions(self, deptACLs, pts, reverse=False):

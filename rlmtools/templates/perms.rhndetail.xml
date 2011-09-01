@@ -36,10 +36,10 @@
       <td py:if="i['dept'] is not None">${i['dept']}</td>
       <td py:if="i['dept'] is None"><i>Not Set</i></td>
     </tr>
-    <tr py:attrs="{'class':i['synced']}">
-      <th>Users Sync'd:</th>
-      <td py:if="len(tasks) == 0">Whew!</td>
-      <td py:if="len(tasks) != 0">God if I know</td>
+    <tr py:if="i['dept'] is not None" py:attrs="{'class':i['synced']}">
+      <th class="right">Users Sync'd:</th>
+      <td py:if="len(tasks) == 0">True</td>
+      <td py:if="len(tasks) != 0">False</td>
     </tr>
     <tr class="neutral">
       <th class="right">RLMTools ACLs:</th>
@@ -78,7 +78,7 @@
         </table>
       </td>
     </tr>
-    <tr class="neutral">
+    <tr class="neutral" py:if="i['dept'] is not None">
       <th class="right">Syncronization Process:</th>
       <td>
         <i py:if="len(tasks) == 0">No Corrections Needed</i>

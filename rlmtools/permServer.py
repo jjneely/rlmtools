@@ -285,7 +285,7 @@ class PermServer(server.Server):
            RHN OrgAdmins who we treat a little differently in
            determining ACLs for RHN Groups."""
 
-        q = """select userid from rhnprotectedusers"""
+        q = """select userid from rhnprotectedusers order by userid"""
         self.cursor.execute(q)
         result = resultSet(self.cursor)
         return [ r['userid'] for r in result ]
