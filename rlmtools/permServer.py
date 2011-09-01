@@ -295,3 +295,42 @@ class PermServer(server.Server):
         self.cursor.execute(q, (userid,))
         self.conn.commit()
 
+    def getAllBcfg2Dir(self):
+        q = """select * from bcfg2repos"""
+        self.cursor.execute(q)
+        return resultSet(self.cursor).dump()
+
+    def insertBcfg2Dir(self, path, dept_id):
+        q1 = """select br_id from bcfg2repos where path = %s"""
+        q2 = """insert into bcfg2repos (path, dept_id)
+                    values (%s, %s)"""
+
+        self.cursor.execute(q1, (path, ))
+        if self.cursor.rowcount > 1:
+            log.warning("Database inconsistancy in bcfg2repos table")
+            log.warning("   Duplicate paths: %s" % path)
+            return
+        if self.cursor.rowcount == 1: return
+
+        self.cursor.execute(q2, (path, dept_id))
+        self.conn.commit()
+
+    def cleanBcfg2Dirs(self, paths):
+        q1 = """delete from bcfg2repos where br_id = %s"""
+        table = self.getAllBcfg2Dir()
+        if len(paths) < 1: return
+        if len(table) < 1: return
+
+        # Make a dict for quick compares
+        d = {}
+        commit = False
+        for i in table: d[i['path']] = i['br_id']
+        for i in d.keys():
+            if i not in paths:
+                self.cursor.execute(q1, (d[i],))
+                if not commit: commit = True
+
+        if commit:
+            self.conn.commit()
+
+

@@ -159,6 +159,37 @@ class Application(AppHelpers):
                     ))
     rhnDetail.exposed = True
 
+    def bcfg2(self, message=""):
+        # Readable by any authenticated user
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        bcfg2Map = self._misc.getAllBcfg2Dir()
+
+        subMenu = [
+                    ('Manage ACLs',
+                     '%s/perms/acl/' % url()),
+                    ('Manage Web-Kickstart Directories',
+                     '%s/perms/webkickstart' % url()),
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
+                  ]
+
+        try:
+            bcfg2Map = [ self.completeWKSInfo(i) for i in bcfg2Map ]
+        except Exception, e:
+            return self.message("An error occured querying AFS: %s" % str(e))
+
+        return self.render('perms.bcfg2',
+                           dict(message=message,
+                                title="Bcfg2 Repositories",
+                                subMenu=subMenu,
+                                bcfg2Map=bcfg2Map,
+                               ))
+    bcfg2.exposed = True
+
     def webkickstart(self, message=""):
         # Readable by any authenticated user
         if not self.isAuthenticated():
@@ -492,7 +523,6 @@ class Application(AppHelpers):
         if i['bad_dept']:
             i['deptACLs'] = None
             i['perm_misalignment'] = True
-            i['show_actions'] = False
         else:
             i['deptACLs'] = matchACLToAFS(
                     self._misc.getDeptACLs(i['dept_id']), True)
