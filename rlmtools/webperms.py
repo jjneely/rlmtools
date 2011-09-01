@@ -175,12 +175,16 @@ class Application(AppHelpers):
                      '%s/perms/rhnGroups' % url()),
                   ]
 
+        try:
+            webksMap = [ self.completeWKSInfo(i) for i in webksMap ]
+        except Exception, e:
+            return self.message("An error occured querying AFS: %s" % str(e))
+
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
                                 subMenu=subMenu,
-                                webksMap=[self.completeWKSInfo(i) \
-                                          for i in webksMap ],
+                                webksMap=webksMap,
                                ))
     webkickstart.exposed = True
 
