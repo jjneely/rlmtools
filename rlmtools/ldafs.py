@@ -40,6 +40,7 @@ def fsla(path):
         # We filter out some PTS groups we are not interested in managing.
         if i.startswith('admin:'): continue
         if i in ['system:administrators']: continue
+        if i.startswith('linux:') and 'servers' in i: continue
 
         # Next we map AFS permissions to something similar to LD's
         # bitfield based permissions.  We have admin, write, read, look,

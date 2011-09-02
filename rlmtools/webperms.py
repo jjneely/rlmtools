@@ -58,6 +58,8 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                     ('Manage RHN Groups',
                      '%s/perms/rhnGroups' % url()),
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
                   ]
         depts = WebServer().getDepartments()
         acls = self._server.memberOfACL(Auth().userid)
@@ -82,6 +84,8 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                     ('Manage RHN Groups',
                      '%s/perms/rhnGroups' % url()),
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
                   ]
 
         rhnMap = self._misc.getRHNGroups()
@@ -204,6 +208,8 @@ class Application(AppHelpers):
                      '%s/perms/webkickstart' % url()),
                     ('Manage RHN Groups',
                      '%s/perms/rhnGroups' % url()),
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
                   ]
 
         try:
