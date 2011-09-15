@@ -295,6 +295,15 @@ class PermServer(server.Server):
         self.cursor.execute(q, (userid,))
         self.conn.commit()
 
+    def getBcfg2Dir(self, br_id):
+        q = """select * from bcfg2repos where br_id = %s"""
+        self.cursor.execute(q, (br_id,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        
+        return ret.dump()[0]
+
     def getAllBcfg2Dir(self):
         q = """select * from bcfg2repos"""
         self.cursor.execute(q)

@@ -362,6 +362,42 @@ class Application(AppHelpers):
                                ))
     modAFS.exposed = True
    
+    def modBcfg2AFS(self, br_id, setIt=None, message=""):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        subMenu = [
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
+                  ]
+
+        br_id = int(br_id)
+        bcfg2Map = self._misc.getBcfg2Dir(br_id)
+        if bcfg2Map is None:
+            message = """A Bcfg2 repository matching ID %s does
+                         not exist.  Use the Back button and try your
+                         query again.""" % br_id
+            return self.message(message)
+
+        bcfg2Map = self.completeWKSInfo(bcfg2Map)  # Yes, right method
+        if bcfg2Map['bad_dept']:
+            message = """The Bcfg2 repository %s is not associated
+                         with a department.  Setting a department must be
+                         completed before setting ACLs.""" % bcfg2Map['path']
+            return self.bcfg2(message)
+
+        bcfg2Map['todo'] = self.diffPermissions(bcfg2Map['deptACLs'], 
+                                                bcfg2Map['pts'],
+                                                reverse=True)
+
+        return self.render('perms.modBcfg2AFS',
+                           dict(message=message,
+                                title="Bcfg2 Repository AFS Sync",
+                                subMenu=subMenu,
+                                bcfg2Map=bcfg2Map,
+                               ))
+    modBcfg2AFS.exposed = True
+   
     def diffAdmins(self, ldAdmins, rhnAdmins):
         """Return a dict of userid => code which is a list of tasks
            that should be done to make the list of rhnAdmins match

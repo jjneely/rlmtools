@@ -12,7 +12,8 @@
 <body>
 
   <p>
-    This maps Bcfg2 Repositories to departments and other stuff.
+    Setup the permssions on your AFS Bcfg2 repository so that they
+    actually make since.
   </p>
 
   <div py:if="message != ''" class="message">
@@ -21,19 +22,14 @@
 
   <p>Greetings, ${name}.  You are user "${userid}".</p>
 
-  <h2>Bcfg2 Repository Listing</h2>
+  <h2>Syncronizing AFS PTS Groups To RLMTools</h2>
 
-  <p py:if="len(bcfg2Map) == 0">
-    You do not appear to have any Bcfg2 Repositories associated
-    with your department.
-  </p>
-
-  <div py:for="i in bcfg2Map">
+  <form method="post" action="${baseURL}/perms/modBcfg2AFS" 
+    py:with="i=bcfg2Map">
     <table>
-      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
+      <tr class="neutral">
         <th class="right">Department:</th>
-        <td py:if="not i['bad_dept']">${i['dept']}</td>
-        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
+        <td>${i['dept']}</td>
       </tr>
       <tr class="neutral">
         <th class="right">AFS Path:</th>
@@ -56,25 +52,32 @@
           </ul>
         </td>
       </tr>
-      <tr py:attrs="{'class': i['perm_misalignment'] and 'bad' or 'good'}">
-        <th class="right">Permissions Aligned:</th>
-        <td>${i['perm_misalignment'] and 'No' or 'Yes'}</td>
+      <tr class="neutral">
+        <th class="right">Syncronization Process:</th>
+        <td>
+          <i py:if="len(i['todo']) == 0">No Action Required</i>
+          <ul class="plain" py:if="len(i['todo']) > 0">
+            <li py:for="acl, perm in i['todo'].items()">
+              <div py:if="perm[0] == 2" py:replace="'Set PTS group %s on
+                this repository to %s.' % (acl, perm[1])"/>
+              <div py:if="perm[0] == 3" py:replace="'Remove PTS group %s from
+                this repository.' % acl"/> 
+            </li>
+          </ul>
+        </td>
       </tr>
-      <tr clas="neutral">
+      <tr class="neutral">
         <th class="right">Available Actions:</th>
         <td>
-          <button type="button" 
-            onclick="location.href='${baseURL}/perms/modBcfg2AFS?br_id=${i['br_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/changeWKSDept?br_id=${i['br_id']}'">Change Department Association</button>
+          <input type="hidden" name="br_id" value="${i['br_id']}"/>
+          <input type="hidden" name="setIt" value="True"/>
+          <input type="submit" value="Submit"/>
         </td>
       </tr>
     </table>
 
-    <p class="space" />
-  </div>
+    <p class="space"/>
+  </form>
 
 </body>
 
