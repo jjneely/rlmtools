@@ -354,32 +354,6 @@ class Application(AppHelpers):
                                                 webksMap['pts'],
                                                 reverse=True)
 
-        if False:
-            # Do the work
-            dept_id = webksMap['dept_id']
-            for (acl, (action, value)) in webksMap['todo'].items():
-                # XXX We assume the bp cell, that's where WKS lives
-                if action == 1:
-                    self._misc.createACL(acl, acl, "bp")
-                acl_id = self._misc.getACLbyName(acl, "bp")
-                if action == 1 or action == 2:
-                    if acl_id is None:
-                        log.warning("modLDACLs: bad ACL %s bp" % acl)
-                        continue
-                    self._misc.setPerm(acl_id, dept_id, rLDBitMap[value])
-                if action == 3:
-                    acls = self._misc.getPermsForACL(acl_id)
-                    rmacl = None
-                    for a in acls:
-                        if dept_id == a['dept_id']: 
-                            rmacl = a
-                            break
-                    if rmacl is not None:
-                        self._misc.removePerm(rmacl['aclg_id'])
-                    else:
-                        log.warning("modLDACLs: Couldn't find ACL to delete: %s ^s" % (acl, 'bp'))
-            return self.webkickstart(message="""RLMTools ACLs for department %s have been set.""" % webksMap['dept'])
-
         return self.render('perms.modAFS',
                            dict(message=message,
                                 title="Web-Kickstart AFS Sync",
