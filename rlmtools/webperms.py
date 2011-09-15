@@ -61,12 +61,10 @@ class Application(AppHelpers):
                     ('Manage Bcfg2 Repositories',
                      '%s/perms/bcfg2' % url()),
                   ]
-        depts = WebServer().getDepartments()
         acls = self._server.memberOfACL(Auth().userid)
 
         return self.render('perms.index',
                            dict(message=message,
-                                depts=depts,
                                 subMenu=subMenu,
                                 title="Permissions",
                                 acls=acls,
@@ -88,7 +86,15 @@ class Application(AppHelpers):
                      '%s/perms/bcfg2' % url()),
                   ]
 
-        rhnMap = self._misc.getRHNGroups()
+        rhnMap = []
+        for g in self._misc.getRHNGroups():
+            if g['dept_id'] is None:
+                if self.adminOf('root'):
+                   rhnMap.append(g)
+            elif self.adminOf(g['dept_id']):
+                rhnMap.append(g)
+
+        rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
         return self.render('perms.rhngroups',
                 dict(message=message,

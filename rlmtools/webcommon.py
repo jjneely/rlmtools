@@ -68,6 +68,8 @@ class AppHelpers(object):
     def isWRITE(self, field): return (field & self.WRITE) >> 1 == 1
     def isREAD(self, field): return (field & self.READ) >> 2 == 1
 
+    def adminOf(self, dept_id): return self.isADMIN(self.getAuthZ(dept_id))
+
     def mapPermBits(self, field):
         if self.isADMIN(field): return "admin"
         if self.isWRITE(field): return "write"
