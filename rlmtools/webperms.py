@@ -265,6 +265,46 @@ class Application(AppHelpers):
                                ))
     changeWKSDept.exposed = True
 
+    def changeBcfg2Dept(self, br_id, setDept=None, message=""):
+        # Readable by any authenticated user
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        subMenu = [
+                    ('Manage Bcfg2 Repositories',
+                     '%s/perms/bcfg2' % url()),
+                  ]
+
+        br_id = int(br_id)
+        bcfg2Map = self._misc.getBcfg2Dir(br_id)
+        depts = self._misc.getAllDepts()
+        if bcfg2Map is None:
+            message = """A Bcfg2 repository matching ID %s does
+                         not exist.  Use the Back button and try your
+                         query again.""" % br_id
+            return self.message(message)
+        if setDept is not None:
+            dept_id = int(setDept)
+            dept = self._misc.getDeptName(dept_id)
+            if dept is None:
+                message = """Department ID %s was not found.  This 
+                             Bcfg2 repository was not modified.""" \
+                                     % dept_id
+            else:
+                self._misc.setBcfg2Dept(br_id, dept_id)
+                message = """Set department association to %s for
+                Bcfg2 repository %s.""" % (dept, bcfg2Map['path'])
+                return self.bcfg2(message)
+
+        return self.render('perms.bcfg2dept',
+                           dict(message=message,
+                                title="Web-Kickstart",
+                                subMenu=subMenu,
+                                bcfg2Map=self.completeWKSInfo(bcfg2Map),
+                                depts=depts,
+                               ))
+    changeBcfg2Dept.exposed = True
+
     def modLDACLs(self, wkd_id, setIt=None, message=""):
         if not self.isAuthenticated():
             return self.message("You do not appear to be authenticated.")

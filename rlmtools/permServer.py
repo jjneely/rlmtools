@@ -309,6 +309,11 @@ class PermServer(server.Server):
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 
+    def setBcfg2Dept(self, br_id, dept_id):
+        q = """update bcfg2repos set dept_id = %s where br_id = %s"""
+        self.cursor.execute(q, (dept_id, br_id))
+        self.conn.commit()
+
     def insertBcfg2Dir(self, path, dept_id):
         q1 = """select br_id from bcfg2repos where path = %s"""
         q2 = """insert into bcfg2repos (path, dept_id)
