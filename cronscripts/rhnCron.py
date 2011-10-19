@@ -32,6 +32,19 @@ from webKickstart.configtools import Configuration as webKSConfig
 import rlmtools.configDragon as configDragon
 import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles
+from rlmtools.hesiod import Hesiod
+
+hes = Hesiod()
+
+def isDisabled(user):
+    """Return True if the given user does not exist in LDAP or is disabled."""
+    groups = hes.accessGroups(user)
+    if len(groups) == 0:
+        return True
+    if 'krb_disable' in groups:
+        return True
+
+    return False
 
 def getRHN(rhnurl, user, passwd):
     server = xmlrpclib.ServerProxy(rhnurl)
@@ -63,32 +76,52 @@ def diffAndInsert(m, rhnGroups, knownGroups):
         m.rmRHNGroup(knownGroups[knownKeys[i]]['rg_id'])
         del knownKeys[i]                # Keep our index numbers intact
 
-def findRHNAdmins(m, server, session):
+def watchRHNUsers(m, server, session):
     """Identify and store folks configured as an RHN Orgizational Admin
-       or higher privleged role."""
+       or higher privleged role.
 
+       Also disable expired NCSU accounts as we grok that information 
+       here as well."""
+
+    log = logging.getLogger('xmlrpc')
     data = server.user.listUsers(session)
     users = [ i['login'] for i in data if i['enabled'] ]
     rhnProtectedUsers = m.getRHNProtectedUsers()
+    realmUsers = {}
+    errors = 0
 
     for i in users:
         try:
             pwd.getpwnam(i)
-            realm = True
+            realmUsers[i] = not isDisabled(i)
         except KeyError:
-            realm = False
+            # User does not exist in the realm at all or
+            #   error talking to LDAP
+            errors = errors + 1
+            realmUsers[i] = False
 
-        if i not in rhnProtectedUsers and not realm:
-            print "DISABLING %s: not a current realm account" % i
-            try:
-                #server.user.disable(session, i)
-                raise Exception("testing")
-            except Exception, e:
-                print "ERROR: Could not disable user %s" % i
+    if not os.path.exists("/var/local/disable-rhn-users-mass-disable"):
+        if errors > len(users) * 0.1:  # Abort if we nuke more than 10% of RHN
+            print "WARNING: Too many errors looking up realm accounts.  Not "
+            print "   disabling any RHN accounts!"
+            log.error("WARNING: Too many errors looking up realm accounts. Not disabling any RHN accounts!")
+            sys.exit(255)
 
+    for i in users:
         roles = server.user.listRoles(session, i)
         if 'org_admin' in roles and i not in rhnProtectedUsers:
             m.addRHNProtectedUser(i)
+            continue
+
+        if i not in rhnProtectedUsers and not realmUsers[i]:
+            try:
+                print "DISABLING RHN ACCOUNT: %s" % i
+                if os.path.exists("/var/local/disable-rhn-users"):
+                    server.user.disable(session, i)
+                else:
+                    print "   Disable aborted!  Holodeck Safeties ON"
+            except Exception, e:
+                print "   Disable aborted! ERROR: %s" % str(e)
 
 def watchRHN(config):
     """Make a map of current WebKickstart directories to departments."""
@@ -111,7 +144,7 @@ def watchRHN(config):
         knownGroups[g['rhng_id']] = g
 
     diffAndInsert(m, rhnGroups, knownGroups)
-    findRHNAdmins(m, server, session)
+    watchRHNUsers(m, server, session)
 
     try:
         server.auth.logout(session)
