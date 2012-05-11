@@ -15,6 +15,23 @@ from rlmtools.constants import defaultConfFiles
 # This matches our "fqdn-UUID" cert naming scheme
 regex = "([-_a-zA-Z0-9.]+)-([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"
 
+# Some additional magic to parse the Puppet/Ruby YAML objects
+def construct_ruby_object(loader, suffix, node):
+    return loader.construct_yaml_map(node)
+
+def construct_ruby_sym(loader, node):
+    return loader.construct_yaml_str(node)
+
+yaml.add_multi_constructor(u"!ruby/object:", construct_ruby_object)
+yaml.add_constructor(u"!ruby/sym", construct_ruby_sym)
+
+def getFacts(clientcert):
+    f = "/var/lib/puppet/yaml/facts/%s.yaml" % clientcert
+    fd = open(f, "r")
+    map = yaml.load(fd.read())
+    fd.close()
+    return map["values"]
+
 def getParams(hostname, uuid):
     RLA = rlattributes.RLAttributes()
     api = apiServer.APIServer(2, hostname, uuid)
@@ -56,6 +73,9 @@ def main():
         log.error("Could not parse certname into host and UUID pair.")
         # A non-realm-linux box?  Sure, we'll take these...might as well
         sys.exit(0)
+
+    log.info("%s has environment %s" % (hostname, 
+        getFacts(certname)["environment"]))
 
     doc = {"parameters": getParams(hostname, uuid), }
 
