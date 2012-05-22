@@ -26,8 +26,7 @@ yaml.add_multi_constructor(u"!ruby/object:", construct_ruby_object)
 yaml.add_constructor(u"!ruby/sym", construct_ruby_sym)
 
 def getFacts(clientcert):
-    f = "/var/lib/puppet/yaml/facts/%s.yaml" % clientcert
-    fd = open(f, "r")
+    fd = open("/var/lib/puppet/yaml/facts/%s.yaml" % clientcert)
     map = yaml.load(fd.read())
     fd.close()
     return map["values"]
@@ -42,6 +41,7 @@ def getParams(hostname, uuid):
 
     m, a = RLA.hostAttrs(host_id)
     a["meta"] = m
+    a["support"] = api.isSupported()
     return { "rlmtools": a }
 
 def main():
@@ -69,17 +69,16 @@ def main():
         uuid = match.group(2)
         log.info("Generating YAML for puppet with RLMTools attributes for "
                  "host %s and UUID: %s" % (hostname, uuid))
+        doc = {"parameters": getParams(hostname, uuid), }
+        print yaml.dump(doc)
     else:
         log.error("Could not parse certname into host and UUID pair.")
         # A non-realm-linux box?  Sure, we'll take these...might as well
-        sys.exit(0)
+        print yaml.dump({"parameters": {} })
 
-    log.info("%s has environment %s" % (hostname, 
-        getFacts(certname)["environment"]))
+#    log.info("%s has environment %s" % (hostname, 
+#        getFacts(certname)["environment"]))
 
-    doc = {"parameters": getParams(hostname, uuid), }
-
-    print yaml.dump(doc)
 
 
 if __name__ == "__main__":
