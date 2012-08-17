@@ -301,19 +301,6 @@ def isRegistered(server):
     sig = key.signString(uuid)
 
     uuidRegistered = doRPC(server.isRegistered, uuid, sig)
-    if not uuidRegistered:
-        pubKey = key.exportKey()
-        keysig = key.signString(pubKey)
-        api = xmlrpc.apiVersion
-        xmlrpc.apiVersion = 0
-        keyRegistered = doRPC(server.isRegistered, pubKey, keysig)
-        xmlrpc.apiVersion = api
-
-        if keyRegistered:
-            ret = doRPC(server.convertApi_1, uuid, getRHNSystemID(), 
-                                             pubKey, sig)
-            if ret == 0:
-                uuidRegistered = doRPC(server.isRegistered, uuid, sig)
 
     return uuidRegistered
 
