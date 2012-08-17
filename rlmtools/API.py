@@ -58,8 +58,6 @@ __API__ = ['hello',
 
            'isRegistered',
            'isSupported',
-
-           'convertApi_1',
           ]
 
 
@@ -157,7 +155,7 @@ def message(apiVersion, publicKey, sig, dict):
     return ret
 
 
-def initHost(apiVersion, secret, fqdn):
+def initHost(apiVersion, secret, fqdn, dept="ncsu"):
     """API call for Web-Kickstart to initialize a host in the database.
        Protected by the knowing of a secret."""
     
@@ -172,7 +170,7 @@ def initHost(apiVersion, secret, fqdn):
         if apiVersion < 2: return 1
         else: return (1, "")
 
-    hid, sid = s.initHost(fqdn, support=1)  # returns host_id, session ID
+    hid, sid = s.initHost(fqdn, support=1, dept=dept)
     if apiVersion < 2:
         return 0
     else:
@@ -320,19 +318,6 @@ def getEncKeyFile(apiVersion, publicKey, sig):
     ret = s.getEncKeyFile(publicKey, sig)
     return ret
 
-def convertApi_1(apiVersion, uuid, rhnid, publicKey, sig):
-    """Converts an API version 0 client to API version 1 and links the
-       new UUID with this public key.
-
-       apiVersion - Must be > 0
-       uuid - The UUID of the client
-       rhnid - The RHN ID of the client.  -1 indicates no ID
-       publicKey - The public key of the client
-       sig - The signature of the uuid text
-    """
-
-    s = server.Server(apiVersion, getHostName(), uuid)
-    return s.convertApi_1(publicKey, uuid, rhnid, sig)
 
 def updateRHNSystemID(apiVersion, uuid, sig, rhnid):
     """Update the clients RHN ID."""

@@ -403,8 +403,9 @@ class APIServer(server.Server):
             self.cursor.execute(q, (self.uuid, self.client))
         
         if not self.cursor.rowcount > 0:
-            # Then we put it there
-            hid, sid = self.initHost(self.client, 1, True)
+            # XXX: We have no source for the dept.  As this is to be a 
+            # trusted client, we trust the client's reported dept value
+            hid, sid = self.initHost(self.client, 1, blessing=True, dept=dept)
         else:
             hid = self.cursor.fetchone()[0]
             q = """update realmlinux set support = 1 where host_id = %s"""
@@ -430,7 +431,8 @@ class APIServer(server.Server):
 
         log.info("Registering no-support for %s" % self.client)
 
-        hid, sid = self.initHost(self.client, 0)
+        # No-supports are initially set to dept=ncsu
+        hid, sid = self.initHost(self.client, 0, dept="ncsu")
         return self.__register(publicKey, dept, version, rhnid, hid)
 
     def __register(self, publicKey, dept, version, rhnid, host_id):
@@ -459,20 +461,20 @@ class APIServer(server.Server):
             return 4
 
         try:
-            deptid = self.getDeptID(dept)
+            # initHost now sets the dept field
 
             q1 = "delete from hostkeys where host_id = %s"
             q2 = """update realmlinux 
-                   set recvdkey=1, dept_id=%s, version=%s, uuid=%s, rhnid=%s
+                   set recvdkey=1, version=%s, uuid=%s, rhnid=%s
                    where host_id=%s"""
             q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
             self.cursor.execute(q1, (host_id,))
             if self.apiVersion > 0:
-                self.cursor.execute(q2, (deptid, version, self.uuid, 
+                self.cursor.execute(q2, (version, self.uuid, 
                                          rhnid, host_id))
             else:
-                self.cursor.execute(q2, (deptid, version, None, None, host_id))
+                self.cursor.execute(q2, (version, None, None, host_id))
             self.cursor.execute(q3, (host_id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (host_id,))
@@ -611,7 +613,7 @@ class APIServer(server.Server):
         self.cursor.execute(q)
         return (0, resultSet(self.cursor).dump())
 
-    def initHost(self, fqdn, support, blessing=False):
+    def initHost(self, fqdn, support, blessing=False, dept='ncsu'):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.
            A secret is used to auth web-kickstart or an admin."""
@@ -632,7 +634,7 @@ class APIServer(server.Server):
                 values (%s,'0000-00-00 00:00:00')"""
 
         date = datetime.today()
-        dept = self.getDeptID('unknown')
+        dept = self.getDeptID(dept)
         self.cursor.execute(q1, (fqdn,))
         if self.cursor.rowcount == 0:
             # Create a new entry
