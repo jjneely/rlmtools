@@ -846,6 +846,12 @@ class APIServer(server.Server):
 
         return 0
 
+    def signCert(self, fingerprint):
+        """Instruct the Puppet Master to sign the certificate for
+           this machine."""
+
+        pass
+
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
 
