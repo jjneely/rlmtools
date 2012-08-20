@@ -32,6 +32,7 @@ import os.path
 import tempfile
 import base64
 import ezPyCrypto
+import random
 
 from rlmtools.constants import defaultConfFiles
 from rlmtools import configDragon
@@ -149,6 +150,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
     def setUp(self):
         URL = "http://localhost:8081"
         self.server = setupServer(URL)
+        self.misc = miscServer.MiscServer()
 
         # Imitate a RL machine
         self.location = tempfile.mkdtemp(prefix="LD")
@@ -158,12 +160,19 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
 
     def tearDown(self):
         # Remove UUID from RLMTools database if present
-        misc = miscServer.MiscServer()
-        host_id = misc.getUuidID(self.uuid)
-        misc.deleteClient(host_id)
+        host_id = self.misc.getUuidID(self.uuid)
+        self.misc.deleteClient(host_id)
 
         # Remove UUID and keys representing fake host
         os.system("rm -rf %s" % self.location)
+
+    def getDept(self):
+        host_id = self.misc.getUuidID(self.uuid)
+        if host_id is None:
+            return None
+        else:
+            dept_id = self.misc.getHostDept(host_id)
+            return self.misc.getDeptName(dept_id)
 
     def test000HelloWorld(self):
         i = doRPC(self.server.hello, 1)
@@ -186,7 +195,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         key = getLocalKey(self.location)
         sig = key.signString(self.uuid)
         i = doRPC(self.server.register, 1, key.exportKey(), "test-dept", 
-                  "test-version", self.uuid, 0)
+                  "test-version", self.uuid, -1)
         self.assertEqual(i, 0)
 
         print "isRegistered()..."
@@ -211,7 +220,8 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertEqual(i, 0)
 
         print "updateRHNSystemID()..."
-        i = doRPC(self.server.updateRHNSystemID, 1, self.uuid, sig, 1)
+        r = random.randint(0, 65535)
+        i = doRPC(self.server.updateRHNSystemID, 1, self.uuid, sig, r)
         self.assertEqual(i, 0)
 
         print "getServerKey()..."
@@ -225,6 +235,10 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertFalse(i == [])
         self.assertTrue(rlPub.verifyString(i[0], i[1]))
         blob = key.decStringFromAscii(i[0])
+
+        print "dept check..."
+        # Dept should be "ncsu"
+        self.assertTrue("ncsu" == self.getDept())
         
     def test120SupportedHost(self):
         secret = configDragon.ConfigDragon().secret
@@ -232,7 +246,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         print "APIv2 Support FQDN: %s" % fqdn
 
         print "initHost()..."
-        ret, sid = doRPC(self.server.initHost, 2, secret, fqdn)
+        ret, sid = doRPC(self.server.initHost, 2, secret, fqdn, "test-dept")
         self.assertEqual(ret, 0)
         self.assertTrue(type(sid) == type(""))
 
@@ -244,7 +258,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         key = getLocalKey(self.location)
         sig = key.signString(self.uuid)
         i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
-                  "test-version", self.uuid, 0, sid)
+                  "test-version", self.uuid, -1, sid)
         self.assertEqual(i, 0)
 
         print "isRegistered()..."
@@ -269,7 +283,8 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertEqual(i, 0)
 
         print "updateRHNSystemID()..."
-        i = doRPC(self.server.updateRHNSystemID, 2, self.uuid, sig, 1)
+        r = random.randint(0, 65535)
+        i = doRPC(self.server.updateRHNSystemID, 2, self.uuid, sig, r)
         self.assertEqual(i, 0)
 
         print "getServerKey()..."
@@ -283,6 +298,10 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertFalse(i == [])
         self.assertTrue(rlPub.verifyString(i[0], i[1]))
         blob = key.decStringFromAscii(i[0])
+
+        print "dept check..."
+        # Dept should be "test-dept"
+        self.assertTrue("test-dept" == self.getDept())
         
     def test115NoSupport(self):
         fqdn = doRPC(self.server.getAddress, 1)[1]
@@ -296,7 +315,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         key = getLocalKey(self.location)
         sig = key.signString(self.uuid)
         i = doRPC(self.server.register, 1, key.exportKey(), "test-dept", 
-                  "test-version", self.uuid, 0)
+                  "test-version", self.uuid, -1)
         self.assertEqual(i, 0)
 
         print "isRegistered()..."
@@ -317,6 +336,10 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         i = doRPC(self.server.getEncKeyFile, 1, self.uuid, sig)
         self.assertTrue(i == [])
 
+        print "dept check..."
+        # Dept should be "ncsu"
+        self.assertTrue("ncsu" == self.getDept())
+
     def test125NoSupport(self):
         fqdn = doRPC(self.server.getAddress, 2)[1]
         print "APIv2 No Support FQDN: %s" % fqdn
@@ -329,7 +352,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         key = getLocalKey(self.location)
         sig = key.signString(self.uuid)
         i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
-                  "test-version", self.uuid, 0)
+                  "test-version", self.uuid, -1)
         self.assertEqual(i, 0)
 
         print "isRegistered()..."
@@ -349,6 +372,10 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         print "getEncKeyFile()..."
         i = doRPC(self.server.getEncKeyFile, 2, self.uuid, sig)
         self.assertTrue(i == [])
+
+        print "dept check..."
+        # Dept should be "ncsu"
+        self.assertTrue("ncsu" == self.getDept())
 
     def test200SecretOps(self):
         secret = configDragon.ConfigDragon().secret
@@ -395,7 +422,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
 
         print "register()..."
         i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
-                  "test-version", self.uuid, 0, sid)
+                  "test-version", self.uuid, -1, sid)
         self.assertEqual(i, 0)
 
         print "getBcfg2Bootstrap()..."
