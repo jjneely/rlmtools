@@ -27,9 +27,6 @@ import os.path
 from webKickstart import webKickstart
 from webKickstart import configtools
 
-# How to better handle web authentication?
-from webKickstart.plugins import webauth
-
 import configDragon
 from webcommon import *
 
