@@ -256,7 +256,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
         self.assertTrue(i)
 
         print "checkIn()..."
-        i = doRPC(self.server.checkIn, 2, self.uuid, sig)
+        i = doRPC(self.server.checkIn, 2, self.uuid, sig, "test-dept")
         self.assertEqual(i, 0)
 
         print "message()..."
@@ -361,6 +361,7 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
             print "Loading Web-Kickstart for %s" % c['hostname']
             if c['uuid'] != "":
                 ret = doRPC(self.server.loadWebKickstart, 2, secret, c['uuid'])
+                print ret
                 if ret == 3:
                     print "Client %s does not have a web-kickstart config" \
                             % c['hostname']
@@ -370,23 +371,37 @@ class TestLiquidDragonXMLRPC(unittest.TestCase):
                     break
                 
     def test220Bcfg2Opts(self):
-        secret = configDragon.ConfigDragon().secret
-        ret = doRPC(self.server.getDeptBcfg2, 2, "root")
-        
-        # RLMTools found all the attributes it needed
-        self.assertTrue(ret[0] == 0)
+        fqdn = doRPC(self.server.getAddress, 2)[1]
+        print "APIv2 Support FQDN: %s" % fqdn
 
+        secret = configDragon.ConfigDragon().secret
+
+        key = getLocalKey(self.location)
+        sig = key.signString(self.uuid)
         url = "http://foobar.com:8072"
         init = "-S %(url)s -x %(password)s -n -qv"
-        ret = doRPC(self.server.setDeptBcfg2, 2, secret, "oit",
+        ret = doRPC(self.server.setDeptBcfg2, 2, secret, "root",
                 init, url)
         self.assertTrue(ret == 0)
 
-        ret, dict = doRPC(self.server.getDeptBcfg2, 2, "oit-hs")
-        print ret, dict
-        self.assertTrue(ret == 0)
-        self.assertTrue(dict['init'] == init)
-        self.assertTrue(dict['url'] == url)
+        print "initHost()..."
+        ret, sid = doRPC(self.server.initHost, 2, secret, fqdn)
+        self.assertEqual(ret, 0)
+        self.assertTrue(type(sid) == type(""))
+
+        print "isRegistered()..."
+        i = doRPC(self.server.isRegistered, 2, self.uuid, "")
+        self.assertFalse(i)
+
+        print "register()..."
+        i = doRPC(self.server.register, 2, key.exportKey(), "test-dept", 
+                  "test-version", self.uuid, 0, sid)
+        self.assertEqual(i, 0)
+
+        print "getBcfg2Bootstrap()..."
+        ret = doRPC(self.server.getBcfg2Bootstrap, 2, self.uuid, sig)
+        print ret
+        self.assertTrue(ret[0] == 0)
 
 
 if __name__ == "__main__":
