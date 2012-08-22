@@ -45,6 +45,7 @@ __API__ = ['hello',
            'message',
            'updateRHNSystemID',
            'getAddress',
+           'signCert',
 
            'initHost',
            'setDeptBcfg2',
@@ -126,6 +127,23 @@ def bless(apiVersion, dept, version, uuid=None, rhnid=None):
     s = server.Server(apiVersion, getHostName(), uuid)
     ret = s.bless(dept, version, rhnid)
     return ret
+
+
+def signCert(apiVersion, uuid, sig, fingerprint):
+    """Request Puppet Certificate for this host be signed."""
+
+    if apiVersion < 2:
+        # This function doesn't exist on apiVersions < 2
+        raise Fault(1, "Method 'signCert' does not exist at this "
+                       "API version")
+
+    s = server.Server(apiVersion, getHostName(), uuid)
+    if not s.verifyClient(uuid, sig):
+        # Auth failed
+        return 1
+
+    return s.signCert(fingerprint)
+
 
 def resetHostname(apiVersion, uuid, sig):
     s = server.Server(apiVersion, getHostName(), uuid)

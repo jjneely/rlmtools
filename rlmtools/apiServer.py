@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005 - 2010 NC State University
+# Copyright (C) 2003, 2005 - 2012 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -37,6 +37,7 @@ from configDragon import config
 from rlattributes import RLAttributes
 from sessions import Session
 
+import puppet
 import webKickstart.libwebks
 
 log = logging.getLogger("xmlrpc")
@@ -850,7 +851,17 @@ class APIServer(server.Server):
         """Instruct the Puppet Master to sign the certificate for
            this machine."""
 
-        pass
+        p = puppet.Puppet()
+        cert = p.getCertStatus()
+        if cert is None:
+            # No certificate/CSR uploaded?
+            return 2
+
+        if p.signCert(self.client, self.uuid, fingerprint):
+            return 0
+
+        # Other problem...check the logs
+        return 3
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
