@@ -46,3 +46,7 @@ log_level = '1'            # A text represntation of an int, log level
 bcfg2_init = '/usr/sbin/bcfg2 -qv -u %(uuid)s -x %(password)s -p %(profile)s -S %(url)s'
 bcfg2_url = 'https://cm.linux.ncsu.edu:6000'
 
+# Default Puppet Bootstrap info
+puppet_init = '/usr/bin/puppet agent --test --certname %(fqdn)s-%(uuid)s --environment %(dept)s --server %(url)s --pluginsync'
+puppet_url = 'puppet.linux.ncsu.edu:8140'
+
