@@ -380,7 +380,7 @@ def doBlessing(server):
 
 def runQueue(server):
     """Process the message queue."""
-    expire = time.time() - 3600 * 24 * 30 # 30 days ago (time.time() 
+    expire = time.time() - 3600 * 24 * 20 # 20 days ago (time.time() 
                                           # for python 2.2)
 
     key = getLocalKey()
@@ -402,9 +402,15 @@ def runQueue(server):
         m = Message()
         m.load(os.path.join(mqueue, file))
 
+        # 0-length files are a common corruption -- just nuke 'em
+        if m.sum == "da39a3ee5e6b4b0d3255bfef95601890afd80709":
+            # The checksum for 0 bytes
+            m.remove()
+            continue
+
         tStamp = m.getTimeStamp()
         if tStamp is None or tStamp < expire:
-            # If the message is 30 days told we aren't interested
+            # If the message is 20 days told we aren't interested
             # This also removes corrupt messages
             m.remove()
         else:
