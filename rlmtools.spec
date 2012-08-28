@@ -26,7 +26,7 @@ specific aspects of the client's behavior to a central location.
 Summary:  RLMTools Server Web App and Database Backend
 Group: Applications/Internet
 Requires: mod_python, python-genshi, python-cherrypy2, rrdtool-python
-Requires: python-ezpycrypto, MySQL-python
+Requires: python-ezpycrypto, MySQL-python, python-httplib2
 Requires: webkickstart
 Requires: python >= 2.5
 Requires(post): httpd
