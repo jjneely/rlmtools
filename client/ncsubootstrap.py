@@ -157,9 +157,8 @@ def go_bcfg2(server, options):
 
 
 def go_puppet(server, options):
-    # subs must include: fqdn, uuid, dept, url for default init string
-    # fingerprint: /usr/bin/puppet agent --fingerprint
 
+    # Step 1: Get the needed data
     subs = {}
     subs['fqdn'] = socket.gethostname()
     subs['uuid'] = uuid
@@ -175,38 +174,35 @@ def go_puppet(server, options):
     else:
         subs['url'] = puppet_url
 
-    ret = 1
-    while len(depts) > 0 and ret & 1 == 1:
-        # Running puppet through all of the possible environments until
-        # the error/failure bit is not set.  We go from specific to least
-        # specific
-        subs['dept'] = depts.pop()
-        print "Running: %s" % subs['init'] % subs
+    # Step 2: Generate key pair and CSR if needed
+    csr = "/var/lib/puppet/ssl/certificate_requests/%(fqdn)s-%(uuid)s.pem"
+    # Puppet Bug # 4680
+    # If the client has ever generated a CSR it assumes its been
+    # uploaded to the master.  This may not be the case.  This is bootstrap
+    # so we assume we need to get it uploaded
+    if os.access(csr % subs, os.F_OK):
+        print "Deleting old CSR..."
+        os.unlink(csr % subs)
 
-        # Puppet Bug # 4680
-        # If the client has ever generated a CSR it assumes its been
-        # uploaded to the master.  This may not be the case
-        csr = "/var/lib/puppet/ssl/certificate_requests/%(fqdn)s-%(uuid)s.pem"
-        if os.access(csr % subs, os.F_OK):
-            print "Deleting old CSR..."
-            os.unlink(csr % subs)
+    # Use "root" here as we know this env exists
+    subs['dept'] = 'root'
+    print "Running Puppet to generate SSL key pair and CSR..."
+    print subs['init'] % subs
 
-        # High byte is our exit code, low byte is not
-        ret = os.system(subs['init'] % subs) >> 8
-        print "DEBUG: %s & 1 = %s" % (ret, ret & 1)
+    # The return code will be a 1 or failure here.  Puppet complains that
+    # we can't get our signed CRT which is expected.
+    os.system(subs['init'] % subs)
+    print
 
-    if len(depts) == 0:
-        print "ERROR: Puppet bootstrap failure...giving up"
-        logger.error("Puppet bootstrap failure...giving up")
-        sys.exit(1)
-
-    # what's our key's fingerprint? -- we do this the old way
+    # what's our key's fingerprint? -- we do this with os.popen()
     # to be compatible with earlier version os python
     fd = os.popen(puppet_fingerprint % subs, "r")
     fingerprint = fd.read().strip()
     fd.close()
 
+    # Step 3: Get the certificate signed
     # Make the XMLRPC call to request cert signing
+    print "Attempting to get certificate signed..."
     err = xmlrpc.doRPC(server.signCert, uuid, sig, fingerprint)
     if err > 0:
         print "ERROR: Could not get Puppet Certificate signed, error # %s" \
@@ -215,12 +211,26 @@ def go_puppet(server, options):
                 % err)
         sys.exit(1)
 
-    # We should have our cert signed now, do the actual first config run
-    print "Running: %s" % subs['init'] % subs
-    ret = os.system(subs['init'] % subs)
-    if ret & 1 == 1:
-        print "ERROR: Final Puppet run failed"
-        logger.error("Final Puppet run failed")
+    # Step 4: Puppet should be ready to fully configure this system.
+    # Run Puppet, check for system failures to identify the correct
+    # puppet environment.  Once we start applying changes, we profit!
+    ret = 1
+    print "Running Puppet..."
+    while len(depts) > 0 and ret & 1 == 1:
+        # Running puppet through all of the possible environments until
+        # the error/failure bit is not set.  We go from specific to least
+        # specific
+        subs['dept'] = depts.pop()
+        print "Trying department %s..." % subs['dept']
+        print subs['init'] % subs
+
+        # High byte is our exit code, low byte is not
+        ret = os.system(subs['init'] % subs) >> 8
+        print
+
+    if len(depts) == 0:
+        print "ERROR: Puppet bootstrap failure...giving up"
+        logger.error("Puppet bootstrap failure...giving up")
         sys.exit(1)
 
 
