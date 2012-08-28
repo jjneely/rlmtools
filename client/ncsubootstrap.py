@@ -228,7 +228,7 @@ def go_puppet(server, options):
         ret = os.system(subs['init'] % subs) >> 8
         print
 
-    if len(depts) == 0:
+    if len(depts) == 0 and ret & 1 == 1:
         print "ERROR: Puppet bootstrap failure...giving up"
         logger.error("Puppet bootstrap failure...giving up")
         sys.exit(1)
