@@ -122,7 +122,10 @@ def go_bcfg2(server, options):
     # Get dept into from RLMTools
     err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, options.uuid, 
             options.sig)
-    if err > 0:
+    if err == 3:
+        print "Bcfg2 setup for non-support client..."
+        rlminfo = {}
+    elif err > 0:
         rlminfo = {}
         logger.warning('ncsubootstrap could not grab bcfg2 info from RLMTools')
         logger.warning('Error code %s' % err)
@@ -139,6 +142,7 @@ def go_bcfg2(server, options):
     if 'url' not in rlminfo:
         print "WARNING: Using default Bcfg2 Repository URL: %s" % bcfg2_url
         rlminfo['url'] = bcfg2_url
+        rlminfo['password'] = 'foobar'
     if 'init' not in rlminfo:
         print "WARNING: Using default command line template: %s" % bcfg2_init
         rlminfo['init'] = bcfg2_init
