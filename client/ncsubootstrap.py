@@ -35,10 +35,6 @@ import client
 
 logger = None
 
-uuid = client.getUUID()
-keypair = client.getLocalKey()
-sig = keypair.signString(uuid)
-
 def dept_search_list(dept):
     # dept - Local department string
     # returns a list of departments, in order, to search for puppet repos
@@ -124,7 +120,8 @@ def go_bcfg2(server, options):
         subs['init'] = options.init
 
     # Get dept into from RLMTools
-    err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, uuid, sig)
+    err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, options.uuid, 
+            options.sig)
     if err > 0:
         rlminfo = {}
         logger.warning('ncsubootstrap could not grab bcfg2 info from RLMTools')
@@ -138,7 +135,7 @@ def go_bcfg2(server, options):
         rlminfo[key] = s.strip()
 
     rlminfo.update(subs)
-    rlminfo['uuid'] = uuid
+    rlminfo['uuid'] = options.uuid
     if 'url' not in rlminfo:
         print "WARNING: Using default Bcfg2 Repository URL: %s" % bcfg2_url
         rlminfo['url'] = bcfg2_url
@@ -161,7 +158,7 @@ def go_puppet(server, options):
     # Step 1: Get the needed data
     subs = {}
     subs['fqdn'] = socket.gethostname()
-    subs['uuid'] = uuid
+    subs['uuid'] = options.uuid
     depts = dept_search_list(options.dept)
 
     if options.init is not None:
@@ -203,7 +200,8 @@ def go_puppet(server, options):
     # Step 3: Get the certificate signed
     # Make the XMLRPC call to request cert signing
     print "Attempting to get certificate signed..."
-    err = xmlrpc.doRPC(server.signCert, uuid, sig, fingerprint)
+    err = xmlrpc.doRPC(server.signCert, options.uuid, 
+            options.sig, fingerprint)
     if err > 0:
         print "ERROR: Could not get Puppet Certificate signed, error # %s" \
                 % err
@@ -258,6 +256,13 @@ def main():
     if not client.isRegistered(server):
         if client.doRegister(server, options.session) != 0:
             sys.exit(1)
+
+    uuid = client.getUUID()
+    keypair = client.getLocalKey()
+    sig = keypair.signString(uuid)
+
+    options.uuid = uuid
+    options.sig = sig
 
     if options.bcfg2:
         go_bcfg2(server, options)
