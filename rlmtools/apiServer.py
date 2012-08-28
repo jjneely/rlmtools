@@ -336,8 +336,11 @@ class APIServer(server.Server):
                                                 rhnid)
                 else:
                     log.info("Registering support for %s" % self.client)
+                    host_id = sess['hostid']
+                    sess.invalidate()
+                    sess.save()
                     return self.__register(publicKey, dept, version, 
-                                           rhnid, sess['hostid'])
+                                           rhnid, host_id)
             else:
                 # No session to match a previous initHost.  
                 # Not installed via Web-Kickstart?
