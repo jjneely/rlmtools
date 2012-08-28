@@ -852,7 +852,7 @@ class APIServer(server.Server):
            this machine."""
 
         p = puppet.Puppet()
-        cert = p.getCertStatus()
+        cert = p.getCertStatus(self.client, self.uuid)
         if cert is None:
             # No certificate/CSR uploaded?
             return 2
