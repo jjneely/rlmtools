@@ -183,7 +183,17 @@ def go_puppet(server, options):
         subs['dept'] = depts.pop()
         print "Running: %s" % subs['init'] % subs
 
-        ret = os.system(subs['init'] % subs)
+        # Puppet Bug # 4680
+        # If the client has ever generated a CSR it assumes its been
+        # uploaded to the master.  This may not be the case
+        csr = "/var/lib/puppet/ssl/certificate_requests/%(fqdn)s-%(uuid)s"
+        if not os.access(csr % subs, os.F_OK):
+            print "Deleting old CSR..."
+            os.unlink(csr % subs)
+
+        # High byte is our exit code, low byte is not
+        ret = os.system(subs['init'] % subs) >> 8
+        print "DEBUG: %s & 1 = %s" % (ret, ret & 1)
 
     if len(depts) == 0:
         print "ERROR: Puppet bootstrap failure...giving up"
