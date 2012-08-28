@@ -192,7 +192,7 @@ def go_puppet(server, options):
 
     # what's our key's fingerprint? -- we do this the old way
     # to be compatible with earlier version os python
-    fd = os.popen("/usr/bin/puppet agent --fingerprint", "r")
+    fd = os.popen(puppet_fingerprint % subs, "r")
     fingerprint = fd.read().strip()
     fd.close()
 
