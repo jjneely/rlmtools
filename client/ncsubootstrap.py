@@ -119,6 +119,14 @@ def go_bcfg2(server, options):
     if options.init is not None:
         subs['init'] = options.init
 
+    # The first argument of the init line should be the full path to
+    # the Bcfg2 executable
+    if not os.access(subs['init'].split()[0], os.X_OK):
+        m = "Bcfg2 does not appear to be installed or bad --init option"
+        print "ERROR: %s" % m
+        logger.error(m)
+        sys.exit(1)
+
     # Get dept into from RLMTools
     err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, options.uuid, 
             options.sig)
@@ -174,6 +182,14 @@ def go_puppet(server, options):
         subs['url'] = options.url
     else:
         subs['url'] = puppet_url
+
+    # The first argument of the init line should be the full path to
+    # the Puppet executable
+    if not os.access(subs['init'].split()[0], os.X_OK):
+        m = "Puppet does not appear to be installed or bad --init option"
+        print "ERROR: %s" % m
+        logger.error(m)
+        sys.exit(1)
 
     # Step 2: Generate key pair and CSR if needed
     csr = "/var/lib/puppet/ssl/certificate_requests/%(fqdn)s-%(uuid)s.pem"
