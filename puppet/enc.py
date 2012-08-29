@@ -42,7 +42,13 @@ def getParams(hostname, uuid):
     m, a = RLA.hostAttrs(host_id)
     a["meta"] = m
     a["support"] = api.isSupported()
-    return { "rlmtools": a }
+    dept = api.getDeptName(api.getHostDept(host_id))
+
+    # dept is a top-level, we use this to match the puppet environment
+    # Also, dept in the database is already normalized
+    return { "rlmtools": a,
+             "rlmdept" : dept,
+           }
 
 def main():
     parser = optparse.OptionParser()
@@ -74,7 +80,13 @@ def main():
     else:
         log.error("Could not parse certname into host and UUID pair.")
         # A non-realm-linux box?  Sure, we'll take these...might as well
-        print yaml.dump({"parameters": {} })
+        print yaml.dump(
+            {
+                "parameters": 
+                {
+                    "rlmdept": "UNKNOWN",
+                }
+            } )
 
 #    log.info("%s has environment %s" % (hostname, 
 #        getFacts(certname)["environment"]))

@@ -1,0 +1,14 @@
+NOTES
+=====
+
+For the Puppet integration to work we need something like the following in
+the /etc/puppet/puppet.conf file to loosen the permissions on the Puppet
+x509 certs/keys
+
+[agent]
+# explicitly set the permissions of this tree to readable by anyone in the puppet group
+privatekeydir = /var/lib/puppet/ssl/private_keys { owner = puppet, group = puppet, mode = 750 }
+
+# The default value is '$privatekeydir/$certname.pem'.
+hostprivkey = $privatekeydir/$certname.pem { owner = puppet, group = puppet, mode = 640 }
+

@@ -21,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-import sha
+import hashlib
 import time
 import random
 import cPickle as pickle
@@ -65,7 +65,7 @@ class Session(dict):
         self.createTime = time.time()
         self.timeOut = self.createTime + self.lifetime
         s = "Liquid-Dragon-%s-%s" % (str(random.random()), str(secret))
-        self.sid = sha.new(s).hexdigest()
+        self.sid = hashlib.sha1(s).hexdigest()
         self.is_new = True
         
                                                         

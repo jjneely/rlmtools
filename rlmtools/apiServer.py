@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # RealmLinux Manager -- Main server object
-# Copyright (C) 2003, 2005 - 2010 NC State University
+# Copyright (C) 2003, 2005 - 2012 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -37,6 +37,7 @@ from configDragon import config
 from rlattributes import RLAttributes
 from sessions import Session
 
+import puppet
 import webKickstart.libwebks
 
 log = logging.getLogger("xmlrpc")
@@ -335,8 +336,11 @@ class APIServer(server.Server):
                                                 rhnid)
                 else:
                     log.info("Registering support for %s" % self.client)
+                    host_id = sess['hostid']
+                    sess.invalidate()
+                    sess.save()
                     return self.__register(publicKey, dept, version, 
-                                           rhnid, sess['hostid'])
+                                           rhnid, host_id)
             else:
                 # No session to match a previous initHost.  
                 # Not installed via Web-Kickstart?
@@ -403,8 +407,9 @@ class APIServer(server.Server):
             self.cursor.execute(q, (self.uuid, self.client))
         
         if not self.cursor.rowcount > 0:
-            # Then we put it there
-            hid, sid = self.initHost(self.client, 1, True)
+            # XXX: We have no source for the dept.  As this is to be a 
+            # trusted client, we trust the client's reported dept value
+            hid, sid = self.initHost(self.client, 1, blessing=True, dept=dept)
         else:
             hid = self.cursor.fetchone()[0]
             q = """update realmlinux set support = 1 where host_id = %s"""
@@ -430,7 +435,8 @@ class APIServer(server.Server):
 
         log.info("Registering no-support for %s" % self.client)
 
-        hid, sid = self.initHost(self.client, 0)
+        # No-supports are initially set to dept=ncsu
+        hid, sid = self.initHost(self.client, 0, dept="ncsu")
         return self.__register(publicKey, dept, version, rhnid, hid)
 
     def __register(self, publicKey, dept, version, rhnid, host_id):
@@ -459,20 +465,20 @@ class APIServer(server.Server):
             return 4
 
         try:
-            deptid = self.getDeptID(dept)
+            # initHost now sets the dept field
 
             q1 = "delete from hostkeys where host_id = %s"
             q2 = """update realmlinux 
-                   set recvdkey=1, dept_id=%s, version=%s, uuid=%s, rhnid=%s
+                   set recvdkey=1, version=%s, uuid=%s, rhnid=%s
                    where host_id=%s"""
             q3 = "insert into hostkeys (host_id, publickey) values (%s, %s)"
 
             self.cursor.execute(q1, (host_id,))
             if self.apiVersion > 0:
-                self.cursor.execute(q2, (deptid, version, self.uuid, 
+                self.cursor.execute(q2, (version, self.uuid, 
                                          rhnid, host_id))
             else:
-                self.cursor.execute(q2, (deptid, version, None, None, host_id))
+                self.cursor.execute(q2, (version, None, None, host_id))
             self.cursor.execute(q3, (host_id, publicKey))
             self.cursor.execute("""delete from lastheard where host_id = %s""",
                                 (host_id,))
@@ -611,7 +617,7 @@ class APIServer(server.Server):
         self.cursor.execute(q)
         return (0, resultSet(self.cursor).dump())
 
-    def initHost(self, fqdn, support, blessing=False):
+    def initHost(self, fqdn, support, blessing=False, dept='ncsu'):
         """Logs a newly installing host.  To work with Web-Kickstart.
            FQDN is the FQDN of the host we are installing.
            A secret is used to auth web-kickstart or an admin."""
@@ -632,7 +638,7 @@ class APIServer(server.Server):
                 values (%s,'0000-00-00 00:00:00')"""
 
         date = datetime.today()
-        dept = self.getDeptID('unknown')
+        dept = self.getDeptID(dept)
         self.cursor.execute(q1, (fqdn,))
         if self.cursor.rowcount == 0:
             # Create a new entry
@@ -843,6 +849,22 @@ class APIServer(server.Server):
         log.info("Updated RHN System ID for host %s" % self.client)
 
         return 0
+
+    def signCert(self, fingerprint):
+        """Instruct the Puppet Master to sign the certificate for
+           this machine."""
+
+        p = puppet.Puppet()
+        cert = p.getCertStatus(self.client, self.uuid)
+        if cert is None:
+            # No certificate/CSR uploaded?
+            return 2
+
+        if p.signCert(self.client, self.uuid, fingerprint):
+            return 0
+
+        # Other problem...check the logs
+        return 3
 
     def __makeUpdatesConf(self):
         """Generate the updates.conf file and return a string."""
