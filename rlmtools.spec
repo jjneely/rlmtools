@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 2.1.0
+Version: 2.1.1
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -94,6 +94,13 @@ fi
 %{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Thu Aug 30 2012 Jack Neely <jjneely@ncsu.edu> 2.1.1-1
+- Upgrade to 2.1.1 - various improvements and fixes in the Puppet support
+
+* Wed Aug 29 2012 Jack Neely <jjneely@ncsu.edu> 2.1.0-1
+- Package 2.1.0
+- Introduce support for Puppet
+
 * Tue Mar 29 2011 Jack Neely <jjneely@ncsu.edu> 2.0.10-1
 - Correct Bcfg2 threading and locking issues with the database connections
 
