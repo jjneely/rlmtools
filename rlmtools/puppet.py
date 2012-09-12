@@ -16,7 +16,8 @@ class Puppet(object):
 
         self.ca = os.path.join(ssldir, "certs/ca.pem")
         if not os.path.exists(self.ca):
-            raise StandardError("Puppet CA certificate not found: %s" % ca)
+            raise StandardError("Puppet CA certificate not found: %s" \
+                    % self.ca)
 
         uuid = self.getLocalUUID()
         fqdn = gethostname()
