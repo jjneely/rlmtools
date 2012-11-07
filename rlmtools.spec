@@ -3,7 +3,7 @@
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
 Version: 2.1.1
-Release: 1%{?dist:%(echo %{dist})}
+Release: 2%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
@@ -11,6 +11,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: realm-hooks
 Requires: python-ezpycrypto
 Requires: rpm-python >= 4.2
+Requires: redhat-lsb
 BuildArch: noarch
 BuildRequires: python-devel
 Obsoletes: ncsu-rlmtools
@@ -94,6 +95,9 @@ fi
 %{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Wed Nov 07 2012 Jack Neely <jjneely@ncsu.edu> 2.1.1-2
+- Require redhat-lsb as the puppet bits require the LSB hooks
+
 * Thu Aug 30 2012 Jack Neely <jjneely@ncsu.edu> 2.1.1-1
 - Upgrade to 2.1.1 - various improvements and fixes in the Puppet support
 
