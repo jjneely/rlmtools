@@ -858,12 +858,16 @@ class APIServer(server.Server):
         cert = p.getCertStatus(self.client, self.uuid)
         if cert is None:
             # No certificate/CSR uploaded?
+            m = "signCert for %s failed -- no CSR uploaded" % self.uuid
+            log.info(m)
             return 2
 
         if p.signCert(self.client, self.uuid, fingerprint):
+            log.info( "signCert for %s succeded" % self.uuid)
             return 0
 
         # Other problem...check the logs
+        log.info("signCert for %s failed -- unknown error" % self.uuid)
         return 3
 
     def __makeUpdatesConf(self):

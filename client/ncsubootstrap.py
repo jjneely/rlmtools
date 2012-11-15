@@ -119,14 +119,6 @@ def go_bcfg2(server, options):
     if options.init is not None:
         subs['init'] = options.init
 
-    # The first argument of the init line should be the full path to
-    # the Bcfg2 executable
-    if not os.access(subs['init'].split()[0], os.X_OK):
-        m = "Bcfg2 does not appear to be installed or bad --init option"
-        print "ERROR: %s" % m
-        logger.error(m)
-        sys.exit(1)
-
     # Get dept into from RLMTools
     err, rlminfo = xmlrpc.doRPC(server.getBcfg2Bootstrap, options.uuid, 
             options.sig)
@@ -158,7 +150,15 @@ def go_bcfg2(server, options):
         print "WARNING: Using default Bcfg2 password"
         rlminfo['password'] = 'foobar'
 
+    # The first argument of the init line should be the full path to
+    # the Bcfg2 executable
     cmd = rlminfo['init'] % rlminfo
+    if not os.access(cmd.split()[0], os.X_OK):
+        m = "%s does not appear to be installed or bad --init option" \
+                % cmd.split()[0]
+        print "ERROR: %s" % m
+        logger.error(m)
+        sys.exit(1)
 
     logger.info("Invoking ncsubootstrap.py to boot strap Bcfg2")
     
