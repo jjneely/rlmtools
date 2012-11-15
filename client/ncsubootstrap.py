@@ -152,13 +152,13 @@ def go_bcfg2(server, options):
 
     # The first argument of the init line should be the full path to
     # the Bcfg2 executable
-    if not os.access(subs['init'].split()[0], os.X_OK):
-        m = "Bcfg2 does not appear to be installed or bad --init option"
+    cmd = rlminfo['init'] % rlminfo
+    if not os.access(cmd.split()[0], os.X_OK):
+        m = "%s does not appear to be installed or bad --init option" \
+                % cmd.split()[0]
         print "ERROR: %s" % m
         logger.error(m)
         sys.exit(1)
-
-    cmd = rlminfo['init'] % rlminfo
 
     logger.info("Invoking ncsubootstrap.py to boot strap Bcfg2")
     
