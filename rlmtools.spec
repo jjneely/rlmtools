@@ -2,8 +2,8 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 2.1.1
-Release: 2%{?dist:%(echo %{dist})}
+Version: 2.1.2
+Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
 Group: System Environment/Base
@@ -95,6 +95,9 @@ fi
 %{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Thu Nov 15 2012 Jack Neely <jjneely@ncsu.edu> 2.1.2-1
+- Bump to 2.1.2
+
 * Wed Nov 07 2012 Jack Neely <jjneely@ncsu.edu> 2.1.1-2
 - Require redhat-lsb as the puppet bits require the LSB hooks
 
