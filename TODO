@@ -15,6 +15,10 @@ Server:
 
 2.1.x:
 
+    Complete: * Add Puppet Support
+
+2.2.x:
+
     * Re-work the UI so that all Admin Panels become "Manage Attributes"
       or similar.  Be able to drill down to all dept and client status
       pages from the Front Page.
@@ -30,7 +34,7 @@ Server:
         * RHN
         * Red Hat KB accounts
         * Departments
-        * Bcfg2 Repos
+        * Puppet Repos
 
     * Create a plugin style system for managing access permissions
         - No.  There is a lot of variability.  Let's get working
