@@ -1,6 +1,10 @@
 # a config.ru, for use with every rack-compatible webserver.
 # SSL needs to be handled outside this, though.
 
+# Set the SHELL PATH.  We used to work without this, now suddenly
+# things blow up badly without setting the PATH
+ENV['PATH'] = "/bin:/usr/bin:/sbin:/usr/sbin"
+
 # if puppet is not in your RUBYLIB:
 # $:.unshift('/opt/puppet/lib')
 
