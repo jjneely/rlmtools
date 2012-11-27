@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS bcfg2repos;
 create table bcfg2repos (
     br_id       INTEGER PRIMARY KEY auto_increment,
     path        VARCHAR(1024) not null,
@@ -6,6 +7,7 @@ create table bcfg2repos (
     index(path)
 );
 
+DROP TABLE IF EXISTS webkickstartdirs;
 create table webkickstartdirs (
     wkd_id      INTEGER PRIMARY KEY auto_increment,
     path        VARCHAR(1024) not null,
@@ -14,6 +16,7 @@ create table webkickstartdirs (
     index(path)
 );
 
+DROP TABLE IF EXISTS rhnprotectedusers;
 create table rhnprotectedusers (
     id          INTEGER PRIMARY KEY auto_increment,
     userid      VARCHAR(256) not null unique,
@@ -25,6 +28,7 @@ insert into rhnprotectedusers (userid) values ('tkl-admin');
 insert into rhnprotectedusers (userid) values ('slack');
 insert into rhnprotectedusers (userid) values ('ece-scripts');
 
+DROP TABLE IF EXISTS rhngroups;
 create table rhngroups (
     rg_id       INTEGER PRIMARY KEY auto_increment,
     dept_id     INTEGER,
