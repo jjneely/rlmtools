@@ -63,6 +63,7 @@ div.field {
    width: 10em;
    height: 1.5em;
    background-color: #ececec;
+   border-radius: 8px;
 }
 div.field:hover
 {
@@ -85,6 +86,7 @@ div.good {
    width: 25em; 
    height: 1.5em;
    background-color: #99ff99;
+   border-radius: 8px;
 }
 div.good:hover {
    background-color: #66ff66;
@@ -106,6 +108,7 @@ div.bad {
    width: 25em;
    height: 1.5em;
    background-color: #ff0000;
+   border-radius: 8px;
 }
 div.bad:hover {
    background-color: #aa0000;
@@ -123,9 +126,11 @@ table {
    border-style: solid;
    border-color: gray;
    border-width: 1px;
+   border-radius: 8px;
 }
 table.noborder {
-    border-width: 0px;
+   border-width: 0px;
+   border-radius: 0px;
 }
 td {
    padding: 4px;
