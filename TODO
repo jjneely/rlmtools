@@ -19,6 +19,23 @@ Server:
 
 2.2.x:
 
+    * Change out all Bcfg2 mess with Puppet management
+    * Puppet updates for the status reports
+        * link in inventory data, run reports, metadata
+    * Future: REST/API access to puppet metadata
+    * Implement the RL "modules" 
+        * pre install setup from web 
+        * cloud setup/support via web-ks tokens
+    * Implement a way to change/assign dept
+    * create new dept
+    * puppet should update lastheard
+    * bugzilla bugs
+    * manual delete system profile
+
+    * Ditch cherrypy and move to flask
+
+Original 2011 plan:
+
     * Re-work the UI so that all Admin Panels become "Manage Attributes"
       or similar.  Be able to drill down to all dept and client status
       pages from the Front Page.
