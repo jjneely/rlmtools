@@ -93,7 +93,7 @@ class Application(AppHelpers, RLAttributes):
         return self.render('admin.host', dict(
                              host_id=host_id,
                              subMenu=subMenu,
-                             title='Host Admin Panel',
+                             title='Manage Host Attributes',
                              hostname=hostname,
                              deptname=deptname,
                              message=message,

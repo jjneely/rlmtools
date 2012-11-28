@@ -269,7 +269,7 @@ class Application(AppHelpers):
         return self.render('client',
                          dict(client=detail, status=detail['status'],
                               subMenu=backlinks,
-                              title="Host Detail"))
+                              title="Host Status"))
     client.exposed = True
 
     def status(self, status_id):
