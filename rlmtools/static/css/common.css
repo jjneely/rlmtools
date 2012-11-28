@@ -167,24 +167,25 @@ td.right {
     border-right-style: solid;
 }
 tr.good {
-   background-color: #99ff99;
+   background-color: #ececec;
+   color: #007700;
 }
 tr.good:hover {
-   background-color: #66ff66;
+   background-color: #cccccc;
 }
 tr.neutral {
    background-color: #ececec;
+   color: #000000;
 }
 tr.neutral:hover {
    background-color: #cccccc;
 }
 tr.bad {
-   background-color: #ff0000;
-   color: #ffffff;
+   background-color: #ececec;
+   color: #880000
 }
 tr.bad:hover {
-   background-color: #aa0000;
-   color: #ffffff;
+   background-color: #cccccc;
 }
 tr.good A {
    text-decoration: none;
@@ -196,7 +197,7 @@ tr.neutral A {
 }
 tr.bad A {
    text-decoration: none;
-   color: white;
+   color: #000088;
 }
 tr A:hover {
    text-decoration: underline;
