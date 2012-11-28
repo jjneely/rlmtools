@@ -87,7 +87,7 @@
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/noupdates">Not Running Updates</a></li>
+    <li class="last"><a href="/rlmtools/noupdates">Not Running Updates</a></li>
       <ul py:if="defined('subMenu') and templateName == 'noupdates'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
