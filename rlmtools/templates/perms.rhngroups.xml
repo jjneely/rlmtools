@@ -30,96 +30,19 @@
 
   <table py:if="len(rhnMap) != 0">
     <tr class="neutral">
-      <th></th>
       <th>RHN Group Name</th>
-      <!-- <th>Actions</th> -->
+      <th>Actions</th>
       <th>Associated Department</th>
     </tr>
-    <div py:for="i in rhnMap">
-    <tr py:attrs="{'class':i['class']}">
-      <td>HIDE</td>
+    <tr py:for="i in rhnMap" py:attrs="{'class':i['class']}">
       <td>${i['rhnname']}</td>
-      <!-- <td>
+      <td>
         <button type="button" 
           onclick="location.href='${baseURL}/perms/rhnDetail?rg_id=${i['rg_id']}'">View Detail</button>
-      </td> -->
+      </td>
       <td py:if="i['dept'] is not None">${i['dept']}</td>
       <td py:if="i['dept'] is None"><i>Not Set</i></td>
     </tr>
-    <tr py:attrs="{'class':i['class']}">
-      <td></td>
-      <td colspan="2">
-
-  <table py:with="j = i['map']">
-    <tr class="neutral">
-      <th class="right">RHN Group Name:</th>
-      <td>${j['rhnname']}</td>
-    </tr>
-    <tr py:attrs="{'class':j['class']}">
-      <th class="right">Department:</th>
-      <td py:if="j['dept'] is not None">${j['dept']}</td>
-      <td py:if="j['dept'] is None"><i>Not Set</i></td>
-    </tr>
-    <tr py:if="j['dept'] is not None" py:attrs="{'class':j['synced']}">
-      <th class="right">Users Sync'd:</th>
-      <td py:if="len(i['tasks']) == 0">True</td>
-      <td py:if="len(i['tasks']) != 0">False</td>
-    </tr>
-    <tr class="neutral">
-      <th class="right">RLMTools ACLs:</th>
-      <td>
-        <i py:if="i['ldacls'] == []">No ACLs</i>
-        <table class="noborder" py:if="i['ldacls'] != []">
-          <tr py:for="k in i['ldacls']">
-            <td style="padding:0px;padding-right:3px">${k[0]}</td>
-            <td style="padding:0px">${k[1]}</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-    <tr class="neutral">
-      <th class="right">Administrators:</th>
-      <td>
-        <table class="noborder">
-          <tr>
-            <th class="bottom">RHN Access</th>
-            <th class="bottom">Dept. Admins</th>
-          </tr>
-          <tr>
-            <td style="vertical-align: top">
-              <i py:if="i['rhnAdmins'] is None">Error Communicating with RHN</i>
-              <ul class="plain" py:if="i['rhnAdmins'] is not None">
-                <li py:for="k in i['rhnAdmins']">${k}</li>
-              </ul>
-            </td>
-            <td style="vertical-align: top">
-              <i py:if="i['ldadmins'] == []">No Administrators</i>
-              <ul class="plain" py:if="i['ldadmins'] != []">
-                <li py:for="k in i['ldadmins']">${k}</li>
-              </ul>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-    <tr class="neutral" py:if="i['dept'] is not None">
-      <th class="right">Syncronization Process:</th>
-      <td>
-        <i py:if="len(i['tasks']) == 0">No Corrections Needed</i>
-        <ul class="plain" py:if="len(i['tasks']) > 0">
-          <li py:for="k in i['tasks'].keys()">
-            <div py:if="i['tasks'][k] == 2">Add ${k} to this RHN Group.</div>
-            <div py:if="i['tasks'][k] == 3">Remove ${k} from this RHN Group.</div>
-          </li>
-        </ul>
-      </td>
-    </tr>
-  </table>
-
-      </td>
-    </tr>
-    </div>
-
   </table>
 
   <p class="space" />

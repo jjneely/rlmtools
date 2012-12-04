@@ -88,19 +88,11 @@ class Application(AppHelpers):
 
         rhnMap = []
         for g in self._misc.getRHNGroups():
-            if g['dept_id'] is None and not self.adminOf('root'):
-                continue
-            if not self.adminOf(g['dept_id']):
-                continue
-
-            map, rhnAdmins, ldadmins, ldacls, tasks \
-                = self.getRHNDetail(g['rg_id'])
-            g['map'] = map
-            g['rhnAdmins'] = rhnAdmins
-            g['ldadmins'] = ldadmins
-            g['ldacls'] = ldacls
-            g['tasks'] = tasks
-            rhnMap.append(g)
+            if g['dept_id'] is None:
+                if self.adminOf('root'):
+                   rhnMap.append(g)
+            elif self.adminOf(g['dept_id']):
+                rhnMap.append(g)
 
         rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
@@ -112,7 +104,25 @@ class Application(AppHelpers):
                     ))
     rhnGroups.exposed = True
 
-    def getRHNDetail(self, rg_id):
+    def rhnDetail(self, rg_id, setDept=None, message=""):
+        if not self.isAuthenticated():
+            return self.message("You do not appear to be authenticated.")
+
+        subMenu = [
+                    ('Manage RHN Groups',
+                     '%s/perms/rhnGroups' % url()),
+                  ]
+
+        rg_id = int(rg_id)
+        if setDept is not None:
+            setDept = int(setDept)
+            deptName = self._misc.getDeptName(setDept)
+            if deptName is None:
+                message = "Department ID %s does not exist." % setDept
+            else:
+                self._misc.setRHNGroupDept(rg_id, setDept)
+                message = "Department association set to %s" % deptName
+
         rhnMap = self._misc.getRHNGroup(rg_id)
         if rhnMap is None:
             return self.message("Unknown RHN Group ID %s" % rg_id)
@@ -145,30 +155,6 @@ class Application(AppHelpers):
             rhnAdmins.sort() # Sorted by side effect in if clause
 
         rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
-        return rhnMap, rhnAdmins, ldadmins, ldacls, tasks
-        
-    def rhnDetail(self, rg_id, setDept=None, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
-
-        subMenu = [
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                  ]
-
-        rg_id = int(rg_id)
-        if setDept is not None:
-            setDept = int(setDept)
-            deptName = self._misc.getDeptName(setDept)
-            if deptName is None:
-                message = "Department ID %s does not exist." % setDept
-            else:
-                self._misc.setRHNGroupDept(rg_id, setDept)
-                message = "Department association set to %s" % deptName
-
-        depts = self._misc.getAllDepts()
-        rhnMap, rhnAdmins, ldadmins, ldacls, tasks \
-                = self.getRHNDetail(rg_id)
 
         return self.render('perms.rhndetail',
                 dict(message=message,
