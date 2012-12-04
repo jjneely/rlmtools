@@ -8,36 +8,6 @@
 
 <head>
   <title>Realm Linux Management Tools</title>
-
-  <script type="text/javascript" src="${baseURL}/static/jQuery.js" />
-  <script type="text/javascript">
-    $$(document).ready(function() {
-      // Get my WKD indexes
-      var wkds = $$.parseJSON("${jWKDs}");
-
-      $$.each(wkds, function() {
-        // Hide Each detail table
-        $$('#hidee'+this).hide();
-
-        // a function to do the callback + argument
-        var f = function() {
-          $$('#hidee'+this).toggle(400);
-        };
-
-        // Function to grab the click event on the hider
-        $$('#hider'+this).click(function() {
-          f();
-          return false;
-        });
-      });
-
-      $$('#hider1').click(function() {
-        $$('#hidee1').toggle(400);
-        return false;
-      });
-    });
-
-  </script>
 </head>
 <body>
 
@@ -58,22 +28,13 @@
     with your department.
   </p>
 
-  <table>
-    <div py:for="i in webksMap">
-      <!-- On hidden we are red on any issue needed correcting
-           On show, we should only be red on rows needing correcting -->
-      <tr py:attrs="{'class': (i['bad_dept'] or i['perm_misalignment']) and 'bad' or 'good'}">
-        <!-- <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">-->
-        <td id="hider${i['wkd_id']}">+/-</td>
+  <div py:for="i in webksMap">
+    <table>
+      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
         <th class="right">Department:</th>
         <td py:if="not i['bad_dept']">${i['dept']}</td>
         <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
       </tr>
-      <tr id="hidee${i['wkd_id']}">
-        <td></td>
-        <td colspan="2">
-          <table>
-
       <tr class="neutral">
         <th class="right">AFS Path:</th>
         <td>${i['path']}</td>
@@ -99,7 +60,7 @@
         <th class="right">Permissions Aligned:</th>
         <td>${i['perm_misalignment'] and 'No' or 'Yes'}</td>
       </tr>
-      <tr class="neutral">
+      <tr clas="neutral">
         <th class="right">Available Actions:</th>
         <td>
           <button type="button" 
@@ -112,14 +73,10 @@
             onclick="location.href='${baseURL}/perms/changeWKSDept?wkd_id=${i['wkd_id']}'">Change Department Association</button>
         </td>
       </tr>
+    </table>
 
-          </table>
-        </td>
-      </tr>
-    </div>
-  </table>
-
-  <!-- <p class="space" py:if="i is not webksMap[-1]" /> -->
+    <p class="space" py:if="i is not webksMap[-1]" />
+  </div>
 
 </body>
 

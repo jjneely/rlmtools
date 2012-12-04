@@ -29,7 +29,6 @@ import time
 import cPickle as pickle
 import logging
 import re
-import json
 
 import configDragon
 
@@ -238,14 +237,11 @@ class Application(AppHelpers):
         except Exception, e:
             return self.message("An error occured querying AFS: %s" % str(e))
 
-        jWKDs = json.dumps([ i['wkd_id'] for i in webksMap ])
-
         return self.render('perms.webkickstart',
                            dict(message=message,
                                 title="Web-Kickstart",
                                 subMenu=subMenu,
                                 webksMap=webksMap,
-                                jWKDs = jWKDs,
                                ))
     webkickstart.exposed = True
 
