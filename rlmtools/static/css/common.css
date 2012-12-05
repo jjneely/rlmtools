@@ -69,11 +69,11 @@ div.field:hover
 {
    background-color: #cccccc
 }
-div.field A {
+div.field a {
    text-decoration: none;
    color: blue;
 }
-div.field A:hover {
+div.field a:hover {
    text-decoration: underline;
 }
 div.good {
@@ -91,11 +91,11 @@ div.good {
 div.good:hover {
    background-color: #66ff66;
 }
-div.good A {
+div.good a {
    text-decoration: none;
    color: black;
 }
-div.good A:hover {
+div.good a:hover {
    text-decoration: underline;
 }
 div.bad {
@@ -113,11 +113,11 @@ div.bad {
 div.bad:hover {
    background-color: #aa0000;
 }
-div.bad A {
+div.bad a {
    text-decoration: none;
    color: #fbfbfb;
 }
-div.bad A:hover {
+div.bad a:hover {
    text-decoration: underline;
 }
 table {
@@ -187,19 +187,19 @@ tr.bad {
 tr.bad:hover {
    background-color: #cccccc;
 }
-tr.good A {
+tr.good a {
    text-decoration: none;
    color: #000088;
 }
-tr.neutral A {
+tr.neutral a {
    text-decoration: none;
    color: #000088;
 }
-tr.bad A {
+tr.bad a {
    text-decoration: none;
    color: #000088;
 }
-tr A:hover {
+tr a:hover {
    text-decoration: underline;
 }
 ul.plain {

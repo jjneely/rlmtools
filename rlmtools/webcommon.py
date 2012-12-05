@@ -61,38 +61,40 @@ class Auth(object):
         return pwd.getpwnam(self.userid)[4]        
 
 class AppHelpers(object):
+    # XXX: Here to hold her together during porting to Flash
+    pass
 
-    # Permission bitfield operations
-    ADMIN = 0x01
-    WRITE = 0x02
-    READ  = 0x04
+# Permission bitfield operations
+ADMIN = 0x01
+WRITE = 0x02
+READ  = 0x04
 
-    def isADMIN(self, field): return (field & self.ADMIN) == 1
-    def isWRITE(self, field): return (field & self.WRITE) >> 1 == 1
-    def isREAD(self, field): return (field & self.READ) >> 2 == 1
+def isADMIN(field): return (field & ADMIN) == 1
+def isWRITE(field): return (field & WRITE) >> 1 == 1
+def isREAD(field): return (field & READ) >> 2 == 1
 
-    def adminOf(self, dept_id): return self.isADMIN(self.getAuthZ(dept_id))
+def adminOf(dept_id): return isADMIN(getAuthZ(dept_id))
 
-    def mapPermBits(self, field):
-        if self.isADMIN(field): return "admin"
-        if self.isWRITE(field): return "write"
-        if self.isREAD(field): return "read"
-        return "unknown"
+def mapPermBits(field):
+    if isADMIN(field): return "admin"
+    if isWRITE(field): return "write"
+    if isREAD(field) : return "read"
+    return "unknown"
 
-    def __init__(self, loader=None):
-        # The DB interface is safe enough for multiple classes to
-        # instantiate their own.
-        self._server = webServer.WebServer()
-
-        # DB query, do it once only
-        self._default_admin = configDragon.config.default_admin
-
-        # However, create a shortcut for only using one global template loader
-        if loader is None:
-            self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
-                                         'templates')], auto_reload=True)
-        else:
-            self.loader = loader
+#def __init__(self, loader=None):
+#    # The DB interface is safe enough for multiple classes to
+#    # instantiate their own.
+#    self._server = webServer.WebServer()
+#
+#    # DB query, do it once only
+#    self._default_admin = configDragon.config.default_admin
+#
+#    # However, create a shortcut for only using one global template loader
+#    if loader is None:
+#        self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
+#                                     'templates')], auto_reload=True)
+#    else:
+#        self.loader = loader
 
 def render(tmpl, dict):
     # Add some default variables
@@ -141,7 +143,7 @@ def getAuthZ(dept):
         return 0
 
     # Check the default initial admin
-    if a.userid == self._default_admin:
+    if a.userid == configDragon.config.default_admin:
         return 7   # read, write, admin
 
     # What is our dept_id?

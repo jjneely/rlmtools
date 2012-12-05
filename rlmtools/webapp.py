@@ -25,7 +25,7 @@ import os.path
 import datetime
 import optparse
 
-from flask import send_from_directory
+from flask import g, request, send_from_directory
 from flaskext.genshi import Genshi, render_response
 
 import rrdconstants
@@ -120,13 +120,16 @@ def index():
                           active=active,
                           totals=totals))
 
-def versionIndex(self, version):
+@app.route("/versionIndex")
+def versionIndex():
+    version = request.args["version"]
+
     # See also dept()
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the version index.")
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                        "the version index.")
     services = ['updates', 'client'] # Services that affect client status
-    clients = self._server.getVersionPile(version)
+    clients = _server.getVersionPile(version)
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
     pile = {}
@@ -158,13 +161,13 @@ def versionIndex(self, version):
     departments = pile.keys()
     departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
 
-    return self.render('versionindex', 
-                dict(departments=departments,
-                     clients=pile,
-                     count=len(clients),
-                     version=version))
+    return render('versionindex', 
+                  dict(departments=departments,
+                       clients=pile,
+                       count=len(clients),
+                       version=version))
 
-def _checkClient(self, client):
+def _checkClient(client):
     # Figure out if the client is RED or GREEN by setting
     # cDict['status'] to False or True respectively
     services = ['updates', 'client'] # Services that affect client status
@@ -175,7 +178,13 @@ def _checkClient(self, client):
 
     client['status'] = True
 
-    if client['lastcheck'] < self.today - self.days7:
+    # Build datetime objects once per request
+    if getattr(g, "today", None) is None:
+        g.today = datetime.datetime.today()
+    if getattr(g, "days7", None) is None:
+        g.days7 = datetime.timedelta(7)
+
+    if client['lastcheck'] < g.today - g.days7:
         client['status'] = False
 
     if client['lastcheck'] < client['installdate']:
@@ -184,7 +193,7 @@ def _checkClient(self, client):
     for service in services:
         key = "%s_time" % service
         if not client.has_key(service) or \
-           client[key] < self.today - self.days7:
+           client[key] < g.today - g.days7:
             client['status'] = False
             break
         if not client[service]:
@@ -198,20 +207,19 @@ def _checkClient(self, client):
 
     return client
 
-def dept(self, dept_id):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the department index.")
+@app.route("/dept")
+def dept():
+    dept_id = request.args["dept_id"]
 
-    # set some globals to speed helper fucntions
-    self.days7 = datetime.timedelta(7)
-    self.today = datetime.datetime.today()
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the department index.")
 
     subMenu = [ ('Manage Department Attributes',
                  '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
               ]
 
-    clients = self._server.getClientList(int(dept_id))
+    clients = _server.getClientList(int(dept_id))
     support = []
     nosupport = []
 
@@ -220,16 +228,16 @@ def dept(self, dept_id):
                                                   client['host_id'])
 
         # Calculate status
-        self._checkClient(client)
+        _checkClient(client)
 
         if client['support']:
             support.append(client)
         else:
             nosupport.append(client)
 
-    return self.render('dept', dict(support=support, 
+    return render('dept', dict(support=support, 
                      nosupport=nosupport, 
-                     department=self._server.getDeptName(int(dept_id)),
+                     department=_server.getDeptName(int(dept_id)),
                      subMenu=subMenu,
                      dept_id=dept_id,
                      title="Department Listing"))
