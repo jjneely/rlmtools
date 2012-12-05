@@ -1,4 +1,7 @@
-from genshi.template import TemplateLoader
+from flask import url_for
+from flaskext.genshi import render_response
+
+#from genshi.template import TemplateLoader
 
 import configDragon
 import cherrypy
@@ -7,7 +10,7 @@ import os.path
 import pwd
 
 def url():
-    base = cherrypy.request.base + cherrypy.tree.mount_point()
+    base = url_for("index")  # the "index" method must exist with route = /
     if base.endswith('/'):
         return base[:-1]
     else:
@@ -91,64 +94,59 @@ class AppHelpers(object):
         else:
             self.loader = loader
 
-        if cherrypy.config.configs['global']['server.protocol_version'] \
-                == "HTTP/1.1":
-            self.outEncoding = 'utf-8'
-        else:
-            self.outEncoding = 'latin-1'
+def render(tmpl, dict):
+    # Add some default variables
+    a = Auth()
+    dict['name'] = a.getName()
+    dict['userid'] = a.userid
+    dict['baseURL'] = url()
+    dict['templateName'] = tmpl
 
-    def render(self, tmpl, dict):
-        # Add some default variables
-        a = Auth()
-        dict['name'] = a.getName()
-        dict['userid'] = a.userid
-        dict['baseURL'] = url()
-        dict['templateName'] = tmpl
+    if not tmpl.endswith(".xml"):
+        tmpl = "%s.xml" % tmpl
 
-        compiled = self.loader.load('%s.xml' % tmpl)
-        stream = compiled.generate(**dict)
-        return stream.render('xhtml', encoding=self.outEncoding)
+    return render_response(tmpl, dict)
 
-    def message(self, str):
-        a = Auth()
-        acls = self._server.memberOfACL(a.userid)
+def message(str):
+    a = Auth()
+    acls = self._server.memberOfACL(a.userid)
 
-        return self.render('message', dict(
-                               message=str,
-                               userid=a.userid,
-                               acls=acls,
-                               fullname=a.getName(),
-                          ))
+    return render('message', dict(
+                           message=str,
+                           userid=a.userid,
+                           acls=acls,
+                           fullname=a.getName(),
+                      ))
 
-    def isAuthenticated(self):
-        return Auth().isAuthenticated()
-    
-    def _parseDept(self, void):
-        """Figure out what the ID of the dept is from whatever is in void.
-           Returns an int or None."""
-        if isinstance(void, int) or isinstance(void, long):
-            return void
-        if void.isdigit():
-            return int(void)
-        # If we are here this must be a name, use the DB to convert
-        return self._server.getDeptIDNoCreate(void)
+def isAuthenticated():
+    return Auth().isAuthenticated()
 
-    def getAuthZ(self, dept):
-        """Return the bitfield that indicates what access permissions the user
-           has that is currently poking the web interface.  0 Mean no rights."""
+def _parseDept(void):
+    """Figure out what the ID of the dept is from whatever is in void.
+       Returns an int or None."""
+    if isinstance(void, int) or isinstance(void, long):
+        return void
+    if void.isdigit():
+        return int(void)
+    # If we are here this must be a name, use the DB to convert
+    return self._server.getDeptIDNoCreate(void)
 
-        a = Auth()
-        # Basic sanity
-        if not a.isAuthenticated():
-            return 0
+def getAuthZ(dept):
+    """Return the bitfield that indicates what access permissions the user
+       has that is currently poking the web interface.  0 Mean no rights."""
 
-        # Check the default initial admin
-        if a.userid == self._default_admin:
-            return 7   # read, write, admin
+    a = Auth()
+    # Basic sanity
+    if not a.isAuthenticated():
+        return 0
 
-        # What is our dept_id?
-        d = self._parseDept(dept)
+    # Check the default initial admin
+    if a.userid == self._default_admin:
+        return 7   # read, write, admin
 
-        perm = self._server.getAccess(a.userid, d)
-        return perm
+    # What is our dept_id?
+    d = self._parseDept(dept)
+
+    perm = self._server.getAccess(a.userid, d)
+    return perm
 

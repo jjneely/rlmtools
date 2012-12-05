@@ -8,9 +8,9 @@
   <title>Realm Linux Management Tools</title>
 
   <link rel="stylesheet" type="text/css" 
-    href="/rlmtools/static/css/navbar.css" /> 
+    href="${baseURL}/static/css/navbar.css" /> 
   <link rel="stylesheet" type="text/css" 
-    href="/rlmtools/static/css/common.css" /> 
+    href="${baseURL}/static/css/common.css" /> 
 
   <meta py:replace="select('*|text()')" />
 
@@ -20,9 +20,9 @@
 <div class="oitnavbar">
   <div class="oit_logo">
       <a href="http://www.oit.ncsu.edu/"><img alt="OIT Homepage"
-          src="/rlmtools/static/oit-logo-icon.png"/></a></div>
+          src="${baseURL}/static/oit-logo-icon.png"/></a></div>
   <div class="ncsu_brick">
-      <a href="http://www.ncsu.edu/"><img src="/rlmtools/static/brick_black.gif"
+    <a href="http://www.ncsu.edu/"><img src="${baseURL}/static/brick_black.gif"
           alt="NC State University"/></a></div>
   <div class="oitcontainer">
     <ul>
@@ -39,55 +39,55 @@
 
   <ul class="makemenu">
     <li class="title">Liquid Dragon Menu</li>
-    <li><a href="/rlmtools">Front Page</a></li>
+    <li><a href="${baseURL}/">Front Page</a></li>
       <ul py:if="defined('subMenu') and (templateName in ['index', 'status', 'client', 'dept'] or templateName[0:5] == 'admin')" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/search">Search</a></li>
+      <li><a href="${baseURL}/search">Search</a></li>
       <ul py:if="defined('subMenu') and templateName == 'search'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/perms">Permissions</a></li>
+      <li><a href="${baseURL}/perms">Permissions</a></li>
       <ul py:if="defined('subMenu') and (templateName[0:5] == 'perms' or templateName[0:3] == 'acl')" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/webKickstart">WebKickstart Tools</a></li>
+      <li><a href="${baseURL}/webKickstart">WebKickstart Tools</a></li>
       <ul py:if="defined('subMenu') and templateName[0:2] == 'wk'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/notregistered">Installing</a></li>
+      <li><a href="${baseURL}/notregistered">Installing</a></li>
       <ul py:if="defined('subMenu') and templateName == 'notregistered'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/problems">Problem Clients</a></li>
+      <li><a href="${baseURL}/problems">Problem Clients</a></li>
       <ul py:if="defined('subMenu') and templateName == 'problems'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/versionList">Version List</a></li>
+      <li><a href="${baseURL}/versionList">Version List</a></li>
       <ul py:if="defined('subMenu') and templateName == 'versionlist'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li><a href="/rlmtools/usage">Usage Statistics</a></li>
+      <li><a href="${baseURL}/usage">Usage Statistics</a></li>
       <ul py:if="defined('subMenu') and templateName == 'usage'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-    <li class="last"><a href="/rlmtools/noupdates">Not Running Updates</a></li>
+      <li class="last"><a href="${baseURL}/noupdates">Not Running Updates</a></li>
       <ul py:if="defined('subMenu') and templateName == 'noupdates'" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
