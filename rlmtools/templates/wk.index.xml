@@ -28,7 +28,7 @@ in the box below.  This will show you the kickstart that will be sent
 to that host when it is Web-Kickstarted.  If there is an error a
 hopefully helpful message will appear.</p>
 
-<form action="debugtool" method="post">
+<form action="${baseURL}/webKickstart/debugtool" method="post">
 <p>IP or host name: <input type="text" name="host"/>
 <input type="submit"/></p>
 </form>
@@ -39,7 +39,7 @@ hopefully helpful message will appear.</p>
 host?  Well, its not good.  Enter in the the IP or FQDN of a host name
 to this tool and it will report config file collisions.</p>
 
-<form action="collision" method="post">
+<form action="${baseURL}/webKickstart/collision" method="post">
 <p>IP or host name: <input type="text" name="host"/>
 <input type="submit"/></p>
 </form>
@@ -50,7 +50,7 @@ to this tool and it will report config file collisions.</p>
 all the config files for hosts that no longer resolve in DNS.  Click the 
 submit button.</p>
 
-<form action="checkconfigs" method="post">
+<form action="${baseURL}/webKickstart/checkconfigs" method="post">
   <input type="submit"/>
 </form>
 

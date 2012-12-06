@@ -19,7 +19,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import optparse
-import cherrypy
 import sys
 import os
 import os.path
@@ -30,77 +29,84 @@ from webKickstart import configtools
 import configDragon
 from webcommon import *
 
-class Application(AppHelpers):
+from flask import request
 
-    def _getWebKs(self):
-        # Helper function to return a WebKickstart object
-        return webKickstart('url', {}, configDragon.config.webks_dir)
+# Flask Application object
+from rlmtools import app
 
-    def index(self):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to debug "
-                                    "Web-Kickstarts.")
-        
-        return self.render('wk.index', dict(title="Web-Kickstart Tools"))
-    index.exposed = True
+def _getWebKs():
+    # Helper function to return a WebKickstart object
+    return webKickstart('url', {}, configDragon.config.webks_dir)
 
-    def rawKickstart(self, host):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to debug "
-                                    "Web-Kickstarts.")
+@app.route("/webKickstart")
+def wk_index():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to debug "
+                       "Web-Kickstarts.")
+    
+    return render('wk.index', dict(title="Web-Kickstart Tools"))
 
-        host = host.strip()
-        w = self._getWebKs()
-        w.setDebug(True)           # Previent running of things that shouldn't
-                                   # for preview mode
-        tuple = w.getKS(host)
+@app.route("/webKickstart/rawKickstart")
+def rawKickstart():
+    host = request.args["host"]
 
-        cherrypy.response.headers['Content-Type'] = 'text/plain'
-        return tuple[1]
-    rawKickstart.exposed = True
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to debug "
+                       "Web-Kickstarts.")
 
-    def debugtool(self, host):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to debug "
-                                    "Web-Kickstarts.")
-        
-        host = host.strip()
-        if host == "":
-            return self.render('wk.debugtool', dict(host="None",
-                  kickstart="# You failed to provide a host to check."))
+    host = host.strip()
+    w = _getWebKs()
+    w.setDebug(True)           # Previent running of things that shouldn't
+                               # for preview mode
+    tuple = w.getKS(host)
 
-        w = self._getWebKs()
-        w.setDebug(True)           # Previent running of things that shouldn't
-                                   # for preview mode
-        tuple = w.getKS(host)
+    return tuple[1], 200, {"Content-Type": "text/plain"}
 
-        return self.render('wk.debugtool', dict(host=host, kickstart=tuple[1]))
-    debugtool.exposed = True
+@app.route("/webKickstart/debugtool", methods=["POST"])
+def debugtool():
+    host = request.form["host"]
 
-    def collision(self, host):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to debug "
-                                    "Web-Kickstarts.")
-        
-        host = host.strip()
-        if host == "":
-            return self.render('wk.debugtool', dict(host="None",
-                  kickstart="# You failed to provide a host to check."))
-        
-        w = self._getWebKs()
-        tuple = w.collisionDetection(host)
-        return self.render('wk.collision', dict(host=host, output=tuple[1]))
-    collision.exposed = True
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to debug "
+                       "Web-Kickstarts.")
+    
+    host = host.strip()
+    if host == "":
+        return self.render('wk.debugtool', dict(host="None",
+              kickstart="# You failed to provide a host to check."))
 
-    def checkconfigs(self):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to debug "
-                                    "Web-Kickstarts.")
-        
-        w = self._getWebKs()
-        tuple = w.checkConfigHostnames()
+    w = _getWebKs()
+    w.setDebug(True)           # Previent running of things that shouldn't
+                               # for preview mode
+    tuple = w.getKS(host)
 
-        return self.render('wk.checkconfigs', dict(output=tuple[1]))
-    checkconfigs.exposed = True
+    return render('wk.debugtool', dict(host=host, kickstart=tuple[1]))
 
+@app.route("/webKickstart/collision", methods=["POST"])
+def collision():
+    host = request.form["host"]
+
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to debug "
+                       "Web-Kickstarts.")
+    
+    host = host.strip()
+    if host == "":
+        return render('wk.debugtool', dict(host="None",
+              kickstart="# You failed to provide a host to check."))
+    
+    w = _getWebKs()
+    tuple = w.collisionDetection(host)
+    return render('wk.collision', dict(host=host, output=tuple[1]))
+
+@app.route("/webKickstart/checkconfigs", methods=["POST"])
+def checkconfigs():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to debug "
+                       "Web-Kickstarts.")
+    
+    w = _getWebKs()
+    tuple = w.checkConfigHostnames()
+
+    return render('wk.checkconfigs', dict(output=tuple[1]))
 

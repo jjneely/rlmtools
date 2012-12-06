@@ -49,7 +49,7 @@
     </tr>
     <tr class="neutral" py:for="version in versions">
       <td py:content="version['version']">Realm Linux 33 1/3</td>
-      <td><a href="/rlmtools/versionIndex?version=${version['version']}" 
+      <td><a href="${baseURL}/versionIndex?version=${version['version']}" 
           py:content="version['count']">-1</a></td>
     </tr>
   </table>

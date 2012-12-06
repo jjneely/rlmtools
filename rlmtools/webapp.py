@@ -242,14 +242,17 @@ def dept():
                      dept_id=dept_id,
                      title="Department Listing"))
 
-def client(self, host_id):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the client index.")
+@app.route("/client")
+def client():
+    host_id = request.args["host_id"]
+
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the client index.")
 
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
-    detail = self._server.getClientDetail(int(host_id))
+    detail = _server.getClientDetail(int(host_id))
     detail['warnUpdate'] = False
     detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                detail['lastcheck'] > today - days7 and \
@@ -300,16 +303,20 @@ def client(self, host_id):
        detail['installdate'] < today - days7:
         detail['warnUpdate'] = True
 
-    return self.render('client',
-                 dict(client=detail, status=detail['status'],
-                          subMenu=backlinks,
-                          title="Host Status"))
+    return render('client',
+                  dict(client=detail, 
+                       status=detail['status'],
+                       subMenu=backlinks,
+                       title="Host Status"))
 
-def status(self, status_id):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the a client status message.")
-    status = self._server.getStatusDetail(int(status_id))
+@app.route("/status")
+def status():
+    status_id = request.args["status_id"]
+
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the a client status message.")
+    status = _server.getStatusDetail(int(status_id))
     backlinks = [
             ('Deptartment Status: %s' % status['dept'],
              "%s/dept?dept_id=%s" % (url(), status['dept_id'])),
@@ -325,15 +332,14 @@ def status(self, status_id):
     else:
         status['data_class'] = "bad"
 
-    return self.render('status', 
-                     dict(status=status, subMenu=backlinks))
+    return render('status', dict(status=status, subMenu=backlinks))
     
 @app.route("/notregistered") 
-def notregistered(self):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the non-registered clients.")
-    clients = self._server.getNotRegistered()
+def notregistered():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the non-registered clients.")
+    clients = _server.getNotRegistered()
     support = []
     nosupport = []
 
@@ -346,18 +352,18 @@ def notregistered(self):
         else:
             nosupport.append(client)
 
-    return self.render('notregistered',
-                     dict(support=support,
-                          nosupport=nosupport,
-                          department="Not Registered")
-                    )
+    return render('notregistered',
+                  dict(support=support,
+                       nosupport=nosupport,
+                       department="Not Registered")
+                 )
 
 @app.route("/problems")
-def problems(self):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the problem children.")
-    clients = self._server.getProblemList()
+def problems():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the problem children.")
+    clients = _server.getProblemList()
     data = {}
 
     for client in clients:
@@ -369,16 +375,14 @@ def problems(self):
         else:
             data[client['deptname']] = [host]
     
-    return self.render('problems',
-                     dict( clients=data )
-                    )
+    return render('problems', dict( clients=data ) )
 
 @app.route("/noupdates")
-def noupdates(self):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the clients not updating.")
-    clients = self._server.getNoUpdates()
+def noupdates():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the clients not updating.")
+    clients = _server.getNoUpdates()
     data = {}
 
     for client in clients:
@@ -392,16 +396,17 @@ def noupdates(self):
     
     departments = data.keys()
     departments.sort(lambda x,y: cmp(x.lower(), y.lower()))
-    return self.render('noupdates',
-                     dict( clients=data,
-                           departments=departments )
-                    )
+    return render('noupdates',
+                  dict( clients=data,
+                        departments=departments )
+                 )
 
-def versionList(self):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the version list.")
-    versions = self._server.getVersionList()
+@app.route("/versionList")
+def versionList():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the version list.")
+    versions = _server.getVersionList()
     graphs = []
     image = "versions-3d.png"
     path = os.path.join(config.rrd_dir, 'graphs', image)
@@ -409,23 +414,27 @@ def versionList(self):
     if os.path.exists(path):
         graphs.append( dict(
                  domain='versions',
-                 url="/rlmtools/static/graphs/%s" % image,
-                 href="/rlmtools/showGraph?title=%s&domain=%s" % \
-                         ("Version Statistics", "versions")))
+                 url="%s/static/graphs/%s" % (url(), image),
+                 href="%s/showGraph?title=%s&domain=%s" % \
+                         (url(), "Version Statistics", "versions")))
     else:
         graphs.append( dict(
                  domain='versions',
                  url="",
                  href=""))
 
-    return self.render('versionlist',
-                     dict( versions=versions,
-                           graphs=graphs ))
+    return render('versionlist',
+                  dict( versions=versions,
+                        graphs=graphs ))
 
-def showGraph(self, title, domain):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "graphs.")
+@app.route("/showGraph")
+def showGraph():
+    title = request.args["title"]
+    domain = request.args["domain"]
+
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "graphs.")
     graphs = []
     for zone in rrdconstants.timeZones:
         d = {}
@@ -439,31 +448,32 @@ def showGraph(self, title, domain):
         image = "%s-%s.png" % (domain, zone)
         path = os.path.join(config.rrd_dir, 'graphs', image)
         if not os.path.exists(path):
-            url = ""
+            u = ""
         else:
-            url = "/rlmtools/static/graphs/%s" % image
+            u = "%s/static/graphs/%s" % (url(), image)
 
-        d['url'] = url
+        d['url'] = u
         graphs.append(d)
 
-    return self.render('graphs',
-                     dict( title=title, graphs=graphs )
-                    )
+    return render('graphs',
+                  dict( title=title, graphs=graphs )
+                 )
 
-def usage(self):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to view "
-                            "the usage information.")
-    depts = self._server.getDeptNames()
+@app.route("/usage")
+def usage():
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "the usage information.")
+    depts = _server.getDeptNames()
     graphs = []
 
     image = "usage-1w.png"
     path = os.path.join(config.rrd_dir, 'graphs', image)
     if os.path.exists(path):
         d = dict(summary="Total Usage Statistics:",
-                 url="/rlmtools/static/graphs/%s" % image,
-                 href="/rlmtools/showGraph?title=%s&domain=%s" % \
-                         ("Total Usage Statistics", "usage"))
+                 url="%s/static/graphs/%s" % (url(), image),
+                 href="%s/showGraph?title=%s&domain=%s" % \
+                         (url(), "Total Usage Statistics", "usage"))
     else:
         d = dict(summary="Total Usage Statistics", url="", href="")
 
@@ -475,31 +485,30 @@ def usage(self):
         image = "%s-1w.png" % dom
         path = os.path.join(config.rrd_dir, 'graphs', image)
         if not os.path.exists(path):
-            url = ""
+            u = ""
             href = ""
         else:
-            url = "/rlmtools/static/graphs/%s" % image
-            href = "/rlmtools/showGraph?title=%s&domain=%s" % (summary,
-                                                               dom)
+            u = "%s/static/graphs/%s" % (url(), image)
+            href = "%s/showGraph?title=%s&domain=%s" % \
+                    (url(), summary, dom)
 
-        graphs.append( dict(url=url, href=href, summary=summary) )
+        graphs.append( dict(url=u, href=href, summary=summary) )
 
-    return self.render('usage', dict(graphs=graphs))
+    return render('usage', dict(graphs=graphs))
 
-def search(self, searchBox=None, dest=None):
-    if not self.isREAD(self.getAuthZ("root")):
-        return self.message("You need root level read access to search.")
-    
-    # This works a lot like the dept() method above
-    # set some globals to speed helper fucntions
-    self.days7 = datetime.timedelta(7)
-    self.today = datetime.datetime.today()
+@app.route("/search", methods=['GET', 'POST'])
+def search():
+    searchBox = request.form.get("searchBox", None)
+    dest = request.form.get("dest", None)
+
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to search.")
     
     if searchBox is None:
         # Just show an empty search and allow user to start typing
         clients = []
     else:
-        clients = self._server.getSearchResult(searchBox)
+        clients = _server.getSearchResult(searchBox)
 
     if type(clients) == type(-1) and clients == -1:
         error = "Search returns more than 100 clients.  Liquid Dragon has "\
@@ -521,81 +530,20 @@ def search(self, searchBox=None, dest=None):
             client['url'] = target % client['host_id']
 
             # Calculate status
-            self._checkClient(client)
+            _checkClient(client)
 
-    return self.render('search', dict(
-                                      clients=clients,
-                                      error=error,
-                                      initial=(searchBox is None)
-                                      ))
+    return render('search', dict(
+                                 clients=clients,
+                                 error=error,
+                                 initial=(searchBox is None)
+                 ))
 
 
 
-def main():
-    global config
-    parser = optparse.OptionParser()
-    parser.add_option("-C", "--configfile", action="store",
-                      default=defaultConfFiles,
-                      dest="configfile",
-                      help="Configuration file")
-    parser.add_option("-a", "--auth", action="store", default=None,
-                      dest="auth", 
-                      help="The webapp will pretend you are this user.")
-    (options, args) = parser.parse_args()
-
-    # Start up configuration/logging/databases
-    configDragon.initConfig(options.configfile)
-    config = configDragon.config
-
-    # Handle testing harness authorization
-    if options.auth is not None:
-        config.vars['auth'] = ["", False]
-        config.auth = options.auth
-
-    # Set "error_page.500" in config to specify a custome error page in CP2.3
-    staticDir = os.path.join(os.path.dirname(__file__), "static")
-    staticDir = os.path.abspath(staticDir)
-
-    graphDir = os.path.join(config.rrd_dir, 'graphs')
-
-#    cherrypy.config.update({"/rlmtools/static": {
-#                               'static_filter.on': True,
-#                               'static_filter.dir': staticDir },
-#                            "/rlmtools/static/graphs": {
-#                               'static_filter.on': True,
-#                               'static_filter.dir': graphDir },
-#                           })
-#
-#    cherrypy.tree.mount(Application(), '/rlmtools')
-#    cherrypy.server.start()
-
-def wsgi(req):
-    global config
-    if req.get_options().has_key('rlmtools.configfile'):
-        configfile = req.get_options()['rlmtools.configfile']
-    else:
-        configfile = defaultConfFiles
-
-    # Start up configuration/logging/databases
-    configDragon.initConfig(configfile)
-    config = configDragon.config
-
-    staticDir = os.path.join(os.path.dirname(__file__), "static")
-    staticDir = os.path.abspath(staticDir)
-
-    graphDir = os.path.join(config.rrd_dir, 'graphs')
-
-    cherrypy.config.update({"server.environment": "production",
-                            "server.protocolVersion": "HTTP/1.1",
-                            "server.log_file": "/var/log/rlmtools-cherrypy.log"})
-    cherrypy.config.update({"/rlmtools/static": {
-                               'static_filter.on': True,
-                               'static_filter.dir': staticDir },
-                            "/rlmtools/static/graphs": {
-                               'static_filter.on': True,
-                               'static_filter.dir': graphDir }
-                           })
-
-    cherrypy.tree.mount(Application(), '/rlmtools')
-    cherrypy.server.start(initOnly=True, serverClass=None)
+#def wsgi(req):
+#    global config
+#    if req.get_options().has_key('rlmtools.configfile'):
+#        configfile = req.get_options()['rlmtools.configfile']
+#    else:
+#        configfile = defaultConfFiles
 

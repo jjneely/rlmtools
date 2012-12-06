@@ -1,7 +1,6 @@
 from flask import url_for
-from flaskext.genshi import render_response
 
-#from genshi.template import TemplateLoader
+from genshi.template import TemplateLoader
 
 import configDragon
 import cherrypy
@@ -96,6 +95,9 @@ def mapPermBits(field):
 #    else:
 #        self.loader = loader
 
+_tloader = TemplateLoader([os.path.join(os.path.dirname(__file__),
+                          'templates')], auto_reload=True)
+
 def render(tmpl, dict):
     # Add some default variables
     a = Auth()
@@ -107,7 +109,9 @@ def render(tmpl, dict):
     if not tmpl.endswith(".xml"):
         tmpl = "%s.xml" % tmpl
 
-    return render_response(tmpl, dict)
+    compiled = _tloader.load(tmpl)
+    stream = compiled.generate(**dict)
+    return stream.render('xhtml', encoding='utf8')
 
 def message(str):
     a = Auth()

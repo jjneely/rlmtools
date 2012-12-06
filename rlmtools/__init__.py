@@ -21,13 +21,11 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 from flask import Flask
-from flaskext.genshi import Genshi, render_response
 
 # Global configuration for RLMTools
 config = None
 
 app = Flask(__name__)
-genshi = Genshi(app)
 
 # Modules exposing views must be imported below
 import rlmtools.webapp
