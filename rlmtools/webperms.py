@@ -21,7 +21,6 @@
 
 import xmlrpclib
 import optparse
-import cherrypy
 import sys
 import os
 import os.path
@@ -33,586 +32,600 @@ import re
 import configDragon
 
 from webcommon import *
-from adminServer import AdminServer
-from webServer import WebServer
 from permServer import PermServer
+from webServer import WebServer
 from ldafs import *
+
+from flask import request
+
+# Flask application object
+from rlmtools import app
 
 logger = logging.getLogger('xmlrpc')
 
-class Application(AppHelpers):
+# Data layer objects
+_server = None
+_misc = None
 
-    def __init__(self):
-        AppHelpers.__init__(self)
-        self._misc = PermServer()
+def _init_perms():
+    global _misc, _server
+    _misc = PermServer()
+    _server = WebServer()
 
-    def index(self, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+app.before_first_request(_init_perms)
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl/' % url()),
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
-        acls = self._server.memberOfACL(Auth().userid)
+@app.route("/perms")
+def perms_index():
+    message = request.args.get("message", "")
 
-        return self.render('perms.index',
-                           dict(message=message,
-                                subMenu=subMenu,
-                                title="Permissions",
-                                acls=acls,
-                               ))
-    index.exposed = True
+    # Readable by any authenticated user
+    if not isAuthenticated():
+        return message("You do not appear to be authenticated.")
 
-    def rhnGroups(self, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('Manage RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
+    acls = _server.memberOfACL(Auth().userid)
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl/' % url()),
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
+    return render('perms.index',
+                  dict(message=message,
+                       subMenu=subMenu,
+                       title="Permissions",
+                       acls=acls,
+                 ))
 
-        rhnMap = []
-        for g in self._misc.getRHNGroups():
-            if g['dept_id'] is None:
-                if self.adminOf('root'):
-                   rhnMap.append(g)
-            elif self.adminOf(g['dept_id']):
-                rhnMap.append(g)
+@app.route("/perms/rhnGroups")
+def rhnGroups():
+    message = request.args.get("message", "")
 
-        rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
+    if not isAuthenticated():
+        return message("You do not appear to be authenticated.")
 
-        return self.render('perms.rhngroups',
-                dict(message=message,
-                     title='RHN Group to Department Map',
-                     rhnMap=[ self.completeRHNGroup(i) for i in rhnMap ],
-                     subMenu=subMenu,
-                    ))
-    rhnGroups.exposed = True
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('Manage RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
 
-    def rhnDetail(self, rg_id, setDept=None, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+    rhnMap = []
+    for g in _misc.getRHNGroups():
+        if g['dept_id'] is None:
+            if adminOf('root'):
+               rhnMap.append(g)
+        elif adminOf(g['dept_id']):
+            rhnMap.append(g)
 
-        subMenu = [
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                  ]
+    rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
-        rg_id = int(rg_id)
-        if setDept is not None:
-            setDept = int(setDept)
-            deptName = self._misc.getDeptName(setDept)
-            if deptName is None:
-                message = "Department ID %s does not exist." % setDept
-            else:
-                self._misc.setRHNGroupDept(rg_id, setDept)
-                message = "Department association set to %s" % deptName
+    return render('perms.rhngroups',
+                  dict(message=message,
+                       title='RHN Group to Department Map',
+                       rhnMap=[ completeRHNGroup(i) for i in rhnMap ],
+                       subMenu=subMenu,
+                 ))
 
-        rhnMap = self._misc.getRHNGroup(rg_id)
-        if rhnMap is None:
-            return self.message("Unknown RHN Group ID %s" % rg_id)
 
-        rhnMap = self.completeRHNGroup(rhnMap)
-        depts = self._misc.getAllDepts()
-        rhnAdmins = self.getRHNGroupAdmins(rhnMap['rhnname'])
+def rhnDetail(self, rg_id, setDept=None, message=""):
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-        ldadmins = []
-        ldacls = []
-        if rhnMap['dept_id'] is not None:
-            # For RHN we want LD admin permissions
-            acls = self._misc.getDeptACLs(rhnMap['dept_id'])
-            for acl in acls:
-                p = ""
-                if self.isREAD(acl['perms']):
-                    p = "read" 
-                if self.isWRITE(acl['perms']):
-                    p = p and "%s|write"%p or "write"
-                if self.isADMIN(acl['perms']):
-                    p = p and "%s|admin"%p or "admin"
-                    for i in self._misc.getSysAdmins(acl['acl_id']):
-                        if i not in ldadmins:
-                            ldadmins.append(i)
-                ldacls.append((acl['name'], p))
+    subMenu = [
+                ('Manage RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+              ]
 
-            tasks = self.diffAdmins(ldadmins, rhnAdmins)
+    rg_id = int(rg_id)
+    if setDept is not None:
+        setDept = int(setDept)
+        deptName = self._misc.getDeptName(setDept)
+        if deptName is None:
+            message = "Department ID %s does not exist." % setDept
         else:
-            tasks = {}
-            rhnAdmins.sort() # Sorted by side effect in if clause
+            self._misc.setRHNGroupDept(rg_id, setDept)
+            message = "Department association set to %s" % deptName
 
-        rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
+    rhnMap = self._misc.getRHNGroup(rg_id)
+    if rhnMap is None:
+        return self.message("Unknown RHN Group ID %s" % rg_id)
 
-        return self.render('perms.rhndetail',
-                dict(message=message,
-                     rhnMap=rhnMap,
-                     subMenu=subMenu,
-                     title="RHN Group Detail",
-                     depts=depts,
-                     rhnAdmins=rhnAdmins,
-                     ldadmins=ldadmins,
-                     ldacls=ldacls,
-                     tasks=tasks,
-                    ))
-    rhnDetail.exposed = True
+    rhnMap = self.completeRHNGroup(rhnMap)
+    depts = self._misc.getAllDepts()
+    rhnAdmins = self.getRHNGroupAdmins(rhnMap['rhnname'])
 
-    def bcfg2(self, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+    ldadmins = []
+    ldacls = []
+    if rhnMap['dept_id'] is not None:
+        # For RHN we want LD admin permissions
+        acls = self._misc.getDeptACLs(rhnMap['dept_id'])
+        for acl in acls:
+            p = ""
+            if self.isREAD(acl['perms']):
+                p = "read" 
+            if self.isWRITE(acl['perms']):
+                p = p and "%s|write"%p or "write"
+            if self.isADMIN(acl['perms']):
+                p = p and "%s|admin"%p or "admin"
+                for i in self._misc.getSysAdmins(acl['acl_id']):
+                    if i not in ldadmins:
+                        ldadmins.append(i)
+            ldacls.append((acl['name'], p))
 
-        bcfg2Map = self._misc.getAllBcfg2Dir()
+        tasks = self.diffAdmins(ldadmins, rhnAdmins)
+    else:
+        tasks = {}
+        rhnAdmins.sort() # Sorted by side effect in if clause
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl/' % url()),
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
+    rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
 
-        try:
-            bcfg2Map = [ self.completeWKSInfo(i) for i in bcfg2Map ]
-        except Exception, e:
-            return self.message("An error occured querying AFS: %s" % str(e))
+    return self.render('perms.rhndetail',
+            dict(message=message,
+                 rhnMap=rhnMap,
+                 subMenu=subMenu,
+                 title="RHN Group Detail",
+                 depts=depts,
+                 rhnAdmins=rhnAdmins,
+                 ldadmins=ldadmins,
+                 ldacls=ldacls,
+                 tasks=tasks,
+                ))
+rhnDetail.exposed = True
 
-        return self.render('perms.bcfg2',
-                           dict(message=message,
-                                title="Bcfg2 Repositories",
-                                subMenu=subMenu,
-                                bcfg2Map=bcfg2Map,
-                               ))
-    bcfg2.exposed = True
+def bcfg2(self, message=""):
+    # Readable by any authenticated user
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-    def webkickstart(self, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+    bcfg2Map = self._misc.getAllBcfg2Dir()
 
-        webksMap = self._misc.getAllWKSDir()
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('Manage RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl/' % url()),
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                    ('Manage RHN Groups',
-                     '%s/perms/rhnGroups' % url()),
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
+    try:
+        bcfg2Map = [ self.completeWKSInfo(i) for i in bcfg2Map ]
+    except Exception, e:
+        return self.message("An error occured querying AFS: %s" % str(e))
 
-        try:
-            webksMap = [ self.completeWKSInfo(i) for i in webksMap ]
-        except Exception, e:
-            return self.message("An error occured querying AFS: %s" % str(e))
+    return self.render('perms.bcfg2',
+                       dict(message=message,
+                            title="Bcfg2 Repositories",
+                            subMenu=subMenu,
+                            bcfg2Map=bcfg2Map,
+                           ))
+bcfg2.exposed = True
 
-        return self.render('perms.webkickstart',
-                           dict(message=message,
-                                title="Web-Kickstart",
-                                subMenu=subMenu,
-                                webksMap=webksMap,
-                               ))
-    webkickstart.exposed = True
+def webkickstart(self, message=""):
+    # Readable by any authenticated user
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-    def changeWKSDept(self, wkd_id, setDept=None, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+    webksMap = self._misc.getAllWKSDir()
 
-        subMenu = [
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                  ]
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('Manage RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
 
-        wkd_id = int(wkd_id)
-        webksMap = self._misc.getWKSDir(wkd_id)
-        depts = self._misc.getAllDepts()
-        if webksMap is None:
-            message = """A Web-Kickstart directory matching ID %s does
-                         not exist.  Use the Back button and try your
-                         query again.""" % wkd_id
-            return self.message(message)
-        if setDept is not None:
-            dept_id = int(setDept)
-            dept = self._misc.getDeptName(dept_id)
-            if dept is None:
-                message = """Department ID %s was not found.  This 
-                             Web-Kickstart directory was not modified.""" \
-                                     % dept_id
-            else:
-                self._misc.setWKSDept(wkd_id, dept_id)
-                message = """Set department association to %s for
-                Web-Kickstart directory %s.""" % (dept, webksMap['path'])
-                return self.webkickstart(message)
+    try:
+        webksMap = [ self.completeWKSInfo(i) for i in webksMap ]
+    except Exception, e:
+        return self.message("An error occured querying AFS: %s" % str(e))
 
-        return self.render('perms.wksdept',
-                           dict(message=message,
-                                title="Web-Kickstart",
-                                subMenu=subMenu,
-                                webksMap=self.completeWKSInfo(webksMap),
-                                depts=depts,
-                               ))
-    changeWKSDept.exposed = True
+    return self.render('perms.webkickstart',
+                       dict(message=message,
+                            title="Web-Kickstart",
+                            subMenu=subMenu,
+                            webksMap=webksMap,
+                           ))
+webkickstart.exposed = True
 
-    def changeBcfg2Dept(self, br_id, setDept=None, message=""):
-        # Readable by any authenticated user
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
+def changeWKSDept(self, wkd_id, setDept=None, message=""):
+    # Readable by any authenticated user
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-        subMenu = [
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
+    subMenu = [
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+              ]
 
-        br_id = int(br_id)
-        bcfg2Map = self._misc.getBcfg2Dir(br_id)
-        depts = self._misc.getAllDepts()
-        if bcfg2Map is None:
-            message = """A Bcfg2 repository matching ID %s does
-                         not exist.  Use the Back button and try your
-                         query again.""" % br_id
-            return self.message(message)
-        if setDept is not None:
-            dept_id = int(setDept)
-            dept = self._misc.getDeptName(dept_id)
-            if dept is None:
-                message = """Department ID %s was not found.  This 
-                             Bcfg2 repository was not modified.""" \
-                                     % dept_id
-            else:
-                self._misc.setBcfg2Dept(br_id, dept_id)
-                message = """Set department association to %s for
-                Bcfg2 repository %s.""" % (dept, bcfg2Map['path'])
-                return self.bcfg2(message)
-
-        return self.render('perms.bcfg2dept',
-                           dict(message=message,
-                                title="Web-Kickstart",
-                                subMenu=subMenu,
-                                bcfg2Map=self.completeWKSInfo(bcfg2Map),
-                                depts=depts,
-                               ))
-    changeBcfg2Dept.exposed = True
-
-    def modLDACLs(self, wkd_id, setIt=None, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
-
-        subMenu = [
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                  ]
-
-        wkd_id = int(wkd_id)
-        webksMap = self._misc.getWKSDir(wkd_id)
-        if webksMap is None:
-            message = """A Web-Kickstart directory matching ID %s does
-                         not exist.  Use the Back button and try your
-                         query again.""" % wkd_id
-            return self.message(message)
-
-        webksMap = self.completeWKSInfo(webksMap)
-        if webksMap['bad_dept']:
-            message = """The Web-Kickstart directory %s is not associated
-                         with a department.  Setting a department must be
-                         completed before setting ACLs.""" % webksMap['path']
+    wkd_id = int(wkd_id)
+    webksMap = self._misc.getWKSDir(wkd_id)
+    depts = self._misc.getAllDepts()
+    if webksMap is None:
+        message = """A Web-Kickstart directory matching ID %s does
+                     not exist.  Use the Back button and try your
+                     query again.""" % wkd_id
+        return self.message(message)
+    if setDept is not None:
+        dept_id = int(setDept)
+        dept = self._misc.getDeptName(dept_id)
+        if dept is None:
+            message = """Department ID %s was not found.  This 
+                         Web-Kickstart directory was not modified.""" \
+                                 % dept_id
+        else:
+            self._misc.setWKSDept(wkd_id, dept_id)
+            message = """Set department association to %s for
+            Web-Kickstart directory %s.""" % (dept, webksMap['path'])
             return self.webkickstart(message)
 
-        webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
-                                                webksMap['pts'])
+    return self.render('perms.wksdept',
+                       dict(message=message,
+                            title="Web-Kickstart",
+                            subMenu=subMenu,
+                            webksMap=self.completeWKSInfo(webksMap),
+                            depts=depts,
+                           ))
+changeWKSDept.exposed = True
 
-        if setIt is not None:
-            # Do the work
-            dept_id = webksMap['dept_id']
-            for (acl, (action, value)) in webksMap['todo'].items():
-                # XXX We assume the bp cell, that's where WKS lives
-                if action == 1:
-                    self._misc.createACL(acl, acl, "bp")
-                acl_id = self._misc.getACLbyName(acl, "bp")
-                if action == 1 or action == 2:
-                    if acl_id is None:
-                        log.warning("modLDACLs: bad ACL %s bp" % acl)
-                        continue
-                    self._misc.setPerm(acl_id, dept_id, rLDBitMap[value])
-                if action == 3:
-                    acls = self._misc.getPermsForACL(acl_id)
-                    rmacl = None
-                    for a in acls:
-                        if dept_id == a['dept_id']: 
-                            rmacl = a
-                            break
-                    if rmacl is not None:
-                        self._misc.removePerm(rmacl['aclg_id'])
-                    else:
-                        log.warning("modLDACLs: Couldn't find ACL to delete: %s ^s" % (acl, 'bp'))
-            return self.webkickstart(message="""RLMTools ACLs for department %s have been set.""" % webksMap['dept'])
+def changeBcfg2Dept(self, br_id, setDept=None, message=""):
+    # Readable by any authenticated user
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-        return self.render('perms.modLDACLs',
-                           dict(message=message,
-                                title="Web-Kickstart ACL Sync",
-                                subMenu=subMenu,
-                                webksMap=webksMap,
-                               ))
-    modLDACLs.exposed = True
+    subMenu = [
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
 
-    def modAFS(self, wkd_id, setIt=None, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
-
-        subMenu = [
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                  ]
-
-        wkd_id = int(wkd_id)
-        webksMap = self._misc.getWKSDir(wkd_id)
-        if webksMap is None:
-            message = """A Web-Kickstart directory matching ID %s does
-                         not exist.  Use the Back button and try your
-                         query again.""" % wkd_id
-            return self.message(message)
-
-        webksMap = self.completeWKSInfo(webksMap)
-        if webksMap['bad_dept']:
-            message = """The Web-Kickstart directory %s is not associated
-                         with a department.  Setting a department must be
-                         completed before setting ACLs.""" % webksMap['path']
-            return self.webkickstart(message)
-
-        webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
-                                                webksMap['pts'],
-                                                reverse=True)
-
-        return self.render('perms.modAFS',
-                           dict(message=message,
-                                title="Web-Kickstart AFS Sync",
-                                subMenu=subMenu,
-                                webksMap=webksMap,
-                               ))
-    modAFS.exposed = True
-   
-    def modBcfg2AFS(self, br_id, setIt=None, message=""):
-        if not self.isAuthenticated():
-            return self.message("You do not appear to be authenticated.")
-
-        subMenu = [
-                    ('Manage Bcfg2 Repositories',
-                     '%s/perms/bcfg2' % url()),
-                  ]
-
-        br_id = int(br_id)
-        bcfg2Map = self._misc.getBcfg2Dir(br_id)
-        if bcfg2Map is None:
-            message = """A Bcfg2 repository matching ID %s does
-                         not exist.  Use the Back button and try your
-                         query again.""" % br_id
-            return self.message(message)
-
-        bcfg2Map = self.completeWKSInfo(bcfg2Map)  # Yes, right method
-        if bcfg2Map['bad_dept']:
-            message = """The Bcfg2 repository %s is not associated
-                         with a department.  Setting a department must be
-                         completed before setting ACLs.""" % bcfg2Map['path']
+    br_id = int(br_id)
+    bcfg2Map = self._misc.getBcfg2Dir(br_id)
+    depts = self._misc.getAllDepts()
+    if bcfg2Map is None:
+        message = """A Bcfg2 repository matching ID %s does
+                     not exist.  Use the Back button and try your
+                     query again.""" % br_id
+        return self.message(message)
+    if setDept is not None:
+        dept_id = int(setDept)
+        dept = self._misc.getDeptName(dept_id)
+        if dept is None:
+            message = """Department ID %s was not found.  This 
+                         Bcfg2 repository was not modified.""" \
+                                 % dept_id
+        else:
+            self._misc.setBcfg2Dept(br_id, dept_id)
+            message = """Set department association to %s for
+            Bcfg2 repository %s.""" % (dept, bcfg2Map['path'])
             return self.bcfg2(message)
 
-        bcfg2Map['todo'] = self.diffPermissions(bcfg2Map['deptACLs'], 
-                                                bcfg2Map['pts'],
-                                                reverse=True)
+    return self.render('perms.bcfg2dept',
+                       dict(message=message,
+                            title="Web-Kickstart",
+                            subMenu=subMenu,
+                            bcfg2Map=self.completeWKSInfo(bcfg2Map),
+                            depts=depts,
+                           ))
+changeBcfg2Dept.exposed = True
 
-        return self.render('perms.modBcfg2AFS',
-                           dict(message=message,
-                                title="Bcfg2 Repository AFS Sync",
-                                subMenu=subMenu,
-                                bcfg2Map=bcfg2Map,
-                               ))
-    modBcfg2AFS.exposed = True
+def modLDACLs(self, wkd_id, setIt=None, message=""):
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
+
+    subMenu = [
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+              ]
+
+    wkd_id = int(wkd_id)
+    webksMap = self._misc.getWKSDir(wkd_id)
+    if webksMap is None:
+        message = """A Web-Kickstart directory matching ID %s does
+                     not exist.  Use the Back button and try your
+                     query again.""" % wkd_id
+        return self.message(message)
+
+    webksMap = self.completeWKSInfo(webksMap)
+    if webksMap['bad_dept']:
+        message = """The Web-Kickstart directory %s is not associated
+                     with a department.  Setting a department must be
+                     completed before setting ACLs.""" % webksMap['path']
+        return self.webkickstart(message)
+
+    webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
+                                            webksMap['pts'])
+
+    if setIt is not None:
+        # Do the work
+        dept_id = webksMap['dept_id']
+        for (acl, (action, value)) in webksMap['todo'].items():
+            # XXX We assume the bp cell, that's where WKS lives
+            if action == 1:
+                self._misc.createACL(acl, acl, "bp")
+            acl_id = self._misc.getACLbyName(acl, "bp")
+            if action == 1 or action == 2:
+                if acl_id is None:
+                    log.warning("modLDACLs: bad ACL %s bp" % acl)
+                    continue
+                self._misc.setPerm(acl_id, dept_id, rLDBitMap[value])
+            if action == 3:
+                acls = self._misc.getPermsForACL(acl_id)
+                rmacl = None
+                for a in acls:
+                    if dept_id == a['dept_id']: 
+                        rmacl = a
+                        break
+                if rmacl is not None:
+                    self._misc.removePerm(rmacl['aclg_id'])
+                else:
+                    log.warning("modLDACLs: Couldn't find ACL to delete: %s ^s" % (acl, 'bp'))
+        return self.webkickstart(message="""RLMTools ACLs for department %s have been set.""" % webksMap['dept'])
+
+    return self.render('perms.modLDACLs',
+                       dict(message=message,
+                            title="Web-Kickstart ACL Sync",
+                            subMenu=subMenu,
+                            webksMap=webksMap,
+                           ))
+modLDACLs.exposed = True
+
+def modAFS(self, wkd_id, setIt=None, message=""):
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
+
+    subMenu = [
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+              ]
+
+    wkd_id = int(wkd_id)
+    webksMap = self._misc.getWKSDir(wkd_id)
+    if webksMap is None:
+        message = """A Web-Kickstart directory matching ID %s does
+                     not exist.  Use the Back button and try your
+                     query again.""" % wkd_id
+        return self.message(message)
+
+    webksMap = self.completeWKSInfo(webksMap)
+    if webksMap['bad_dept']:
+        message = """The Web-Kickstart directory %s is not associated
+                     with a department.  Setting a department must be
+                     completed before setting ACLs.""" % webksMap['path']
+        return self.webkickstart(message)
+
+    webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
+                                            webksMap['pts'],
+                                            reverse=True)
+
+    return self.render('perms.modAFS',
+                       dict(message=message,
+                            title="Web-Kickstart AFS Sync",
+                            subMenu=subMenu,
+                            webksMap=webksMap,
+                           ))
+modAFS.exposed = True
    
-    def diffAdmins(self, ldAdmins, rhnAdmins):
-        """Return a dict of userid => code which is a list of tasks
-           that should be done to make the list of rhnAdmins match
-           our understanding in LD."""
+def modBcfg2AFS(self, br_id, setIt=None, message=""):
+    if not self.isAuthenticated():
+        return self.message("You do not appear to be authenticated.")
 
-        # Return values
-        tasks = {}
+    subMenu = [
+                ('Manage Bcfg2 Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
 
-        # Everyone must be sorted
-        ldAdmins.sort()
-        rhnAdmins.sort()
+    br_id = int(br_id)
+    bcfg2Map = self._misc.getBcfg2Dir(br_id)
+    if bcfg2Map is None:
+        message = """A Bcfg2 repository matching ID %s does
+                     not exist.  Use the Back button and try your
+                     query again.""" % br_id
+        return self.message(message)
 
-        # Copies that we can modify
-        LD  = [ i for i in ldAdmins ]
-        RHN = [ i for i in rhnAdmins ]
-        protected = self._misc.getRHNProtectedUsers()
+    bcfg2Map = self.completeWKSInfo(bcfg2Map)  # Yes, right method
+    if bcfg2Map['bad_dept']:
+        message = """The Bcfg2 repository %s is not associated
+                     with a department.  Setting a department must be
+                     completed before setting ACLs.""" % bcfg2Map['path']
+        return self.bcfg2(message)
 
-        i = 0
-        while len(LD) > i:
-            if len(RHN) <= i or RHN[i] > LD[i]:
-                # Add to RHN
-                RHN.insert(i, LD[i])
-                tasks[LD[i]] = 2
-                i = i + 1
-            elif RHN[i] < LD[i]:
-                # remove from RHN
-                if RHN[i] not in protected:
-                    tasks[RHN[i]] = 3
-                del RHN[i]
-            else:
-                # equal
-                i = i + 1
-        while len(RHN) > len(LD):
+    bcfg2Map['todo'] = self.diffPermissions(bcfg2Map['deptACLs'], 
+                                            bcfg2Map['pts'],
+                                            reverse=True)
+
+    return self.render('perms.modBcfg2AFS',
+                       dict(message=message,
+                            title="Bcfg2 Repository AFS Sync",
+                            subMenu=subMenu,
+                            bcfg2Map=bcfg2Map,
+                           ))
+modBcfg2AFS.exposed = True
+   
+def diffAdmins(self, ldAdmins, rhnAdmins):
+    """Return a dict of userid => code which is a list of tasks
+       that should be done to make the list of rhnAdmins match
+       our understanding in LD."""
+
+    # Return values
+    tasks = {}
+
+    # Everyone must be sorted
+    ldAdmins.sort()
+    rhnAdmins.sort()
+
+    # Copies that we can modify
+    LD  = [ i for i in ldAdmins ]
+    RHN = [ i for i in rhnAdmins ]
+    protected = self._misc.getRHNProtectedUsers()
+
+    i = 0
+    while len(LD) > i:
+        if len(RHN) <= i or RHN[i] > LD[i]:
+            # Add to RHN
+            RHN.insert(i, LD[i])
+            tasks[LD[i]] = 2
+            i = i + 1
+        elif RHN[i] < LD[i]:
+            # remove from RHN
             if RHN[i] not in protected:
                 tasks[RHN[i]] = 3
             del RHN[i]
+        else:
+            # equal
+            i = i + 1
+    while len(RHN) > len(LD):
+        if RHN[i] not in protected:
+            tasks[RHN[i]] = 3
+        del RHN[i]
 
-        return tasks
+    return tasks
 
-    def diffPermissions(self, deptACLs, pts, reverse=False):
-        """Return a dict of ACL -> (code, data) that indicates what
-           actions need to be performed to change the deptACLs to 
-           match AFS.  If reverse is True the dict will indicate what
-           needs to be done to AFS to match LD."""
-        # There are some caveats here that make this algorythm 
-        # assume WKD directories in the BP cell
+def diffPermissions(self, deptACLs, pts, reverse=False):
+    """Return a dict of ACL -> (code, data) that indicates what
+       actions need to be performed to change the deptACLs to 
+       match AFS.  If reverse is True the dict will indicate what
+       needs to be done to AFS to match LD."""
+    # There are some caveats here that make this algorythm 
+    # assume WKD directories in the BP cell
 
-        # Return dict
-        tasks = {}
+    # Return dict
+    tasks = {}
 
-        # Translated deptACLs into the same format as the PTS tuples
-        LD = [ LDtoAFS(i) for i in deptACLs ]
-        AFS = [ i for i in pts ] # weak copy
+    # Translated deptACLs into the same format as the PTS tuples
+    LD = [ LDtoAFS(i) for i in deptACLs ]
+    AFS = [ i for i in pts ] # weak copy
 
-        # Sort everybody
-        LD.sort(cmp=lambda x,y: cmp(x[0], y[0]))
-        AFS.sort(cmp=lambda x,y: cmp(x[0], y[0]))
+    # Sort everybody
+    LD.sort(cmp=lambda x,y: cmp(x[0], y[0]))
+    AFS.sort(cmp=lambda x,y: cmp(x[0], y[0]))
 
-        print "LD ACLs: " + str(LD)
-        print "AFS PTS: " + str(AFS)
-        i = 0
-        while len(AFS) > i:
+    print "LD ACLs: " + str(LD)
+    print "AFS PTS: " + str(AFS)
+    i = 0
+    while len(AFS) > i:
+        if len(LD) > i:
+            print "Comparing: %s, %s" % (str(LD[i]), str(AFS[i]))
+        else:
+            print "Comparing: %s, %s" % ("(EMPTY)", str(AFS[i]))
+        if len(LD) <= i or LD[i][0] > AFS[i][0]:
+            # Add ACL to LD or remove from AFS
             if len(LD) > i:
-                print "Comparing: %s, %s" % (str(LD[i]), str(AFS[i]))
-            else:
-                print "Comparing: %s, %s" % ("(EMPTY)", str(AFS[i]))
-            if len(LD) <= i or LD[i][0] > AFS[i][0]:
-                # Add ACL to LD or remove from AFS
-                if len(LD) > i:
-                    print "X: %s > %s" % (LD[i][0], AFS[i][0])
-                if reverse:
-                    tasks[AFS[i][0]] = (3, None)
-                    del AFS[i]
-                else:
-                    if not self._misc.isACL(AFS[i][0]):
-                        tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
-                    else:
-                        tasks[AFS[i][0]] = (2, AFSpermLD(AFS[i][1]))
-                    LD.insert(i, AFS[i])
-                    i = i + 1
-            elif LD[i][0] < AFS[i][0]:
-                # del from LD or add to AFS
-                print "X: %s < %s" % (LD[i][0], AFS[i][0])
-                if reverse:
-                    tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))
-                    AFS.insert(i, LD[i])
-                    i = i + 1
-                else:
-                    tasks[LD[i][0]] = (3, None)
-                    del LD[i]
-            else: # equal
-                # check permission
-                print "X: %s == %s" % (LD[i][0], AFS[i][0])
-                print "A: %s =? %s" % (LD[i][1], AFS[i][1])
-                if not equalPerm(LD[i][1], AFS[i][1]):
-                    if reverse:
-                        print "X:   Setting %s to %s" % (AFS[i][0], LDpermAFS(LD[i][1]))
-                        tasks[AFS[i][0]] = (2, LDpermAFS(LD[i][1]))
-                    else:
-                        print "X:   Setting %s to %s" % (LD[i][0], AFS[i][1])
-                        tasks[LD[i][0]] = (2, AFS[i][1])
-                i = i + 1
-
-        while len(LD) > len(AFS):
+                print "X: %s > %s" % (LD[i][0], AFS[i][0])
             if reverse:
-                print "X: adding %s %s" %(LD[i][0], LDpermAFS(LD[i][1]))
-                tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))  
+                tasks[AFS[i][0]] = (3, None)
+                del AFS[i]
+            else:
+                if not self._misc.isACL(AFS[i][0]):
+                    tasks[AFS[i][0]] = (1, AFSpermLD(AFS[i][1]))
+                else:
+                    tasks[AFS[i][0]] = (2, AFSpermLD(AFS[i][1]))
+                LD.insert(i, AFS[i])
+                i = i + 1
+        elif LD[i][0] < AFS[i][0]:
+            # del from LD or add to AFS
+            print "X: %s < %s" % (LD[i][0], AFS[i][0])
+            if reverse:
+                tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))
                 AFS.insert(i, LD[i])
                 i = i + 1
             else:
                 tasks[LD[i][0]] = (3, None)
                 del LD[i]
+        else: # equal
+            # check permission
+            print "X: %s == %s" % (LD[i][0], AFS[i][0])
+            print "A: %s =? %s" % (LD[i][1], AFS[i][1])
+            if not equalPerm(LD[i][1], AFS[i][1]):
+                if reverse:
+                    print "X:   Setting %s to %s" % (AFS[i][0], LDpermAFS(LD[i][1]))
+                    tasks[AFS[i][0]] = (2, LDpermAFS(LD[i][1]))
+                else:
+                    print "X:   Setting %s to %s" % (LD[i][0], AFS[i][1])
+                    tasks[LD[i][0]] = (2, AFS[i][1])
+            i = i + 1
 
-        # Extra special rules
-        if 'installer:common' in tasks and \
-                tasks['installer:common'][0] in [1, 2]:
-            del tasks['installer:common']
-        if 'linux' in tasks and tasks['linux'][0] == 3:
-            del tasks['linux']
-        if 'linux' in tasks and tasks['linux'][0] == 2:
-            tasks['linux'] = (2, 'admin')
-
-        return tasks
-
-    def completeWKSInfo(self, webks):
-        # Complete the dict for the perm pages that deal with web-kickstarts
-        # webks should be the output from _misc.getWKSDir() or one entry
-        # from _misc.getAllWKSDir()
-
-        i = webks.copy()
-        i['dept'] = self._misc.getDeptName(i['dept_id'])
-        i['bad_dept'] = i['dept'] is None
-
-        # Build representation of AFS PTS groups
-        i['pts'] = fsla(i['path'])
-
-        # Include ACL information from LD department
-        # Look and see if AFS PTS groups match the LD ACLs
-        if i['bad_dept']:
-            i['deptACLs'] = None
-            i['perm_misalignment'] = True
+    while len(LD) > len(AFS):
+        if reverse:
+            print "X: adding %s %s" %(LD[i][0], LDpermAFS(LD[i][1]))
+            tasks[LD[i][0]] = (2, LDpermAFS(LD[i][1]))  
+            AFS.insert(i, LD[i])
+            i = i + 1
         else:
-            i['deptACLs'] = matchACLToAFS(
-                    self._misc.getDeptACLs(i['dept_id']), True)
-            misalignment = not equalACLs(i['deptACLs'], i['pts'])
+            tasks[LD[i][0]] = (3, None)
+            del LD[i]
 
-            i['perm_misalignment'] = misalignment
+    # Extra special rules
+    if 'installer:common' in tasks and \
+            tasks['installer:common'][0] in [1, 2]:
+        del tasks['installer:common']
+    if 'linux' in tasks and tasks['linux'][0] == 3:
+        del tasks['linux']
+    if 'linux' in tasks and tasks['linux'][0] == 2:
+        tasks['linux'] = (2, 'admin')
 
-        return i
+    return tasks
 
-    def completeRHNGroup(self, rhnMap):
-        i = rhnMap.copy()
-        i['class'] = i['dept_id'] is None and 'bad' or 'good'
-        i['dept'] = self._misc.getDeptName(i['dept_id'])
+def completeWKSInfo(webks):
+    # Complete the dict for the perm pages that deal with web-kickstarts
+    # webks should be the output from _misc.getWKSDir() or one entry
+    # from _misc.getAllWKSDir()
 
-        return i
+    i = webks.copy()
+    i['dept'] = _misc.getDeptName(i['dept_id'])
+    i['bad_dept'] = i['dept'] is None
 
-    def getRHNGroupAdmins(self, group):
-        # group is a string that matches the RHN group name
-        config = configDragon.config
-        server = xmlrpclib.ServerProxy(config.rhnurl)
+    # Build representation of AFS PTS groups
+    i['pts'] = fsla(i['path'])
 
-        try:
-            session = server.auth.login(config.rhnuser, config.rhnpasswd, 30)
-            ret = server.systemgroup.listAdministrators(session, group)
-        except Exception, e:
-            print "RHN Exception: %s" % str(e)
-            ret = None
+    # Include ACL information from LD department
+    # Look and see if AFS PTS groups match the LD ACLs
+    if i['bad_dept']:
+        i['deptACLs'] = None
+        i['perm_misalignment'] = True
+    else:
+        i['deptACLs'] = matchACLToAFS(
+                _misc.getDeptACLs(i['dept_id']), True)
+        misalignment = not equalACLs(i['deptACLs'], i['pts'])
 
-        if ret is None: return None
-        return [ i['login'] for i in ret if i['enabled'] ]
+        i['perm_misalignment'] = misalignment
+
+    return i
+
+def completeRHNGroup(rhnMap):
+    i = rhnMap.copy()
+    i['class'] = i['dept_id'] is None and 'bad' or 'good'
+    i['dept'] = _misc.getDeptName(i['dept_id'])
+
+    return i
+
+def getRHNGroupAdmins(self, group):
+    # group is a string that matches the RHN group name
+    config = configDragon.config
+    server = xmlrpclib.ServerProxy(config.rhnurl)
+
+    try:
+        session = server.auth.login(config.rhnuser, config.rhnpasswd, 30)
+        ret = server.systemgroup.listAdministrators(session, group)
+    except Exception, e:
+        print "RHN Exception: %s" % str(e)
+        ret = None
+
+    if ret is None: return None
+    return [ i['login'] for i in ret if i['enabled'] ]
 
