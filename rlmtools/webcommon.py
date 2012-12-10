@@ -8,6 +8,9 @@ import webServer
 import os.path
 import pwd
 
+# Flask application object
+from rlmtools import app
+
 def url():
     base = url_for("index")  # the "index" method must exist with route = /
     if base.endswith('/'):
@@ -80,23 +83,15 @@ def mapPermBits(field):
     if isREAD(field) : return "read"
     return "unknown"
 
-#def __init__(self, loader=None):
-#    # The DB interface is safe enough for multiple classes to
-#    # instantiate their own.
-#    self._server = webServer.WebServer()
-#
-#    # DB query, do it once only
-#    self._default_admin = configDragon.config.default_admin
-#
-#    # However, create a shortcut for only using one global template loader
-#    if loader is None:
-#        self.loader = TemplateLoader([os.path.join(os.path.dirname(__file__), 
-#                                     'templates')], auto_reload=True)
-#    else:
-#        self.loader = loader
-
 _tloader = TemplateLoader([os.path.join(os.path.dirname(__file__),
                           'templates')], auto_reload=True)
+_server = None
+
+def _init_webcommon():
+    global _server
+    _server = webServer.WebServer()
+
+app.before_first_request(_init_webcommon)
 
 def render(tmpl, dict):
     # Add some default variables
@@ -113,12 +108,12 @@ def render(tmpl, dict):
     stream = compiled.generate(**dict)
     return stream.render('xhtml', encoding='utf8')
 
-def message(str):
+def message(s):
     a = Auth()
-    acls = self._server.memberOfACL(a.userid)
+    acls = _server.memberOfACL(a.userid)
 
     return render('message', dict(
-                           message=str,
+                           message=s,
                            userid=a.userid,
                            acls=acls,
                            fullname=a.getName(),
