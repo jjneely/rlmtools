@@ -19,7 +19,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import optparse
-import cherrypy
 import sys
 import os
 import os.path
@@ -34,130 +33,160 @@ from permServer import PermServer
 from webServer import WebServer
 from rlattributes import RLAttributes
 
+from flask import request
+
+# Flask Application object
+from rlmtools import app
+
+# Data layer objects
+_admin = None
+_server = None
+
 logger = logging.getLogger('xmlrpc')
 
-class Application(AppHelpers):
+def _init_webperms():
+    global _admin, _server
+    _admin = PermServer()
+    _server = WebServer()
 
-    def __init__(self):
-        AppHelpers.__init__(self)
-        self._admin = PermServer()
+app.before_first_request(_init_webperms)
 
-    def index(self):
-        # Readable by any authenticated user
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to view "
-                                "ACLs.")
+@app.route("/perms/acl/")  #XXX: Fix the extra / in the templates?
+def perms_acl_index():
+    # Readable by any authenticated user
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "ACLs.")
 
-        ptsgroups = self._admin.getPTSGroups()
+    ptsgroups = _admin.getPTSGroups()
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl/' % url()),
-                    ('Manage Web-Kickstart Directories',
-                     '%s/perms/webkickstart' % url()),
-                  ]
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Manage Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+              ]
 
-        return self.render('acl.index', 
-                           dict(ptsgroups=ptsgroups,
-                                title="Manage ACLs",
-                                subMenu=subMenu,
-                               ))
-    index.exposed = True
+    return render('acl.index', 
+                  dict(ptsgroups=ptsgroups,
+                       title="Manage ACLs",
+                       subMenu=subMenu,
+                 ))
 
-    def newACL(self, cell, ptsGroup, aclName):
-        # You need admin access to mess with ACLs
-        if not self.isADMIN(self.getAuthZ("root")):
-            return self.message("You need root level admin access to modify "
-                                "ACLs.")
+@app.route("/perms/acl/newACL")
+def newACL():
+    cell = request.args["cell"]
+    ptsGroup = request.args["ptsGroup"]
+    aclName = request.args["aclName"]
 
-        if "" in [cell.strip(), ptsGroup.strip(), aclName.strip()]:
-            return self.message("All fields are required.  Not creating an ACL without complete data.")
-        self._admin.createACL(aclName, ptsGroup, cell)
-        return self.index()
-    newACL.exposed = True
+    # You need admin access to mess with ACLs
+    if not isADMIN(getAuthZ("root")):
+        return message("You need root level admin access to modify "
+                       "ACLs.")
 
-    def removeACL(self, acl_id, consent=None):
-        if not self.isADMIN(self.getAuthZ("root")):
-            return self.message("You need root level admin access to modify "
-                                "ACLs.")
+    if "" in [cell.strip(), ptsGroup.strip(), aclName.strip()]:
+        return message("All fields are required.  Not creating an ACL without complete data.")
+    _admin.createACL(aclName, ptsGroup, cell)
+    return perms_acl_index()
 
-        if consent == "yes":
-            self._admin.removeACL(acl_id)
-            return self.index()
-        if consent == "no":
-            return self.index()
+@app.route("/perms/acl/removeACL")
+def removeACL():
+    consent = request.args.get("consent", None)
+    acl_id = request.args["acl_id"]
 
-        acl = self._admin.getACL(int(acl_id))
-        return self.render('acl.remove', dict(
-            title="Delete ACL",
-            aclname=acl['name'],
-            acl_id=acl_id,
-            ))
-    removeACL.exposed = True
+    if not isADMIN(getAuthZ("root")):
+        return message("You need root level admin access to modify "
+                       "ACLs.")
 
-    def permissions(self, acl_id):
-        if not self.isREAD(self.getAuthZ("root")):
-            return self.message("You need root level read access to view "
-                                "ACLs.")
+    if consent == "yes":
+        _admin.removeACL(acl_id)
+        return perms_acl_index()
+    if consent == "no":
+        return perms_acl_index()
 
-        subMenu = [
-                    ('Manage ACLs',
-                     '%s/perms/acl' % url()),
-                  ]
+    acl = _admin.getACL(int(acl_id))
+    return render('acl.remove', 
+                  dict(
+                       title="Delete ACL",
+                       aclname=acl['name'],
+                       acl_id=acl_id,
+                 ))
 
-        acl = self._admin.getACL(int(acl_id))
-        depts = self._admin.getPermsForACL(int(acl_id))
-        users = self._admin.getSysAdmins(acl_id)
+@app.route("/perms/acl/permissions")
+def permissions():
+    acl_id = request.args["acl_id"]
 
-        for i in depts:
-            i['write'] = self.isWRITE(i['perms'])
-            i['read'] = self.isREAD(i['perms'])
-            i['admin'] = self.isADMIN(i['perms'])
+    if not isREAD(getAuthZ("root")):
+        return message("You need root level read access to view "
+                       "ACLs.")
 
-        return self.render('acl.mod', dict(
-            deptlist=self._admin.getAllDepts(),
-            users=users,
-            acl_id=acl_id,
-            title="ACL Permissions",
-            aclname=acl['name'],
-            depts=depts,
-            subMenu=subMenu,
-            ))
-    permissions.exposed = True
+    subMenu = [
+                ('Manage ACLs',
+                 '%s/perms/acl' % url()),
+              ]
 
-    def addPerm(self, dept_id, acl_id, read=None, write=None, admin=None):
-        if not self.isADMIN(self.getAuthZ("root")):
-            return self.message("You need root level admin access to modify "
-                                "ACLs.")
+    acl = _admin.getACL(int(acl_id))
+    depts = _admin.getPermsForACL(int(acl_id))
+    users = _admin.getSysAdmins(acl_id)
 
-        dept_id = int(dept_id)
-        acl_id = int(acl_id)
-        perms = self._admin.getPermsForACL(acl_id)
+    for i in depts:
+        i['write'] = isWRITE(i['perms'])
+        i['read']  = isREAD(i['perms'])
+        i['admin'] = isADMIN(i['perms'])
 
-        for i in perms:
-            # See if we are modifying an existing permission
-            if i['dept_id'] == dept_id:
-                self._admin.removePerm(i['aclg_id'])
+    return render('acl.mod', 
+                  dict(
+                       deptlist=_admin.getAllDepts(),
+                       users=users,
+                       acl_id=acl_id,
+                       title="ACL Permissions",
+                       aclname=acl['name'],
+                       depts=depts,
+                       subMenu=subMenu,
+                 ))
 
-        field = 0
-        if read == "True":
-            field = field | self.READ
-        if write == "True":
-            field = field | self.WRITE
-        if admin == "True":
-            field = field | self.ADMIN
+@app.route("/perms/acl/addPerm")
+def addPerm():
+    dept_id = request.args["dept_id"]
+    acl_id  = request.args["acl_id"]
+    read    = request.args.get("read", None)
+    write   = request.args.get("write", None)
+    admin   = request.args.get("admin", None)
 
-        self._admin.setPerm(acl_id, dept_id, field)
+    if not isADMIN(getAuthZ("root")):
+        return message("You need root level admin access to modify "
+                       "ACLs.")
 
-        return self.permissions(acl_id)
-    addPerm.exposed = True
+    dept_id = int(dept_id)
+    acl_id = int(acl_id)
+    perms = _admin.getPermsForACL(acl_id)
 
-    def removePerm(self, acl_id, aclg_id):
-        if not self.isADMIN(self.getAuthZ("root")):
-            return self.message("You need root level admin access to modify "
-                                "ACLs.")
+    for i in perms:
+        # See if we are modifying an existing permission
+        if i['dept_id'] == dept_id:
+            _admin.removePerm(i['aclg_id'])
 
-        self._admin.removePerm(int(aclg_id))
-        return self.permissions(int(acl_id))
-    removePerm.exposed = True
+    field = 0
+    if read == "True":
+        field = field | READ
+    if write == "True":
+        field = field | WRITE
+    if admin == "True":
+        field = field | ADMIN
+
+    _admin.setPerm(acl_id, dept_id, field)
+
+    return permissions()  # method requires acl_id in GET args
+
+@app.route("/perms/acl/removePerm")
+def removePerm():
+    acl_id = request.args["acl_id"]
+    aclg_id = request.args["aclg_id"]
+
+    if not isADMIN(getAuthZ("root")):
+        return message("You need root level admin access to modify "
+                       "ACLs.")
+
+    _admin.removePerm(int(aclg_id))
+    return permissions() # again, requires acl_id
 
