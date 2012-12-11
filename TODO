@@ -34,6 +34,11 @@ Server:
 
     * Ditch cherrypy and move to flask
 
+ Missing UI bits from 2011 re-work:
+
+    * Setting AFS permisssions (Bcfg2/WKS)
+    
+
 Original 2011 plan:
 
     * Re-work the UI so that all Admin Panels become "Manage Attributes"
