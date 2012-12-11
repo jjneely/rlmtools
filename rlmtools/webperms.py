@@ -424,10 +424,19 @@ def modLDACLs():
                        webksMap=webksMap,
                  ))
 
+@app.route("/perms/modAFS", methods=["GET", "POST"])
+def modAFS():
+    if request.method == "POST":
+        wkd_id = request.form["wkd_id"]
+        setIt = request.form["setIt"]
+        wmessage = request.form.get("message", "")
+    else:
+        wkd_id = request.args["wkd_id"]
+        setIt = None
+        wmessage = request.args.get("message", "")
 
-def modAFS(self, wkd_id, setIt=None, message=""):
-    if not self.isAuthenticated():
-        return self.message("You do not appear to be authenticated.")
+    if not isAuthenticated():
+        return message("You do not appear to be authenticated.")
 
     subMenu = [
                 ('Manage Web-Kickstart Directories',
@@ -435,35 +444,44 @@ def modAFS(self, wkd_id, setIt=None, message=""):
               ]
 
     wkd_id = int(wkd_id)
-    webksMap = self._misc.getWKSDir(wkd_id)
+    webksMap = _misc.getWKSDir(wkd_id)
     if webksMap is None:
-        message = """A Web-Kickstart directory matching ID %s does
-                     not exist.  Use the Back button and try your
-                     query again.""" % wkd_id
-        return self.message(message)
+        wmessage = """A Web-Kickstart directory matching ID %s does
+                      not exist.  Use the Back button and try your
+                      query again.""" % wkd_id
+        return message(wmessage)
 
-    webksMap = self.completeWKSInfo(webksMap)
+    webksMap = completeWKSInfo(webksMap)
     if webksMap['bad_dept']:
-        message = """The Web-Kickstart directory %s is not associated
-                     with a department.  Setting a department must be
-                     completed before setting ACLs.""" % webksMap['path']
-        return self.webkickstart(message)
+        wmessage = """The Web-Kickstart directory %s is not associated
+                      with a department.  Setting a department must be
+                      completed before setting ACLs.""" % webksMap['path']
+        return webkickstart(wmessage)
 
-    webksMap['todo'] = self.diffPermissions(webksMap['deptACLs'], 
-                                            webksMap['pts'],
-                                            reverse=True)
+    webksMap['todo'] = diffPermissions(webksMap['deptACLs'], 
+                                       webksMap['pts'],
+                                       reverse=True)
 
-    return self.render('perms.modAFS',
-                       dict(message=message,
-                            title="Web-Kickstart AFS Sync",
-                            subMenu=subMenu,
-                            webksMap=webksMap,
-                           ))
-modAFS.exposed = True
-   
-def modBcfg2AFS(self, br_id, setIt=None, message=""):
-    if not self.isAuthenticated():
-        return self.message("You do not appear to be authenticated.")
+    return render('perms.modAFS',
+                  dict(message=wmessage,
+                       title="Web-Kickstart AFS Sync",
+                       subMenu=subMenu,
+                       webksMap=webksMap,
+                 ))
+
+@app.route("/perms/modBcfg2AFS", methods=["GET", "POST"])   
+def modBcfg2AFS():
+    if request.method == "POST":
+        br_id = request.form["br_id"]
+        setIt = request.form["setIt"]
+        wmessage = request.form.get("message", "")
+    else:
+        br_id = request.args["br_id"]
+        setIt = None
+        wmessage = request.args.get("message", "")
+
+    if not isAuthenticated():
+        return message("You do not appear to be authenticated.")
 
     subMenu = [
                 ('Manage Bcfg2 Repositories',
@@ -471,31 +489,31 @@ def modBcfg2AFS(self, br_id, setIt=None, message=""):
               ]
 
     br_id = int(br_id)
-    bcfg2Map = self._misc.getBcfg2Dir(br_id)
+    bcfg2Map = _misc.getBcfg2Dir(br_id)
     if bcfg2Map is None:
-        message = """A Bcfg2 repository matching ID %s does
-                     not exist.  Use the Back button and try your
-                     query again.""" % br_id
-        return self.message(message)
+        wmessage = """A Bcfg2 repository matching ID %s does
+                      not exist.  Use the Back button and try your
+                      query again.""" % br_id
+        return message(wmessage)
 
-    bcfg2Map = self.completeWKSInfo(bcfg2Map)  # Yes, right method
+    bcfg2Map = completeWKSInfo(bcfg2Map)  # Yes, right method
     if bcfg2Map['bad_dept']:
-        message = """The Bcfg2 repository %s is not associated
-                     with a department.  Setting a department must be
-                     completed before setting ACLs.""" % bcfg2Map['path']
-        return self.bcfg2(message)
+        wmessage = """The Bcfg2 repository %s is not associated
+                      with a department.  Setting a department must be
+                      completed before setting ACLs.""" % bcfg2Map['path']
+        return bcfg2(wmessage)
 
-    bcfg2Map['todo'] = self.diffPermissions(bcfg2Map['deptACLs'], 
-                                            bcfg2Map['pts'],
-                                            reverse=True)
+    bcfg2Map['todo'] = diffPermissions(bcfg2Map['deptACLs'], 
+                                       bcfg2Map['pts'],
+                                       reverse=True)
 
-    return self.render('perms.modBcfg2AFS',
-                       dict(message=message,
-                            title="Bcfg2 Repository AFS Sync",
-                            subMenu=subMenu,
-                            bcfg2Map=bcfg2Map,
-                           ))
-modBcfg2AFS.exposed = True
+    return render('perms.modBcfg2AFS',
+                  dict(message=wmessage,
+                       title="Bcfg2 Repository AFS Sync",
+                       subMenu=subMenu,
+                       bcfg2Map=bcfg2Map,
+                  ))
+
    
 def diffAdmins(ldAdmins, rhnAdmins):
     """Return a dict of userid => code which is a list of tasks
