@@ -19,7 +19,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import optparse
-import cherrypy
 import sys
 import os
 import os.path
@@ -34,304 +33,363 @@ from adminServer import AdminServer
 from webServer import WebServer
 from rlattributes import RLAttributes
 
+from flask import request, abort
+
+# Flask application object
+from rlmtools import app
+
 logger = logging.getLogger('xmlrpc')
 
-class Application(AppHelpers, RLAttributes):
+# Data Layer objects
+_server = None
+_admin = None
+_rla = None
 
-    def __init__(self):
-        AppHelpers.__init__(self)
-        self._admin = AdminServer()
+def _admin_init():
+    global _server, _admin, _rla
+    _server = WebServer()
+    _admin = AdminServer()
+    _rla = RLAttributes()
 
-    def host(self, host_id, importWebKS=None):
-        dept_id = self._admin.getHostDept(host_id)
-        deptname = self._admin.getDeptName(dept_id)
-        if not self.isADMIN(self.getAuthZ(dept_id)):
-            return self.message("You need %s level admin access to view "
-                                "host attributes." % deptname)
+app.before_first_request(_admin_init)
 
-        ikeys = self._admin.getImportantKeys()
-        message = ''
+@app.route("/admin/host", methods=["GET", "POST"])
+def host(host_id=None):
+    if request.method == "POST":
+        # Other methods call us from their POST actions.
+        host_id = request.form.get("host_id", host_id)
+        importWebKS = request.form.get("importWebKS", None)
+    else:
+        host_id = request.args["host_id"]
+        importWebKS = None
 
-        if importWebKS is not None:
-            if not self.isWRITE(self.getAuthZ(dept_id)):
-                return self.message("You need %s level write access to set "
-                                "attributes." % deptname)
-            try:
-                if not self.importWebKickstart(host_id):
-                    message="Error Importing Web-Kickstart Configuration"
-            except Exception, e:
-                message = "Exception Importing Web-Kickstart: %s" % str(e)
+    if host_id is None:
+        abort(400)
 
-        meta, attributes = self.hostAttrs(host_id)
+    dept_id = _admin.getHostDept(host_id)
+    deptname = _admin.getDeptName(dept_id)
+    if not isADMIN(getAuthZ(dept_id)):
+        return message("You need %s level admin access to view "
+                       "host attributes." % deptname)
 
-        # Don't display encrypt secrets fully
-        regex = re.compile(r"([-a-zA-Z0-9]+) ([a-zA-Z0-9]+)")
-        for a in ['root', 'users']:
-            if a in attributes and isinstance(attributes[a], str):
-                match = regex.match(attributes[a])
-                if match is None: continue
-                attributes[a] = "%s ...%s [Secret Obscured]" % \
-                        (match.group(1), match.group(2)[:6])
+    ikeys = _admin.getImportantKeys()
+    wmessage = ''
 
-        if 'meta.imported' not in meta:
-            if message == "":
-                message = "The Web-Kickstart data for this host needs to be imported."
-            importTime = "Never"
+    if importWebKS is not None:
+        if not isWRITE(getAuthZ(dept_id)):
+            return message("You need %s level write access to set "
+                           "attributes." % deptname)
+        try:
+            if not _rla.importWebKickstart(host_id):
+                wmessage="Error Importing Web-Kickstart Configuration"
+        except Exception, e:
+            wmessage = "Exception Importing Web-Kickstart: %s" % str(e)
+
+    meta, attributes = _rla.hostAttrs(host_id)
+
+    # Don't display encrypt secrets fully
+    regex = re.compile(r"([-a-zA-Z0-9]+) ([a-zA-Z0-9]+)")
+    for a in ['root', 'users']:
+        if a in attributes and isinstance(attributes[a], str):
+            match = regex.match(attributes[a])
+            if match is None: continue
+            attributes[a] = "%s ...%s [Secret Obscured]" % \
+                    (match.group(1), match.group(2)[:6])
+
+    if 'meta.imported' not in meta:
+        if wmessage == "":
+            wmessage = "The Web-Kickstart data for this host needs to be imported."
+        importTime = "Never"
+    else:
+        importTime = time.strftime("%a, %d %b %Y %H:%M:%S %Z", \
+                                   time.localtime(meta['meta.imported']))
+    
+    hostname = _admin.getHostName(host_id)
+    subMenu = [ ('Host Status: %s' % short(hostname),
+                 '%s/client?host_id=%s' % (url(), host_id)),
+                ('Department Status: %s' % deptname,
+                 '%s/dept?dept_id=%s' % (url(), dept_id)),
+                ('Manage Department Attributes: %s' % deptname,
+                 '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
+              ]
+
+    return render('admin.host', 
+                  dict(
+                       host_id=host_id,
+                       subMenu=subMenu,
+                       title='Manage Host Attributes',
+                       hostname=hostname,
+                       deptname=deptname,
+                       message=wmessage,
+                       attributes=attributes,
+                       meta=meta,
+                       importTime=importTime,
+                       webKickstartKeys=ikeys,
+                 ))
+
+@app.route("/admin/dept")
+def admin_dept(dept_id=None):
+    dept_id = request.args.get("dept_id", dept_id)
+
+    if dept_id is None:
+        abort(400)
+
+    deptname = _admin.getDeptName(int(dept_id))
+    if not isADMIN(getAuthZ(dept_id)):
+        return message("You need %s level admin access to view "
+                       "department attributes." % deptname)
+
+    wmessage = ''
+
+    meta, attributes = _rla.deptAttrs(dept_id)
+
+    subMenu = [ ('Deptartment Status: %s' % deptname,
+                 '%s/dept?dept_id=%s' % (url(), dept_id))
+              ]
+
+    return render('admin.dept', 
+                  dict(
+                       dept_id=dept_id,
+                       deptname=deptname,
+                       subMenu=subMenu,
+                       title='Manage Department Attributes',
+                       message=wmessage,
+                       attributes=attributes,
+                       meta=meta,
+                 ))
+
+@app.route("/admin/deleteHostAttr", methods=["POST"])
+def deleteHostAttr(modifyKey=None, host_id=None):
+
+    modifyKey = request.form.get("modifyKey", modifyKey)
+    host_id = request.form.get("host_id", host_id)
+    submit = request.form.get("submit", None)
+    aptr = request.form.get("aptr", None)
+    callback = request.form.get("callback", None)
+
+    if submit is not None:
+        if callback is None:
+            return message(
+                    "Interal application fault in deleteHostAttr()")
+        host_id = int(callback)
+    dept_id = _admin.getHostDept(int(host_id))
+    deptname = _admin.getDeptName(dept_id)
+    hostname = _admin.getHostName(int(host_id))
+    aptr = _admin.getHostAttrPtr(int(host_id))
+
+    if not isWRITE(getAuthZ(dept_id)):
+        return message("You need %s level write access to remove "
+                       "attributes." % deptname)
+
+    if submit is not None:
+        _rla.removeAttributeByKey(aptr, modifyKey)
+        # To reuse the template we stuck this in 'callback'
+        return host(host_id) # XXX: needs host_id
+
+    subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
+                 '%s/admin/host?host_id=%s' % (url(), int(host_id)))
+              ]
+
+    meta, attributes = _rla.hostAttrs(host_id)
+    if modifyKey not in attributes:
+        return message("%s is not an attribute of %s" \
+                       % (modifyKey, hostname))
+
+    if modifyKey in ['root', 'users']:
+        value = "[Secret Obscured]"
+    else:
+        value = attributes[modifyKey]
+    return render('admin.delattr', 
+                  dict(
+                       subMenu=subMenu,
+                       title=hostname,
+                       key=modifyKey,
+                       value=value,
+                       message="",
+                       callback=host_id,
+                       call="deleteHostAttr",
+                 ))
+
+@app.route("/admin/deleteDeptAttr", methods=["POST"])
+def deleteDeptAttr(modifyKey=None, dept_id=None):
+    modifyKey = request.form.get("modifyKey", modifyKey)
+    dept_id = request.form.get("dept_id", dept_id)
+    submit = request.form.get("submit", None)
+    aptr = request.form.get("aptr", None)
+    callback = request.form.get("callback", None)
+
+    if submit is not None:
+        if callback is None:
+            return message("Interal application fault in deleteDeptAttr()")
+        dept_id = int(callback)
+    deptname = _admin.getDeptName(int(dept_id))
+    aptr = _admin.getDeptAttrPtr(int(dept_id))
+
+    if not isWRITE(getAuthZ(dept_id)):
+        return message("You need %s level write access to remove "
+                       "attributes." % deptname)
+
+    if submit is not None:
+        _rla.removeAttributeByKey(aptr, modifyKey)
+        # To reuse the template we stuck this in 'callback'
+        return admin_dept(int(dept_id))
+
+    subMenu = [ ('Manage Department Attributes: %s' % deptname,
+                 '%s/admin/dept?dept_id=%s' % (url(), int(dept_id)))
+              ]
+
+    meta, attributes = _rla.deptAttrs(dept_id)
+    if modifyKey not in attributes:
+        return message("%s is not an attribute of %s" \
+                            % (modifyKey, deptname))
+
+    return render('admin.delattr', 
+                  dict(
+                       subMenu=subMenu,
+                       title=deptname,
+                       key=modifyKey,
+                       value=attributes[modifyKey],
+                       message="",
+                       callback=dept_id,
+                       call="deleteDeptAttr",
+                 ))
+
+
+@app.route("/admin/modifyHost", methods=["POST"])
+def modifyHost():
+    host_id = request.form["host_id"]
+    modifyKey = request.form["modifyKey"]
+    textbox = request.form.get("textbox", None)
+    setAttribute = request.form.get("setAttribute", None)
+    reset = request.form.get("reset", None)
+    delete = request.form.get("delete", None)
+    modify = request.form.get("modify", None)
+
+    # XXX: check for altering meta. keys??
+    dept_id = _admin.getHostDept(int(host_id))
+    deptname = _admin.getDeptName(dept_id)
+
+    if setAttribute == "Submit":
+        if not isWRITE(getAuthZ(dept_id)):
+            return message("You need %s level write access to set "
+                           "attributes." % deptname)
+        aptr = _admin.getHostAttrPtr(host_id)
+        _rla.setAttribute(aptr, modifyKey, textbox)
+        # Set the value and redirect to the Host Admin Panel
+        return host()  # Uses host_id
+
+    meta, attributes = _rla.hostAttrs(host_id)
+    attributes.update(meta)
+    hostname = _admin.getHostName(host_id)
+
+    if delete == "Delete":
+        if 'meta.inhairited' in meta:
+            if modifyKey in meta['meta.inhairited']:
+                return message(
+                        "The attribute %s is inhairited from a higher "
+                        "order department.  It cannot be deleted from "
+                        "this host: %s" % (modifyKey, hostname))
+
+        return deleteHostAttr(modifyKey, host_id)
+
+    if not isADMIN(getAuthZ(dept_id)):
+        return message("You need %s level admin access to view "
+                       "host attributes." % deptname)
+
+    replaceValue = None
+    if reset == "Reset":
+        if 'meta.parsed' in attributes and \
+                modifyKey in attributes['meta.parsed']:
+            replaceValue = \
+                _rla.stringifyWebKS(attributes['meta.parsed'][modifyKey])
         else:
-            importTime = time.strftime("%a, %d %b %Y %H:%M:%S %Z", \
-                                       time.localtime(meta['meta.imported']))
-        
-        hostname = self._admin.getHostName(host_id)
-        subMenu = [ ('Host Status: %s' % short(hostname),
-                     '%s/client?host_id=%s' % (url(), host_id)),
-                    ('Department Status: %s' % deptname,
-                     '%s/dept?dept_id=%s' % (url(), dept_id)),
-                    ('Manage Department Attributes: %s' % deptname,
-                     '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
-                  ]
+            m, a = _rla.inhairitedAttrs(host_id)
+            a.update(m)
+            if modifyKey in a:
+                replaceValue = a[modifyKey]
 
-        return self.render('admin.host', dict(
-                             host_id=host_id,
-                             subMenu=subMenu,
-                             title='Manage Host Attributes',
-                             hostname=hostname,
-                             deptname=deptname,
-                             message=message,
-                             attributes=attributes,
-                             meta=meta,
-                             importTime=importTime,
-                             webKickstartKeys=ikeys,
-                             ))
-    host.exposed = True
+    elif modifyKey in attributes:
+        replaceValue = attributes[modifyKey]
 
-    def dept(self, dept_id):
-        deptname = self._admin.getDeptName(int(dept_id))
-        if not self.isADMIN(self.getAuthZ(dept_id)):
-            return self.message("You need %s level admin access to view "
-                                "department attributes." % deptname)
+    subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
+                 '%s/admin/host?host_id=%s' % (url(), host_id))
+              ]
 
-        message = ''
+    return render('admin.modifyHost', 
+                  dict(
+                       subMenu=subMenu,
+                       message='',
+                       title=hostname,
+                       host_id=host_id,
+                       key=modifyKey,
+                       replaceValue=replaceValue,
+                 ))
 
-        meta, attributes = self.deptAttrs(dept_id)
+@app.route("/admin/modifyDept", methods=["POST"])
+def modifyDept():
+    dept_id = request.form["dept_id"]
+    modifyKey = request.form["modifyKey"]
+    textbox = request.form.get("textbox", None)
+    setAttribute = request.form.get("setAttribute", None)
+    reset = request.form.get("reset", None)
+    delete = request.form.get("delete", None)
+    modify = request.form.get("modify", None)
 
-        deptname = self._admin.getDeptName(dept_id)
-        subMenu = [ ('Deptartment Status: %s' % deptname,
-                     '%s/dept?dept_id=%s' % (url(), dept_id))
-                  ]
+    # XXX: check for altering meta. keys??
+    deptname = _admin.getDeptName(int(dept_id))
 
-        return self.render('admin.dept', dict(
-                             dept_id=dept_id,
-                             deptname=deptname,
-                             subMenu=subMenu,
-                             title='Manage Department Attributes',
-                             message=message,
-                             attributes=attributes,
-                             meta=meta,
-                             ))
-    dept.exposed = True
+    if setAttribute == "Submit":
+        if not isWRITE(getAuthZ(dept_id)):
+            return message("You need %s level write access to set "
+                           "attributes." % deptname)
+        aptr = _admin.getDeptAttrPtr(dept_id)
+        _rla.setAttribute(aptr, modifyKey, textbox)
+        # Set the value and redirect to the Dept Admin Panel
+        return admin_dept(dept_id)
 
-    def deleteHostAttr(self, modifyKey, host_id=None,
-                       submit=None, aptr=None, callback=None):
-        if submit is not None:
-            if callback is None:
-                return self.message(
-                        "Interal application fault in deleteHostAttr()")
-            host_id = int(callback)
-        dept_id = self._admin.getHostDept(int(host_id))
-        deptname = self._admin.getDeptName(dept_id)
-        hostname = self._admin.getHostName(int(host_id))
-        aptr = self._admin.getHostAttrPtr(int(host_id))
+    if not isADMIN(getAuthZ(dept_id)):
+        return message("You need %s level admin access to view "
+                       "attributes." % deptname)
 
-        if not self.isWRITE(self.getAuthZ(dept_id)):
-            return self.message("You need %s level write access to remove "
-                                    "attributes." % deptname)
+    meta, attributes = _rla.deptAttrs(dept_id)
+    attributes.update(meta)
+    deptname = _admin.getDeptName(dept_id)
 
-        if submit is not None:
-            self.removeAttributeByKey(aptr, modifyKey)
-            # To reuse the template we stuck this in 'callback'
-            return self.host(host_id)
+    if delete == "Delete":
+        if 'meta.inhairited' in meta:
+            if modifyKey in meta['meta.inhairited']:
+                return message(
+                        "The attribute %s is inhairited from a higher "
+                        "order department.  It cannot be deleted from "
+                        "this department: %s" % (modifyKey, deptname))
 
-        subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
-                     '%s/admin/host?host_id=%s' % (url(), int(host_id)))
-                  ]
+        return deleteDeptAttr(modifyKey, int(dept_id))
 
-        meta, attributes = self.hostAttrs(host_id)
-        if modifyKey not in attributes:
-            return self.message("%s is not an attribute of %s" \
-                                % (modifyKey, hostname))
+    replaceValue = None
+    if reset == "Reset":
+        parent = _admin.getDeptParentID(int(dept_id))
+        if parent is not None:
+            m, a = _rla.deptAttrs(parent)
+            a.update(m)
+            if modifyKey in a:
+                replaceValue = a[modifyKey]
 
-        if modifyKey in ['root', 'users']:
-            value = "[Secret Obscured]"
-        else:
-            value = attributes[modifyKey]
-        return self.render('admin.delattr', dict(
-                           subMenu=subMenu,
-                           title=hostname,
-                           key=modifyKey,
-                           value=value,
-                           message="",
-                           callback=host_id,
-                           call="deleteHostAttr",
-                           ))
-    deleteHostAttr.exposed = True
+    elif modifyKey in attributes:
+        replaceValue = attributes[modifyKey]
 
-    def deleteDeptAttr(self, modifyKey, dept_id=None,
-                       submit=None, aptr=None, callback=None):
-        if submit is not None:
-            if callback is None:
-                return self.message(
-                        "Interal application fault in deleteDeptAttr()")
-            dept_id = int(callback)
-        deptname = self._admin.getDeptName(int(dept_id))
-        aptr = self._admin.getDeptAttrPtr(int(dept_id))
+    subMenu = [ ('Manage Department Attributes: %s' % deptname,
+                 '%s/admin/dept?dept_id=%s' % (url(), dept_id))
+              ]
 
-        if not self.isWRITE(self.getAuthZ(dept_id)):
-            return self.message("You need %s level write access to remove "
-                                    "attributes." % deptname)
+    return render('admin.modifyDept', 
+                  dict(
+                       subMenu=subMenu,
+                       message='',
+                       title='Modify Attribute',
+                       deptname=deptname,
+                       dept_id=dept_id,
+                       key=modifyKey,
+                       replaceValue=replaceValue,
+                 ))
 
-        if submit is not None:
-            self.removeAttributeByKey(aptr, modifyKey)
-            # To reuse the template we stuck this in 'callback'
-            return self.dept(int(dept_id))
-
-        subMenu = [ ('Manage Department Attributes: %s' % deptname,
-                     '%s/admin/dept?dept_id=%s' % (url(), int(dept_id)))
-                  ]
-
-        meta, attributes = self.deptAttrs(dept_id)
-        if modifyKey not in attributes:
-            return self.message("%s is not an attribute of %s" \
-                                % (modifyKey, deptname))
-
-        return self.render('admin.delattr', dict(
-                           subMenu=subMenu,
-                           title=deptname,
-                           key=modifyKey,
-                           value=attributes[modifyKey],
-                           message="",
-                           callback=dept_id,
-                           call="deleteDeptAttr",
-                           ))
-    deleteDeptAttr.exposed = True
-
-    def modifyHost(self, host_id, modifyKey, textbox=None,
-                   setAttribute=None, reset=None, delete=None, modify=None):
-        # XXX: check for altering meta. keys??
-        dept_id = self._admin.getHostDept(int(host_id))
-        deptname = self._admin.getDeptName(dept_id)
-
-        if setAttribute == "Submit":
-            if not self.isWRITE(self.getAuthZ(dept_id)):
-                return self.message("You need %s level write access to set "
-                                    "attributes." % deptname)
-            aptr = self._admin.getHostAttrPtr(host_id)
-            self.setAttribute(aptr, modifyKey, textbox)
-            # Set the value and redirect to the Host Admin Panel
-            return self.host(host_id)
-
-        meta, attributes = self.hostAttrs(host_id)
-        attributes.update(meta)
-        hostname = self._admin.getHostName(host_id)
-
-        if delete == "Delete":
-            if 'meta.inhairited' in meta:
-                if modifyKey in meta['meta.inhairited']:
-                    return self.message(
-                            "The attribute %s is inhairited from a higher "
-                            "order department.  It cannot be deleted from "
-                            "this host: %s" % (modifyKey, hostname))
-
-            return self.deleteHostAttr(modifyKey, host_id)
-
-        if not self.isADMIN(self.getAuthZ(dept_id)):
-            return self.message("You need %s level admin access to view "
-                                "host attributes." % deptname)
-
-        replaceValue = None
-        if reset == "Reset":
-            if 'meta.parsed' in attributes and \
-                    modifyKey in attributes['meta.parsed']:
-                replaceValue = \
-                    self.stringifyWebKS(attributes['meta.parsed'][modifyKey])
-            else:
-                m, a = self.inhairitedAttrs(host_id)
-                a.update(m)
-                if modifyKey in a:
-                    replaceValue = a[modifyKey]
-
-        elif modifyKey in attributes:
-            replaceValue = attributes[modifyKey]
-
-        subMenu = [ ('Manage Host Attributes: %s' % short(hostname),
-                     '%s/admin/host?host_id=%s' % (url(), host_id))
-                  ]
-
-        return self.render('admin.modifyHost', dict(
-                           subMenu=subMenu,
-                           message='',
-                           title=hostname,
-                           host_id=host_id,
-                           key=modifyKey,
-                           replaceValue=replaceValue,
-                           ))
-    modifyHost.exposed = True
-
-    def modifyDept(self, dept_id, modifyKey, textbox=None,
-                   setAttribute=None, reset=None, delete=None, modify=None):
-        # XXX: check for altering meta. keys??
-        deptname = self._admin.getDeptName(int(dept_id))
-
-        if setAttribute == "Submit":
-            if not self.isWRITE(self.getAuthZ(dept_id)):
-                return self.message("You need %s level write access to set "
-                                    "attributes." % deptname)
-            aptr = self._admin.getDeptAttrPtr(dept_id)
-            self.setAttribute(aptr, modifyKey, textbox)
-            # Set the value and redirect to the Dept Admin Panel
-            return self.dept(dept_id)
-
-        if not self.isADMIN(self.getAuthZ(dept_id)):
-            return self.message("You need %s level admin access to view "
-                                "attributes." % deptname)
-
-        meta, attributes = self.deptAttrs(dept_id)
-        attributes.update(meta)
-        deptname = self._admin.getDeptName(dept_id)
-
-        if delete == "Delete":
-            if 'meta.inhairited' in meta:
-                if modifyKey in meta['meta.inhairited']:
-                    return self.message(
-                            "The attribute %s is inhairited from a higher "
-                            "order department.  It cannot be deleted from "
-                            "this department: %s" % (modifyKey, deptname))
-
-            return self.deleteDeptAttr(modifyKey, int(dept_id))
-
-        replaceValue = None
-        if reset == "Reset":
-            parent = self._admin.getDeptParentID(int(dept_id))
-            if parent is not None:
-                m, a = self.deptAttrs(parent)
-                a.update(m)
-                if modifyKey in a:
-                    replaceValue = a[modifyKey]
-
-        elif modifyKey in attributes:
-            replaceValue = attributes[modifyKey]
-
-        subMenu = [ ('Manage Department Attributes: %s' % deptname,
-                     '%s/admin/dept?dept_id=%s' % (url(), dept_id))
-                  ]
-
-        return self.render('admin.modifyDept', dict(
-                           subMenu=subMenu,
-                           message='',
-                           title='Modify Attribute',
-                           deptname=deptname,
-                           dept_id=dept_id,
-                           key=modifyKey,
-                           replaceValue=replaceValue,
-                           ))
-    modifyDept.exposed = True
 
