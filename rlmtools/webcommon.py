@@ -1,9 +1,8 @@
-from flask import url_for
+from flask import request, url_for
 
 from genshi.template import TemplateLoader
 
 import configDragon
-import cherrypy
 import webServer
 import os.path
 import pwd
@@ -12,7 +11,7 @@ import pwd
 from rlmtools import app
 
 def url():
-    base = url_for("index")  # the "index" method must exist with route = /
+    base = request.url_root
     if base.endswith('/'):
         return base[:-1]
     else:
@@ -33,7 +32,7 @@ class Auth(object):
             return
 
         try:
-            env = cherrypy.request.wsgi_environ
+            env = request.environ
         except AttributeError:
             # Gah!  Where is the WSGI environment?
             return
@@ -61,10 +60,6 @@ class Auth(object):
         if not self.isAuthenticated():
             return "Guest User"
         return pwd.getpwnam(self.userid)[4]        
-
-class AppHelpers(object):
-    # XXX: Here to hold her together during porting to Flash
-    pass
 
 # Permission bitfield operations
 ADMIN = 0x01
