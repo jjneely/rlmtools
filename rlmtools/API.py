@@ -27,14 +27,13 @@ import socket
 import logging
 import apiServer as server
 
-from xmlrpclib import Fault
+from rlmtools import app
 
-try:
-    from mod_python import apache
-except ImportError:
-    # Not running under mod_python -- testing harness
-    apache = None
-    import cherrypy
+from flask import request
+from flaskext.xmlrpc import Fault, XMLRPCHandler
+
+handler = XMLRPCHandler("__API__", introspection=False)
+handler.connect(app, "/api/xmlrpc")
 
 log = logging.getLogger("xmlrpc")
 
@@ -61,11 +60,35 @@ __API__ = ['hello',
            'isSupported',
           ]
 
+# Helper decorator -- Log exceptions -- all of them
+def trap(func):
+    def exception_trap(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception, e:
+            log.exception("An exception occured in the XML-RPC handler.")
+            
+            # Let the normal python/Flask error handlers do their job
+            raise
 
+    # The handler.register decorator is above us, pass the __name__ through
+    exception_trap.__name__ = func.__name__
+    return exception_trap
+
+# Helper function, not exposed to the XML-RPC interface
+def getHostName():
+    """Digs out the hostname from the headers.  This identifies who we
+       say we are."""
+    
+    return getAddress(1)[1]
+
+@handler.register
+@trap
 def hello(apiVersion):
     return "Hello World"
 
-
+@handler.register
+@trap
 def getAddress(apiVersion):
     """Return the ip/fqdn address pair of the calling client.  This is
        the address as viewed from the RLMTools server."""
@@ -96,13 +119,8 @@ def getAddress(apiVersion):
 
     return ip, addr[0]
 
-def getHostName():
-    """Digs out the hostname from the headers.  This identifies who we
-       say we are."""
-    
-    return getAddress(1)[1]
-
-
+@handler.register
+@trap
 def getServerKey(apiVersion, uuid=None):
     """Return the Server's public key"""
     
@@ -110,7 +128,8 @@ def getServerKey(apiVersion, uuid=None):
     ret = srv.getPublicKey()
     return ret
     
-
+@handler.register
+@trap
 def register(apiVersion, publicKey, dept, version, uuid=None, rhnid=None,
              sid=None):
     """Workstation requests registration.  Check DB and register host as
@@ -120,7 +139,8 @@ def register(apiVersion, publicKey, dept, version, uuid=None, rhnid=None,
     ret = s.register(publicKey, dept, version, rhnid, sid)
     return ret
 
-
+@handler.register
+@trap
 def bless(apiVersion, dept, version, uuid=None, rhnid=None):
     """Administratively bless a workstation."""
 
@@ -128,7 +148,8 @@ def bless(apiVersion, dept, version, uuid=None, rhnid=None):
     ret = s.bless(dept, version, rhnid)
     return ret
 
-
+@handler.register
+@trap
 def signCert(apiVersion, uuid, sig, fingerprint):
     """Request Puppet Certificate for this host be signed."""
 
@@ -144,7 +165,8 @@ def signCert(apiVersion, uuid, sig, fingerprint):
 
     return s.signCert(fingerprint)
 
-
+@handler.register
+@trap
 def resetHostname(apiVersion, uuid, sig):
     s = server.Server(apiVersion, getHostName(), uuid)
 
@@ -156,6 +178,8 @@ def resetHostname(apiVersion, uuid, sig):
 
     return s.resetHostname()
 
+@handler.register
+@trap
 def message(apiVersion, publicKey, sig, dict):
     """Log a message from a client."""
     if apiVersion == 0:
@@ -172,7 +196,8 @@ def message(apiVersion, publicKey, sig, dict):
                              dict['data'])
     return ret
 
-
+@handler.register
+@trap
 def initHost(apiVersion, secret, fqdn, dept="ncsu"):
     """API call for Web-Kickstart to initialize a host in the database.
        Protected by the knowing of a secret."""
@@ -194,7 +219,8 @@ def initHost(apiVersion, secret, fqdn, dept="ncsu"):
     else:
         return (0, sid)
 
-
+@handler.register
+@trap
 def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args, url):
     """Set the bcfg2.init, bcfg2.url attributes for the given department name.
        You need the admin secret to do so."""
@@ -210,7 +236,8 @@ def setDeptBcfg2(apiVersion, secret, deptName, bcfg2args, url):
 
     return s.setDeptBcfg2(deptName, bcfg2args, url)
 
-
+@handler.register
+@trap
 def getBcfg2Bootstrap(apiVersion, uuid, sig):
     """Registered machines can request their Bcfg2 bootstrap information"""
         
@@ -225,7 +252,8 @@ def getBcfg2Bootstrap(apiVersion, uuid, sig):
 
     return s.getBcfg2Bootstrap()
 
-
+@handler.register
+@trap
 def loadWebKickstart(apiVersion, secret, uuid):
     """(re-)load the Web-Kickstart data into this hosts attributes"""
 
@@ -241,6 +269,8 @@ def loadWebKickstart(apiVersion, secret, uuid):
 
     return s.loadWebKickstart()
 
+@handler.register
+@trap
 def dumpClients(apiVersion, secret):
     """Return a list of dicts for each host"""
 
@@ -256,6 +286,8 @@ def dumpClients(apiVersion, secret):
 
     return s.dumpClients()
 
+@handler.register
+@trap
 def isRegistered(apiVersion, pubKey=None, sig=None):
     """Returns True if client by this name is registered."""
 
@@ -274,7 +306,8 @@ def isRegistered(apiVersion, pubKey=None, sig=None):
     else:
         return True
 
-
+@handler.register
+@trap
 def isSupported(apiVersion, uuid=None):
     "Returns True if the client meets requirments for support."
 
@@ -285,7 +318,8 @@ def isSupported(apiVersion, uuid=None):
 
     return s.isSupported()
 
-
+@handler.register
+@trap
 def checkIn(apiVersion, publicKey, sig, dept=None):
     """Workstation checking in.  Update status in DB."""
 
@@ -308,7 +342,8 @@ def checkIn(apiVersion, publicKey, sig, dept=None):
 
     return ret
 
-
+@handler.register
+@trap
 def getActivationKey(apiVersion, publicKey, sig):
     "Return the RHN activation key for this host."
 
@@ -323,7 +358,8 @@ def getActivationKey(apiVersion, publicKey, sig):
     else:
         return ret
 
-
+@handler.register
+@trap
 def getEncKeyFile(apiVersion, publicKey, sig):
     """Returns an ecrypted string containing what should go in /etc/update.conf
        on the workstation."""
@@ -336,7 +372,8 @@ def getEncKeyFile(apiVersion, publicKey, sig):
     ret = s.getEncKeyFile(publicKey, sig)
     return ret
 
-
+@handler.register
+@trap
 def updateRHNSystemID(apiVersion, uuid, sig, rhnid):
     """Update the clients RHN ID."""
 

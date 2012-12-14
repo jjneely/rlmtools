@@ -27,10 +27,14 @@ config = None
 
 app = Flask(__name__)
 
+# Use my logger please
+app.config["LOGGER_NAME"] = "xmlrpc"
+
 # Modules exposing views must be imported below
 import rlmtools.webapp
 import rlmtools.webks
 import rlmtools.webadmin
 import rlmtools.webperms
 import rlmtools.webacl
-    
+import rlmtools.API     # XMLRPC API
+

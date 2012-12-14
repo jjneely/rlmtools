@@ -148,7 +148,7 @@ def getLocalKey(location):
 class TestLiquidDragonXMLRPC(unittest.TestCase):
 
     def setUp(self):
-        URL = "http://localhost:8081"
+        URL = "http://localhost:5000/api/xmlrpc"
         self.server = setupServer(URL)
         self.misc = miscServer.MiscServer()
 
