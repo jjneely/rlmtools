@@ -29,7 +29,7 @@ import apiServer as server
 
 from rlmtools import app
 
-from flask import request
+from flask import request, g
 from flaskext.xmlrpc import Fault, XMLRPCHandler
 
 handler = XMLRPCHandler("__API__", introspection=False)
@@ -80,7 +80,7 @@ def getHostName():
     """Digs out the hostname from the headers.  This identifies who we
        say we are."""
     
-    return getAddress(1)[1]
+    return g.fqdn
 
 @handler.register
 @trap
@@ -93,31 +93,8 @@ def getAddress(apiVersion):
     """Return the ip/fqdn address pair of the calling client.  This is
        the address as viewed from the RLMTools server."""
 
-    if apache is not None:
-        ip = req.get_remote_host(apache.REMOTE_NOLOOKUP)
-    else:
-        # Part of cherrypy test harness
-        try:
-            ip = cherrypy.request.remote.ip
-        except AttributeError:
-            ip = cherrypy.request.remote_addr
-
-    if ip.startswith('::ffff:'):
-        # Ugh...IPv6 crap in v4 addresses
-        ip = ip[7:]
-    try:
-        addr = socket.gethostbyaddr(ip)
-    except socket.herror, e:
-        if e[0] == 0:
-            # No error...IP does not resolve
-            log.warning("Request from %s which does not resolve" % ip)
-            addr = [ip]
-        else:
-            log.error("HELP! socket.gethostbyaddr(%s) blew up with: %s" \
-                    % (ip, e))
-            raise
-
-    return ip, addr[0]
+    # We use this a lot so its done once for each call via webcommon.py
+    return g.ip, g.fqdn
 
 @handler.register
 @trap

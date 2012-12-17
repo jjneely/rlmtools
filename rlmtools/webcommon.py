@@ -1,4 +1,4 @@
-from flask import request, url_for
+from flask import request, url_for, g
 
 from genshi.template import TemplateLoader
 
@@ -6,6 +6,7 @@ import configDragon
 import webServer
 import os.path
 import pwd
+import socket
 
 # Flask application object
 from rlmtools import app
@@ -82,11 +83,33 @@ _tloader = TemplateLoader([os.path.join(os.path.dirname(__file__),
                           'templates')], auto_reload=True)
 _server = None
 
+def _before_each_fqdn():
+    ip = request.remote_addr
+    
+    if ip.startswith('::ffff:'):
+        # Ugh...IPv6 crap in v4 addresses
+        ip = ip[7:]
+    try:
+        addr = socket.gethostbyaddr(ip)
+    except socket.herror, e:
+        if e[0] == 0:
+            # No error...IP does not resolve
+            log.warning("Request from %s which does not resolve" % ip)
+            addr = [ip]
+        else:
+            log.error("HELP! socket.gethostbyaddr(%s) blew up with: %s" \
+                    % (ip, e))
+            raise
+
+    g.ip = ip
+    g.fqdn = addr[0]
+
 def _init_webcommon():
     global _server
     _server = webServer.WebServer()
 
 app.before_first_request(_init_webcommon)
+app.before_request(_before_each_fqdn)
 
 def render(tmpl, dict):
     # Add some default variables
