@@ -7,9 +7,12 @@ import webServer
 import os.path
 import pwd
 import socket
+import logging
 
 # Flask application object
 from rlmtools import app
+
+log = logging.getLogger('xmlrpc')
 
 def url():
     base = request.url_root
