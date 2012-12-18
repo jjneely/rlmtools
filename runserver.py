@@ -28,11 +28,7 @@ def main():
         rlmtools.config.vars['auth'] = ["", False]
         rlmtools.config.auth = options.auth
 
-    staticDir = os.path.join(os.path.dirname(__file__), "static")
-    staticDir = os.path.abspath(staticDir)
-
-    graphDir = os.path.join(rlmtools.config.rrd_dir, 'graphs')
-
+    #rlmtools.app.run(host="0.0.0.0", debug=True)
     rlmtools.app.run(debug=True)
 
 
