@@ -40,11 +40,11 @@ class WRAPCookie(object):
         if type(cookie) == type(""):
             self.cookie = cookie
         elif isinstance(cookie, dict):
-            if not cookie.has_key('wrap16'):
+            if not cookie.has_key('WRAP16'):
                 # Odd...no WRAP cookie
                 self.cookie = None
             else:
-                self.cookie = cookie['wrap16'].value
+                self.cookie = cookie['WRAP16']
             
         else:
             raise WRAPError("Cookie argument not a known type.")
@@ -106,11 +106,11 @@ class WRAPCookie(object):
         if cstruct:
             try:
                 tuple = struct.unpack("16s20s10s15s1s", cstruct)
-                self.userID = tuple[0]
-                self.affiliation = tuple[1]
-                self.expiration = tuple[2]
-                self.address = tuple[3]
-                self.onProxy = tuple[4]
+                self.userID = tuple[0].partition('\0')[0]
+                self.affiliation = tuple[1].partition('\0')[0]
+                self.expiration = tuple[2].partition('\0')[0]
+                self.address = tuple[3].partition('\0')[0]
+                self.onProxy = tuple[4].partition('\0')[0]
 
                 return True
             except Exception, e:
