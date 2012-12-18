@@ -32,7 +32,8 @@ Server:
     * bugzilla bugs
     * manual delete system profile
 
-    * Ditch cherrypy and move to flask
+    * Ditch cherrypy and move to flask -- done, for the most part
+        * cleanups remain
 
  Missing UI bits from 2011 re-work:
 
