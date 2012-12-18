@@ -42,7 +42,7 @@ class WRAPCookie(object):
         elif isinstance(cookie, dict):
             if not cookie.has_key('wrap16'):
                 # Odd...no WRAP cookie
-                self.cookie = ""
+                self.cookie = None
             else:
                 self.cookie = cookie['wrap16'].value
             
@@ -55,6 +55,9 @@ class WRAPCookie(object):
         self.address = None
         self.onProxy = None
         
+        if self.cookie is None:
+            return
+
         if keyFile:
             self.pubKey(keyFile)
             self.parse()
