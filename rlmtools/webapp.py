@@ -87,6 +87,9 @@ def graphs(filename):
 
 @app.route("/")
 def index():
+    from flask import g
+    g.auth.require()
+
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
 

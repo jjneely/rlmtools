@@ -36,7 +36,7 @@ from permServer import PermServer
 from webServer import WebServer
 from ldafs import *
 
-from flask import request
+from flask import request, g
 
 # Flask application object
 from rlmtools import app
@@ -72,7 +72,7 @@ def perms_index():
                 ('Manage Bcfg2 Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
-    acls = _server.memberOfACL(Auth().userid)
+    acls = _server.memberOfACL(g.auth.userid)
 
     return render('perms.index',
                   dict(message=message,

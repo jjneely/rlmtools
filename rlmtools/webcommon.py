@@ -1,9 +1,10 @@
-from flask import request, url_for, g
+from flask import request, url_for, abort, g
 
 from genshi.template import TemplateLoader
 
 import configDragon
 import webServer
+import wrap
 import os.path
 import pwd
 import socket
@@ -24,7 +25,9 @@ def url():
 def short(fqdn): return fqdn.split('.')[0]
 
 class Auth(object):
-    
+   
+    # XXX: Cache location of WRAP key?
+
     def __init__(self):
         self.null()
         if "auth" in configDragon.config.vars:
@@ -35,18 +38,14 @@ class Auth(object):
             self.ipaddress = "No Man's Land"
             return
 
-        try:
-            env = request.environ
-        except AttributeError:
-            # Gah!  Where is the WSGI environment?
-            return
+        auth = wrap.WRAPCookie(request.cookies, configDragon.config.wrapkey)
 
-        try:
-            self.userid = env['WRAP_USERID']
-            self.affiliation = env['WRAP_AFFIL']
-            self.expire = env['WRAP_EXPDATE']
-            self.ipaddress = env['WRAP_ADDRESS']
-        except KeyError:
+        if auth.isValid():
+            self.userid = auth.userID
+            self.affiliation = auth.affiliation
+            self.expire = auth.expiration
+            self.ipaddress = auth.address
+        else:
             self.null()
 
     def null(self):
@@ -57,6 +56,13 @@ class Auth(object):
 
     def isAuthenticated(self):
         return self.userid is not None
+
+    def require(self):
+        print "Auth.require()..."
+        if not self.isAuthenticated():
+            print "Calling redirect()..."
+            #redirect("https://sysnews.ncsu.edu/GetWrapped")
+            abort(401)
 
     def getName(self):
         # Note that the users that authenticate will also be in the system's
@@ -107,18 +113,21 @@ def _before_each_fqdn():
     g.ip = ip
     g.fqdn = addr[0]
 
+def _before_each_auth():
+    g.auth = Auth()
+
 def _init_webcommon():
     global _server
     _server = webServer.WebServer()
 
 app.before_first_request(_init_webcommon)
 app.before_request(_before_each_fqdn)
+app.before_request(_before_each_auth)
 
 def render(tmpl, dict):
     # Add some default variables
-    a = Auth()
-    dict['name'] = a.getName()
-    dict['userid'] = a.userid
+    dict['name'] = g.auth.getName()
+    dict['userid'] = g.auth.userid
     dict['baseURL'] = url()
     dict['templateName'] = tmpl
 
@@ -130,18 +139,17 @@ def render(tmpl, dict):
     return stream.render('xhtml', encoding='utf8')
 
 def message(s):
-    a = Auth()
-    acls = _server.memberOfACL(a.userid)
+    acls = _server.memberOfACL(g.auth.userid)
 
     return render('message', dict(
                            message=s,
-                           userid=a.userid,
+                           userid=g.auth.userid,
                            acls=acls,
-                           fullname=a.getName(),
+                           fullname=g.auth.getName(),
                       ))
 
 def isAuthenticated():
-    return Auth().isAuthenticated()
+    return g.auth.isAuthenticated()
 
 def _parseDept(void):
     """Figure out what the ID of the dept is from whatever is in void.
@@ -157,18 +165,23 @@ def getAuthZ(dept):
     """Return the bitfield that indicates what access permissions the user
        has that is currently poking the web interface.  0 Mean no rights."""
 
-    a = Auth()
     # Basic sanity
-    if not a.isAuthenticated():
+    if not g.auth.isAuthenticated():
         return 0
 
     # Check the default initial admin
-    if a.userid == configDragon.config.default_admin:
+    if g.auth.userid == configDragon.config.default_admin:
         return 7   # read, write, admin
 
     # What is our dept_id?
     d = self._parseDept(dept)
 
-    perm = self._server.getAccess(a.userid, d)
+    perm = self._server.getAccess(g.auth.userid, d)
     return perm
+
+@app.errorhandler(401)
+def error401(error):
+    print error
+    print request.cookies
+    return render("401", {})
 

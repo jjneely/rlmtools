@@ -44,9 +44,12 @@ requiredConfig = {
         'secret': ["Set an authentication secret for the XMLRPC API.", False],
         'defaultkey': ["Set default blowfish key for root password crypts.", False],
         'rrd_dir': ["Directory round robin databases will live.", False],
+
         'rhnurl': ["URL to the RHN XMLRPC API Interface.", False],
         'rhnuser': ["RHN administrative user to issue commands.", False],
         'rhnpasswd': ["Password for RHN admin user.", False],
+
+        'wrapkey': ["Path to WRAP public key in RAW form.", False],
         }
 
 def initLogging():
