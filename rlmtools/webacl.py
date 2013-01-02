@@ -54,7 +54,7 @@ app.before_first_request(_init_webperms)
 @app.route("/perms/acl/")  #XXX: Fix the extra / in the templates?
 def perms_acl_index():
     # Readable by any authenticated user
-    if not isREAD(getAuthZ("root")):
+    if not isREADby("root"):
         return message("You need root level read access to view "
                        "ACLs.")
 
@@ -80,7 +80,7 @@ def newACL():
     aclName = request.args["aclName"]
 
     # You need admin access to mess with ACLs
-    if not isADMIN(getAuthZ("root")):
+    if not isADMINby("root"):
         return message("You need root level admin access to modify "
                        "ACLs.")
 

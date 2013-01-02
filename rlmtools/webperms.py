@@ -88,6 +88,11 @@ def rhnGroups():
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
 
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
+
     subMenu = [
                 ('Manage ACLs',
                  '%s/perms/acl/' % url()),
@@ -129,6 +134,11 @@ def rhnDetail():
 
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
+
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
 
     subMenu = [
                 ('Manage RHN Groups',
@@ -198,6 +208,11 @@ def bcfg2(wmessage=""):
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
 
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
+
     bcfg2Map = _misc.getAllBcfg2Dir()
 
     subMenu = [
@@ -230,6 +245,11 @@ def webkickstart(wmessage=""):
     # Readable by any authenticated user
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
+
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
 
     webksMap = _misc.getAllWKSDir()
 
@@ -270,6 +290,11 @@ def changeWKSDept():
     # Readable by any authenticated user
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
+
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
 
     subMenu = [
                 ('Manage Web-Kickstart Directories',
@@ -320,6 +345,11 @@ def changeBcfg2Dept():
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
 
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
+
     subMenu = [
                 ('Manage Bcfg2 Repositories',
                  '%s/perms/bcfg2' % url()),
@@ -367,6 +397,11 @@ def modLDACLs():
 
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
+
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
 
     subMenu = [
                 ('Manage Web-Kickstart Directories',
@@ -438,6 +473,11 @@ def modAFS():
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
 
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
+
     subMenu = [
                 ('Manage Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
@@ -482,6 +522,11 @@ def modBcfg2AFS():
 
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
+
+    # XXX: Code not done, yet
+    if not isADMINby("root"):
+        return message("There is no light in this dragon cave and...oops..."
+                "you have just been eaten by a grue.")
 
     subMenu = [
                 ('Manage Bcfg2 Repositories',
