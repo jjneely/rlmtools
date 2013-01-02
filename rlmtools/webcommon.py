@@ -114,7 +114,7 @@ def isWRITEby(dept):
     return isWRITE(getAuthZ(dept))
 
 def isADMINby(dept):
-    return isADMIN(getAuthZ(dept_id))
+    return isADMIN(getAuthZ(dept))
 
 def mapPermBits(field):
     if isADMIN(field): return "admin"
