@@ -102,9 +102,9 @@ def rhnGroups():
     rhnMap = []
     for g in _misc.getRHNGroups():
         if g['dept_id'] is None:
-            if adminOf('root'):
+            if isADMINby('root'):
                rhnMap.append(g)
-        elif adminOf(g['dept_id']):
+        elif isADMINby(g['dept_id']):
             rhnMap.append(g)
 
     rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))

@@ -107,7 +107,14 @@ def isADMIN(field): return (field & ADMIN) == 1
 def isWRITE(field): return (field & WRITE) >> 1 == 1
 def isREAD(field): return (field & READ) >> 2 == 1
 
-def adminOf(dept_id): return isADMIN(getAuthZ(dept_id))
+def isREADby(dept):
+    return isREAD(getAuthZ(dept))
+
+def isWRITEby(dept):
+    return isWRITE(getAuthZ(dept))
+
+def isADMINby(dept):
+    return isADMIN(getAuthZ(dept_id))
 
 def mapPermBits(field):
     if isADMIN(field): return "admin"
