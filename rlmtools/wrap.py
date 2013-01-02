@@ -24,7 +24,7 @@ import base64
 import time
 import Crypto.PublicKey.RSA as RSA
 import Crypto.Util.number as number
-import Crypto.Util.asn1 as asn1 
+#import Crypto.Util.asn1 as asn1 
 
 # Encrypted with NCSU's WRAP key
 KNOWN_GOOD = 'S6zbm08iaJx97Q7POLKGMXvOPTTGQwu+O9wSJ/zVzMTfy8+9CcXBKc2Wsz7ag7Ru1VvQsz8HULep1xxQY7SkZid6eEH5Y1r5WkYWaQQGLgR9X1aPu3i/9BkAm7WeH8+c'
