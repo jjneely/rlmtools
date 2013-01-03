@@ -171,9 +171,7 @@ def message(s):
 
     return render('message', dict(
                            message=s,
-                           userid=g.auth.userid,
                            acls=acls,
-                           fullname=g.auth.getName(),
                       ))
 
 def _parseDept(void):

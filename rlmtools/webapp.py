@@ -25,7 +25,7 @@ import os.path
 import datetime
 import optparse
 
-from flask import g, request, send_from_directory
+from flask import g, request, send_from_directory, redirect
 from flaskext.genshi import Genshi, render_response
 
 import rrdconstants
@@ -541,6 +541,25 @@ def search():
                                  initial=(searchBox is None)
                  ))
 
+@app.route("/getWrapped")
+def getWrapped():
+    refer = request.referrer
+    if refer is None:
+        refer = url()
+
+    response = redirect("https://webauth.ncsu.edu/wrap-bin/was16.cgi")
+    
+    # This is the "correct" way to set a cookie, but the value ends up
+    # quoted in the outgoing headers and the WRAP server doesn't deal
+    # with those quotes. 
+    #
+    # response.set_cookie("WRAP_REFERER", value=refer, domain=".ncsu.edu")
+    #
+    # So we set this the old fashioned way instead
+    cookie = "WRAP_REFERER=%s; path=/; domain=%s" % (refer, ".ncsu.edu")
+    response.headers.add("Set-Cookie", cookie)
+
+    return response
 
 
 #def wsgi(req):

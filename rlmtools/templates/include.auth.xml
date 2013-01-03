@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+  <h2>Authorization Information</h2>
+
+  <p>Greetings, ${name}.  
+    <py:if test="userid is not None">
+      You are user ID: <tt>${userid}</tt>
+    </py:if>
+  </p>
+
+  <p>You are a member of the following ACLs:</p>
+  <ul py:if="len(acls) > 0">
+    <li py:for="acl in acls" py:content="acl"/>
+  </ul>
+  <p py:if="len(acls) == 0">
+    <i>You have no ACL memberships.</i>
+  </p>
+
+  <h2>Login, Logout, or Change Users</h2>
+
+  <button py:if="userid is not None" onClick="location.href='${baseURL}/getWrapped'">Change Login</button>
+  <button py:if="userid is None" onClick="location.href='${baseURL}/getWrapped'">Login</button>
+
+  <button onClick="location.href='https://webauth.ncsu.edu/wrap-bin/was16.cgi?logout'">Logout</button>
+
+</html>

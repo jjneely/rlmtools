@@ -23,17 +23,7 @@
     <a href="mailto:linux@help.ncsu.edu">linux@help.ncsu.edu</a>.
   </p>
 
-  <h2>Authorization Information</h2>
-
-  <p>Greetings, ${fullname}.  You are user "${userid}".</p>
-
-  <p>You are a member of the following ACLs:</p>
-  <ul py:if="len(acls) > 0">
-    <li py:for="acl in acls" py:content="acl"/>
-  </ul>
-  <p py:if="len(acls) == 0">
-    You have no ACL memberships.
-  </p>
+  <xi:include href="include.auth.xml" />
 
 </body>
 
