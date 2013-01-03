@@ -279,3 +279,20 @@ ul.submenu a:hover {
     text-decoration: underline;
 }
 
+button {
+    border-radius: 5px;
+    border: 1px solid #000000;
+    color: #FFFFFF;
+    background: #0000bb;
+    padding: 5px;
+}
+button:hover {
+    background: #000088;
+}
+button:active, button:focus {
+    background: #000055;
+}
+button:disabled {
+    background: #999999;
+}
+
