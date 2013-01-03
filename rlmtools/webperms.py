@@ -56,7 +56,7 @@ app.before_first_request(_init_perms)
 
 @app.route("/perms")
 def perms_index():
-    message = request.args.get("message", "")
+    wmessage = request.args.get("message", "")
 
     # Readable by any authenticated user
     if not isAuthenticated():
@@ -75,7 +75,7 @@ def perms_index():
     acls = _server.memberOfACL(g.auth.userid)
 
     return render('perms.index',
-                  dict(message=message,
+                  dict(message=wmessage,
                        subMenu=subMenu,
                        title="Permissions",
                        acls=acls,
@@ -83,7 +83,7 @@ def perms_index():
 
 @app.route("/perms/rhnGroups")
 def rhnGroups():
-    message = request.args.get("message", "")
+    wmessage = request.args.get("message", "")
 
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
@@ -115,7 +115,7 @@ def rhnGroups():
     rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
     return render('perms.rhngroups',
-                  dict(message=message,
+                  dict(message=wmessage,
                        title='RHN Group to Department Map',
                        rhnMap=[ completeRHNGroup(i) for i in rhnMap ],
                        subMenu=subMenu,
@@ -126,11 +126,11 @@ def rhnDetail():
     if request.method == 'POST':
         rg_id = request.form["rg_id"]
         setDept = request.form.get("setDept", None)
-        message = request.form.get("message", "")
+        wmessage = request.form.get("message", "")
     else:
         rg_id = request.args["rg_id"]
         setDept = None
-        message = request.args.get("message", "")
+        wmessage = request.args.get("message", "")
 
     if not isAuthenticated():
         return message("You do not appear to be authenticated.")
@@ -150,10 +150,10 @@ def rhnDetail():
         setDept = int(setDept)
         deptName = _misc.getDeptName(setDept)
         if deptName is None:
-            message = "Department ID %s does not exist." % setDept
+            wmessage = "Department ID %s does not exist." % setDept
         else:
             _misc.setRHNGroupDept(rg_id, setDept)
-            message = "Department association set to %s" % deptName
+            wmessage = "Department association set to %s" % deptName
 
     rhnMap = _misc.getRHNGroup(rg_id)
     if rhnMap is None:
@@ -189,7 +189,7 @@ def rhnDetail():
     rhnMap['synced'] = len(tasks) == 0 and 'good' or 'bad'
 
     return render('perms.rhndetail',
-                  dict(message=message,
+                  dict(message=wmessage,
                        rhnMap=rhnMap,
                        subMenu=subMenu,
                        title="RHN Group Detail",
