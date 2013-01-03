@@ -49,10 +49,7 @@ class Auth(object):
         return self.userid is not None
 
     def require(self):
-        print "Auth.require()..."
         if not self.isAuthenticated():
-            print "Calling redirect()..."
-            #redirect("https://sysnews.ncsu.edu/GetWrapped")
             abort(401)
 
     def getName(self):
@@ -158,6 +155,7 @@ def render(tmpl, dict):
     dict['userid'] = g.auth.userid
     dict['baseURL'] = url()
     dict['templateName'] = tmpl
+    dict['acls'] = _server.memberOfACL(g.auth.userid)
 
     if not tmpl.endswith(".xml"):
         tmpl = "%s.xml" % tmpl
@@ -167,12 +165,7 @@ def render(tmpl, dict):
     return stream.render('xhtml', encoding='utf8')
 
 def message(s):
-    acls = _server.memberOfACL(g.auth.userid)
-
-    return render('message', dict(
-                           message=s,
-                           acls=acls,
-                      ))
+    return render('message', dict(message=s))
 
 def _parseDept(void):
     """Figure out what the ID of the dept is from whatever is in void.
@@ -186,7 +179,5 @@ def _parseDept(void):
 
 @app.errorhandler(401)
 def error401(error):
-    print error
-    print request.cookies
-    return render("401", {})
+    return message("You do not appear to be authenticated. (Error code 401.)")
 
