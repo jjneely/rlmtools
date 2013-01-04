@@ -215,10 +215,19 @@ def error401(error):
 
 @app.errorhandler(403)
 def error403(error):
-    if hasattr("error", g):
+    if hasattr(g, "error"):
         msg = g.error
     else:
         msg = "You are not authorized to look at Liquid Dragon's treasure."
 
     return message("%s (Error code 403.)" % msg)
+
+@app.errorhandler(400)
+def error400(error):
+    if hasattr(g, "error"):
+        msg = g.error
+    else:
+        msg = "You are not authorized to look at Liquid Dragon's treasure."
+
+    return message("%s (Error code 400.)" % msg)
 

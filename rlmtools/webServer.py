@@ -189,7 +189,10 @@ class WebServer(server.Server):
                 order by status.received desc, status.timestamp desc"""
 
         self.cursor.execute(q1, (host_id,))
-        result1 = resultSet(self.cursor).dump()[0]  # This is one row
+        if self.cursor.rowcount < 1:
+            result1 = {}
+        else:
+            result1 = resultSet(self.cursor).dump()[0]  # This is one row
 
         self.cursor.execute(q2, (host_id,))
         if self.cursor.rowcount > 0:

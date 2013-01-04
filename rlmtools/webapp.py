@@ -261,6 +261,11 @@ def client():
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
     detail = _server.getClientDetail(int(host_id))
+    if "hostname" not in detail:
+        # Bad host ID
+        g.error = "host_id '%s' not found" % host_id
+        abort(400)
+
     detail['warnUpdate'] = False
     detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                detail['lastcheck'] > today - days7 and \
