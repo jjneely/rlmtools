@@ -211,7 +211,8 @@ def _parseDept(void):
 
 @app.errorhandler(401)
 def error401(error):
-    return message("You do not appear to be authenticated. (Error code 401.)")
+    return message("You are not authenticated. Please login from the " \
+                   "buttons below.  (Error code 401.)")
 
 @app.errorhandler(403)
 def error403(error):
