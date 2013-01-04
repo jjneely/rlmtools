@@ -30,10 +30,11 @@ div.message {
     margin-left: auto;
     margin-right: auto;
     width: 30em;
-    background-color: #DAA520;
+    background-color: #FFF050;
     padding: 0.5em;
-    border: 4px solid #B8860B;
+    border: 1px solid #000000;
     text-align: center;
+    border-radius: 8px;
 }
 div.alert {
    float: left;
