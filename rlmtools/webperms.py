@@ -59,8 +59,7 @@ def perms_index():
     wmessage = request.args.get("message", "")
 
     # Readable by any authenticated user
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
+    g.auth.require()
 
     subMenu = [
                 ('Manage ACLs',
@@ -89,7 +88,7 @@ def rhnGroups():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -136,7 +135,7 @@ def rhnDetail():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -209,7 +208,7 @@ def bcfg2(wmessage=""):
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -292,7 +291,7 @@ def changeWKSDept():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -346,7 +345,7 @@ def changeBcfg2Dept():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -399,7 +398,7 @@ def modLDACLs():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -474,7 +473,7 @@ def modAFS():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
@@ -524,7 +523,7 @@ def modBcfg2AFS():
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMINby("root"):
+    if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 

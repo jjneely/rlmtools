@@ -85,12 +85,26 @@ def graphs(filename):
     return send_from_directory(graphDir, filename,
                                cache_timeout=cache_timeout)
 
+# AuthN/AuthZ Notes:
+#   To force the user be to autheNticated just call
+#
+#     g.auth.require()
+#   
+#   That's the Auth class for the specific user/request.  To check
+#   that the user is authoriZed for a specific department level
+#   you can call any of:
+#
+#     isREADby(dept)
+#     isWRITEby(dept)
+#     isADMINby(dept)
+#
+#   These functions also call g.auth.require() and force the authentication
+#   step.  These functions do not return if the user is not authN'd/authZ'd.
+#   They call Flask's abort() method and return an HTTP error.
+
 @app.route("/")
 def index():
     g.auth.require()
-
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
 
     totals = _server.getTotalClients()
     active = _server.getActiveClients()
@@ -124,12 +138,10 @@ def index():
 
 @app.route("/versionIndex")
 def versionIndex():
+    isREADby("root")
     version = request.args["version"]
 
     # See also dept()
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                        "the version index.")
     services = ['updates', 'client'] # Services that affect client status
     clients = _server.getVersionPile(version)
     days7 = datetime.timedelta(7)
@@ -211,11 +223,8 @@ def _checkClient(client):
 
 @app.route("/dept")
 def dept():
+    isREADby("root")
     dept_id = request.args["dept_id"]
-
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the department index.")
 
     subMenu = [ ('Manage Department Attributes',
                  '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
@@ -246,11 +255,8 @@ def dept():
 
 @app.route("/client")
 def client():
+    isREADby("root")
     host_id = request.args["host_id"]
-
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the client index.")
 
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
@@ -313,11 +319,9 @@ def client():
 
 @app.route("/status")
 def status():
+    isREADby("root")
     status_id = request.args["status_id"]
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the a client status message.")
     status = _server.getStatusDetail(int(status_id))
     backlinks = [
             ('Deptartment Status: %s' % status['dept'],
@@ -338,9 +342,8 @@ def status():
     
 @app.route("/notregistered") 
 def notregistered():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the non-registered clients.")
+    isREADby("root")
+
     clients = _server.getNotRegistered()
     support = []
     nosupport = []
@@ -362,9 +365,8 @@ def notregistered():
 
 @app.route("/problems")
 def problems():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the problem children.")
+    isREADby("root")
+
     clients = _server.getProblemList()
     data = {}
 
@@ -381,9 +383,8 @@ def problems():
 
 @app.route("/noupdates")
 def noupdates():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the clients not updating.")
+    isREADby("root")
+
     clients = _server.getNoUpdates()
     data = {}
 
@@ -405,9 +406,8 @@ def noupdates():
 
 @app.route("/versionList")
 def versionList():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the version list.")
+    isREADby("root")
+
     versions = _server.getVersionList()
     graphs = []
     image = "versions-3d.png"
@@ -431,12 +431,10 @@ def versionList():
 
 @app.route("/showGraph")
 def showGraph():
+    isREADby("root")
     title = request.args["title"]
     domain = request.args["domain"]
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "graphs.")
     graphs = []
     for zone in rrdconstants.timeZones:
         d = {}
@@ -463,9 +461,8 @@ def showGraph():
 
 @app.route("/usage")
 def usage():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "the usage information.")
+    isREADby("root")
+
     depts = _server.getDeptNames()
     graphs = []
 
@@ -500,12 +497,11 @@ def usage():
 
 @app.route("/search", methods=['GET', 'POST'])
 def search():
+    isREADby("root")
+
     searchBox = request.form.get("searchBox", None)
     dest = request.form.get("dest", None)
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to search.")
-    
     if searchBox is None:
         # Just show an empty search and allow user to start typing
         clients = []

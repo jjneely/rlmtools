@@ -105,13 +105,45 @@ def isWRITE(field): return (field & WRITE) >> 1 == 1
 def isREAD(field): return (field & READ) >> 2 == 1
 
 def isREADby(dept):
-    return isREAD(getAuthZ(dept))
+    return _authZ_require(dept, "READ")
 
 def isWRITEby(dept):
-    return isWRITE(getAuthZ(dept))
+    return _authZ_require(dept, "WRITE")
 
 def isADMINby(dept):
-    return isADMIN(getAuthZ(dept))
+    return _authZ_require(dept, "ADMIN")
+
+def _authZ_require(dept, acl):
+    g.auth.require()
+    display = None
+
+    if isinstance(dept, int) or isinstance(dept, long):
+        display = _server.getDeptName(dept)
+    elif dept.isdigit():
+        display = _server.getDeptName(int(dept))
+    else:
+        display = dept
+
+    if acl == "ADMIN":
+        f = isADMIN
+    elif acl == "WRITE":
+        f = isWRITE
+    elif acl == "READ":
+        f = isREAD
+    else:
+        raise StandardError("Invalid ACL given in authorization require")
+
+    if not f(getAuthZ(dept)):
+        msg = "You do not seem to have %s access on the %s level of the "  \
+              "department hierarchy.  Those permissions are required for " \
+              "this page." % (acl, display)
+
+        # Stuff this in the Flask globals so we can reference the error
+        # message later
+        g.error = msg
+        abort(403)
+    else:
+        return True
 
 def mapPermBits(field):
     if isADMIN(field): return "admin"
@@ -175,9 +207,18 @@ def _parseDept(void):
     if void.isdigit():
         return int(void)
     # If we are here this must be a name, use the DB to convert
-    return self._server.getDeptIDNoCreate(void)
+    return _server.getDeptIDNoCreate(void)
 
 @app.errorhandler(401)
 def error401(error):
     return message("You do not appear to be authenticated. (Error code 401.)")
+
+@app.errorhandler(403)
+def error403(error):
+    if hasattr("error", g):
+        msg = g.error
+    else:
+        msg = "You are not authorized to look at Liquid Dragon's treasure."
+
+    return message("%s (Error code 403.)" % msg)
 

@@ -68,9 +68,7 @@ def host(host_id=None):
 
     dept_id = _admin.getHostDept(host_id)
     deptname = _admin.getDeptName(dept_id)
-    if not isADMIN(getAuthZ(dept_id)):
-        return message("You need %s level admin access to view "
-                       "host attributes." % deptname)
+    isADMINby(dept_id)
 
     ikeys = _admin.getImportantKeys()
     wmessage = ''
@@ -135,9 +133,7 @@ def admin_dept(dept_id=None):
         abort(400)
 
     deptname = _admin.getDeptName(int(dept_id))
-    if not isADMIN(getAuthZ(dept_id)):
-        return message("You need %s level admin access to view "
-                       "department attributes." % deptname)
+    isADMINby(dept_id)
 
     wmessage = ''
 
@@ -177,9 +173,7 @@ def deleteHostAttr(modifyKey=None, host_id=None):
     hostname = _admin.getHostName(int(host_id))
     aptr = _admin.getHostAttrPtr(int(host_id))
 
-    if not isWRITE(getAuthZ(dept_id)):
-        return message("You need %s level write access to remove "
-                       "attributes." % deptname)
+    isWRITEby(dept_id)
 
     if submit is not None:
         _rla.removeAttributeByKey(aptr, modifyKey)
@@ -225,9 +219,7 @@ def deleteDeptAttr(modifyKey=None, dept_id=None):
     deptname = _admin.getDeptName(int(dept_id))
     aptr = _admin.getDeptAttrPtr(int(dept_id))
 
-    if not isWRITE(getAuthZ(dept_id)):
-        return message("You need %s level write access to remove "
-                       "attributes." % deptname)
+    isWRITEby(dept_id)
 
     if submit is not None:
         _rla.removeAttributeByKey(aptr, modifyKey)
@@ -270,9 +262,7 @@ def modifyHost():
     deptname = _admin.getDeptName(dept_id)
 
     if setAttribute == "Submit":
-        if not isWRITE(getAuthZ(dept_id)):
-            return message("You need %s level write access to set "
-                           "attributes." % deptname)
+        isWRITEby(dept_id)
         aptr = _admin.getHostAttrPtr(host_id)
         _rla.setAttribute(aptr, modifyKey, textbox)
         # Set the value and redirect to the Host Admin Panel
@@ -283,6 +273,7 @@ def modifyHost():
     hostname = _admin.getHostName(host_id)
 
     if delete == "Delete":
+        isWRITEby(dept_id)
         if 'meta.inhairited' in meta:
             if modifyKey in meta['meta.inhairited']:
                 return message(
@@ -292,9 +283,7 @@ def modifyHost():
 
         return deleteHostAttr(modifyKey, host_id)
 
-    if not isADMIN(getAuthZ(dept_id)):
-        return message("You need %s level admin access to view "
-                       "host attributes." % deptname)
+    isADMINby(dept_id)   # XXX: WRITE to edit, but ADMIN to read???
 
     replaceValue = None
     if reset == "Reset":
@@ -339,17 +328,13 @@ def modifyDept():
     deptname = _admin.getDeptName(int(dept_id))
 
     if setAttribute == "Submit":
-        if not isWRITE(getAuthZ(dept_id)):
-            return message("You need %s level write access to set "
-                           "attributes." % deptname)
+        isWRITEby(dept_id)
         aptr = _admin.getDeptAttrPtr(dept_id)
         _rla.setAttribute(aptr, modifyKey, textbox)
         # Set the value and redirect to the Dept Admin Panel
         return admin_dept(dept_id)
 
-    if not isADMIN(getAuthZ(dept_id)):
-        return message("You need %s level admin access to view "
-                       "attributes." % deptname)
+    isADMINby(dept_id)  # XXX: WRITE to edit, ADMIN to read???
 
     meta, attributes = _rla.deptAttrs(dept_id)
     attributes.update(meta)

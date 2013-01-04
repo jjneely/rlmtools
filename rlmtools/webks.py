@@ -40,19 +40,13 @@ def _getWebKs():
 
 @app.route("/webKickstart")
 def wk_index():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to debug "
-                       "Web-Kickstarts.")
-    
+    isREADby("root")
     return render('wk.index', dict(title="Web-Kickstart Tools"))
 
 @app.route("/webKickstart/rawKickstart")
 def rawKickstart():
+    isREADby("root")
     host = request.args["host"]
-
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to debug "
-                       "Web-Kickstarts.")
 
     host = host.strip()
     w = _getWebKs()
@@ -64,12 +58,9 @@ def rawKickstart():
 
 @app.route("/webKickstart/debugtool", methods=["POST"])
 def debugtool():
+    isREADby("root")
     host = request.form["host"]
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to debug "
-                       "Web-Kickstarts.")
-    
     host = host.strip()
     if host == "":
         return self.render('wk.debugtool', dict(host="None",
@@ -84,12 +75,9 @@ def debugtool():
 
 @app.route("/webKickstart/collision", methods=["POST"])
 def collision():
+    isREADby("root")
     host = request.form["host"]
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to debug "
-                       "Web-Kickstarts.")
-    
     host = host.strip()
     if host == "":
         return render('wk.debugtool', dict(host="None",
@@ -101,9 +89,7 @@ def collision():
 
 @app.route("/webKickstart/checkconfigs", methods=["POST"])
 def checkconfigs():
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to debug "
-                       "Web-Kickstarts.")
+    isREADby("root")
     
     w = _getWebKs()
     tuple = w.checkConfigHostnames()

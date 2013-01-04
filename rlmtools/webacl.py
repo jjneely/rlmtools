@@ -54,9 +54,7 @@ app.before_first_request(_init_webperms)
 @app.route("/perms/acl/")  #XXX: Fix the extra / in the templates?
 def perms_acl_index():
     # Readable by any authenticated user
-    if not isREADby("root"):
-        return message("You need root level read access to view "
-                       "ACLs.")
+    isREADby("root")
 
     ptsgroups = _admin.getPTSGroups()
 
@@ -75,14 +73,12 @@ def perms_acl_index():
 
 @app.route("/perms/acl/newACL")
 def newACL():
+    # You need admin access to mess with ACLs
+    isADMINby("root")
+
     cell = request.args["cell"]
     ptsGroup = request.args["ptsGroup"]
     aclName = request.args["aclName"]
-
-    # You need admin access to mess with ACLs
-    if not isADMINby("root"):
-        return message("You need root level admin access to modify "
-                       "ACLs.")
 
     if "" in [cell.strip(), ptsGroup.strip(), aclName.strip()]:
         return message("All fields are required.  Not creating an ACL without complete data.")
@@ -91,12 +87,9 @@ def newACL():
 
 @app.route("/perms/acl/removeACL")
 def removeACL():
+    isADMINby("root")
     consent = request.args.get("consent", None)
     acl_id = request.args["acl_id"]
-
-    if not isADMIN(getAuthZ("root")):
-        return message("You need root level admin access to modify "
-                       "ACLs.")
 
     if consent == "yes":
         _admin.removeACL(acl_id)
@@ -114,11 +107,9 @@ def removeACL():
 
 @app.route("/perms/acl/permissions")
 def permissions():
-    acl_id = request.args["acl_id"]
+    isREADby("root")
 
-    if not isREAD(getAuthZ("root")):
-        return message("You need root level read access to view "
-                       "ACLs.")
+    acl_id = request.args["acl_id"]
 
     subMenu = [
                 ('Manage ACLs',
@@ -147,13 +138,15 @@ def permissions():
 
 @app.route("/perms/acl/addPerm")
 def addPerm():
+    isADMINby("root")
+
     dept_id = request.args["dept_id"]
     acl_id  = request.args["acl_id"]
     read    = request.args.get("read", None)
     write   = request.args.get("write", None)
     admin   = request.args.get("admin", None)
 
-    if not isADMIN(getAuthZ("root")):
+    if not isADMINby("root"):
         return message("You need root level admin access to modify "
                        "ACLs.")
 
@@ -180,12 +173,9 @@ def addPerm():
 
 @app.route("/perms/acl/removePerm")
 def removePerm():
+    isADMINby("root")
     acl_id = request.args["acl_id"]
     aclg_id = request.args["aclg_id"]
-
-    if not isADMIN(getAuthZ("root")):
-        return message("You need root level admin access to modify "
-                       "ACLs.")
 
     _admin.removePerm(int(aclg_id))
     return permissions() # again, requires acl_id
