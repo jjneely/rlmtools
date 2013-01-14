@@ -6,6 +6,8 @@ Server:
 3.0.x:
 
     * Solve the bazillian MySQL connections problem
+        * Solved by moving to Flask/nginx
+        * Solved by porting away from Bcfg2
     * Port away from mod_python (unmaintained)
         nginx ??
         uWSGI ??
