@@ -12,9 +12,18 @@
 <body>
 
   <p>
-    ACL groups are based off of AFS PTS groups.  The following table lists out
-    the ACLs known.  Click on the ACL Name to alter the permissions 
-    assigned to that ACL.
+    Access Control Lists (ACLs) for RLMTools (Liquid Dragon) are based off
+    of AFS PTS groups.  An ACL is created and associated with one PTS group
+    and the ACL can be used to grant permissions to any user in the source
+    PTS group.  An ACL can be associated with any number of departments
+    from the interface below.
+  </p>
+
+  <p>
+    Departments and their associated ACLs form a hierarchy.  ACLs associated
+    with one department will also affect sub-departments as well.  All
+    Realm Linux system administrators have read rights on the root department
+    which gives them certain rights to view all departments.
   </p>
 
   <h2>ACLs</h2>

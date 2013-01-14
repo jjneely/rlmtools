@@ -62,13 +62,15 @@ def perms_index():
     g.auth.require()
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
-                ('Manage Web-Kickstart Directories',
+                ('Realm Linux Departments',
+                 '%s/perms/departments' % url()),
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
-                ('Manage RHN Groups',
+                ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
     acls = _server.memberOfACL(g.auth.userid)
@@ -93,13 +95,13 @@ def rhnGroups():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
-                ('Manage RHN Groups',
+                ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
 
@@ -140,7 +142,7 @@ def rhnDetail():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage RHN Groups',
+                ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
               ]
 
@@ -215,13 +217,13 @@ def bcfg2(wmessage=""):
     bcfg2Map = _misc.getAllBcfg2Dir()
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
-                ('Manage RHN Groups',
+                ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
 
@@ -253,13 +255,13 @@ def webkickstart(wmessage=""):
     webksMap = _misc.getAllWKSDir()
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
-                ('Manage RHN Groups',
+                ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
 
@@ -296,7 +298,7 @@ def changeWKSDept():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
               ]
 
@@ -350,7 +352,7 @@ def changeBcfg2Dept():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
 
@@ -403,7 +405,7 @@ def modLDACLs():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
               ]
 
@@ -478,7 +480,7 @@ def modAFS():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
               ]
 
@@ -528,7 +530,7 @@ def modBcfg2AFS():
                 "you have just been eaten by a grue.")
 
     subMenu = [
-                ('Manage Bcfg2 Repositories',
+                ('Puppet Repositories',
                  '%s/perms/bcfg2' % url()),
               ]
 
@@ -558,7 +560,58 @@ def modBcfg2AFS():
                        bcfg2Map=bcfg2Map,
                   ))
 
-   
+@app.route("/perms/departments")
+def perms_departments():
+    def children_of(root_id, depts):
+        # Find my children!
+        r = []
+        for row in depts:
+            if row['parent'] == root_id:
+                r.append({"name":     row["name"],
+                          "dept_id":  row["dept_id"],
+                          "children": [],
+                         })
+        return r
+    def recurse(root_id, depts):
+        # Build the tree
+        children = children_of(root_id, depts)
+        if len(children) < 1: return []
+        for i in children:
+            i["children"] = recurse(i["dept_id"], depts)
+        return children
+
+    isREADby("root")
+
+    wmessage = ""
+    subMenu = [
+                ('Liquid Dragon ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Realm Linux Departments',
+                 '%s/perms/departments' % url()),
+                ('Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Puppet Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
+
+    root_id = _misc.getDeptIDNoCreate("root")
+    depts = _misc.getAllDepts()
+
+    tree = {"name":     "root",
+            "dept_id":  root_id,
+            "children": recurse(root_id, depts),
+           }
+
+
+    return render('perms.departments',
+                  dict(message=wmessage,
+                       title="Departments",
+                       subMenu=subMenu,
+                       dtree=tree,
+                 ))
+
 def diffAdmins(ldAdmins, rhnAdmins):
     """Return a dict of userid => code which is a list of tasks
        that should be done to make the list of rhnAdmins match

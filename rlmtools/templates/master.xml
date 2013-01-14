@@ -51,7 +51,7 @@
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>
         </li>
       </ul>
-      <li><a href="${baseURL}/perms">Permissions</a></li>
+      <li><a href="${baseURL}/perms">Access Permissions</a></li>
       <ul py:if="defined('subMenu') and (templateName[0:5] == 'perms' or templateName[0:3] == 'acl')" class="submenu">
         <li py:for="name, href in value_of('subMenu', [])">
           <a href="" py:attrs="{'href':href}" py:content="name">Sub Item</a>

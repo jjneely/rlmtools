@@ -111,12 +111,14 @@
   </form>
   -->
 
-  <h2>Manage ACLs</h2>
+  <h2>Liquid Dragon ACLs</h2>
 
   <p>
-    You may also manage access permissions for each department and their
-    children on the <a href="${baseURL}/perms/acl/">ACL Groups</a>
-    page.
+    You may manage the Access Control Lists for RLMTools (code name
+    Liquid Dragon) from the 
+    <a href="${baseURL}/perms/acl/">Liquid Dragon ACLs</a>
+    page.  This allows you to set which ACLs govern access to 
+    specific departments and their children.
   </p>
 
 </body>

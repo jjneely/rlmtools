@@ -131,7 +131,7 @@ class Server(object):
 
     def getAllDepts(self):
         "Return a dict of department name => department ID"
-        q = "select name, dept_id from dept order by name"
+        q = "select name, dept_id, parent from dept order by name"
         self.cursor.execute(q)
         result = resultSet(self.cursor).dump()
         return result
@@ -219,6 +219,18 @@ class Server(object):
             return self.getDeptParentID(id)
         else:
             return result
+
+#    def getDeptChildren(self, dept_id):
+#        """Return a sorted list of dicts keyed by 'name' and 'dept_id' 
+#           that represent the
+#           child departments of the given dept_id."""
+#
+#        q1 = "select name, dept_id from dept where parent = %s"
+#        self.cursor.execute(q1, (dept_id))
+#        if self.cursor.rowcount < 1:
+#            return None
+#        else:
+#            return resultSet(self.cursor).dump()
 
     def getHostDept(self, host_id):
         q = """select dept_id from realmlinux where host_id = %s"""

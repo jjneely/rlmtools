@@ -59,15 +59,15 @@ def perms_acl_index():
     ptsgroups = _admin.getPTSGroups()
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
-                ('Manage Web-Kickstart Directories',
+                ('Web-Kickstart Directories',
                  '%s/perms/webkickstart' % url()),
               ]
 
     return render('acl.index', 
                   dict(ptsgroups=ptsgroups,
-                       title="Manage ACLs",
+                       title="Liquid Dragon ACLs",
                        subMenu=subMenu,
                  ))
 
@@ -112,7 +112,7 @@ def permissions():
     acl_id = request.args["acl_id"]
 
     subMenu = [
-                ('Manage ACLs',
+                ('Liquid Dragon ACLs',
                  '%s/perms/acl' % url()),
               ]
 
