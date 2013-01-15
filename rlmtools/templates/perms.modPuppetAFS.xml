@@ -12,7 +12,7 @@
 <body>
 
   <p>
-    Setup the permssions on your AFS Bcfg2 repository so that they
+    Setup the permssions on your AFS Puppet repository so that they
     actually make since.
   </p>
 
@@ -24,8 +24,8 @@
 
   <h2>Syncronizing AFS PTS Groups To RLMTools</h2>
 
-  <form method="post" action="${baseURL}/perms/modBcfg2AFS" 
-    py:with="i=bcfg2Map">
+  <form method="post" action="${baseURL}/perms/modPuppetAFS" 
+    py:with="i=puppetMap">
     <table>
       <tr class="neutral">
         <th class="right">Department:</th>
@@ -69,7 +69,7 @@
       <tr class="neutral">
         <th class="right">Available Actions:</th>
         <td>
-          <input type="hidden" name="br_id" value="${i['br_id']}"/>
+          <input type="hidden" name="p_id" value="${i['p_id']}"/>
           <input type="hidden" name="setIt" value="True"/>
           <input type="submit" value="Submit"/>
         </td>

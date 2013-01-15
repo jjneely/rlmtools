@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS bcfg2repos;
-create table bcfg2repos (
-    br_id       INTEGER PRIMARY KEY auto_increment,
+DROP TABLE IF EXISTS puppetrepos;
+create table puppetrepos (
+    p_id        INTEGER PRIMARY KEY auto_increment,
     path        VARCHAR(1024) not null,
     dept_id     INTEGER,
 

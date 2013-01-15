@@ -12,8 +12,7 @@
 <body>
 
   <p>
-    This page allows you to change the department associated with a 
-    Bcfg2 repository.
+    This maps Puppet Repositories to departments and other stuff.
   </p>
 
   <div py:if="message != ''" class="message">
@@ -22,21 +21,19 @@
 
   <p>Greetings, ${name}.  You are user "${userid}".</p>
 
-  <h2>Bcfg2 Repository</h2>
+  <h2>Puppet Repository Listing</h2>
 
-  <form method="post" action="${baseURL}/perms/changeBcfg2Dept" 
-    py:with="i=bcfg2Map">
+  <p py:if="len(puppetMap) == 0">
+    You do not appear to have any Puppet Repositories associated
+    with your department.
+  </p>
+
+  <div py:for="i in puppetMap">
     <table>
-      <tr class="neutral">
+      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
         <th class="right">Department:</th>
-        <td>
-          <select name="setDept">
-            <option py:for="d in depts" value="${d['dept_id']}" 
-              py:attrs="d['dept_id'] == i['dept_id'] and {'selected':'selected'} or {}">
-              ${d['name']}
-            </option>
-          </select>
-        </td>
+        <td py:if="not i['bad_dept']">${i['dept']}</td>
+        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
       </tr>
       <tr class="neutral">
         <th class="right">AFS Path:</th>
@@ -66,14 +63,18 @@
       <tr clas="neutral">
         <th class="right">Available Actions:</th>
         <td>
-          <input type="hidden" name="br_id" value="${i['br_id']}"/>
-          <input type="submit" value="Submit"/>
+          <button type="button" 
+            onclick="location.href='${baseURL}/perms/modPuppetAFS?p_id=${i['p_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
+          <button type="button"
+            onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
+          <button type="button"
+            onclick="location.href='${baseURL}/perms/changePuppetDept?p_id=${i['p_id']}'">Change Department Association</button>
         </td>
       </tr>
     </table>
 
-    <p class="space"/>
-  </form>
+    <p class="space" />
+  </div>
 
 </body>
 

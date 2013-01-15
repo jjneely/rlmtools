@@ -20,8 +20,8 @@
 
   <p>
     This page allows you to set certain attributes for this host and only
-    this host.  These attributes replace RealmConfig and can be used to
-    configure this host via Bcfg2.  Attributes that are inherited are 
+    this host.  These attributes replace RealmConfig and can be used in
+    your Puppet or Bcfg2 specifications.  Attributes that are inherited are 
     marked.
   </p>
 
@@ -109,8 +109,8 @@ configuration file.
 
   <p>
     Adding additional attributes is possible.  These can be referenced in
-    your Bcfg2 configuration templates.  The "attribute key" is the key
-    that references this variable, such as "root" or "users" above.
+    your Puppet or Bcfg2 configuration templates.  The "attribute key" is 
+    the key that references this variable, such as "root" or "users" above.
   </p>
 
   <table>

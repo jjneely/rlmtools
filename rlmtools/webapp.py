@@ -214,7 +214,7 @@ def _checkClient(client):
             client['status'] = False
 
     # Optional services that can turn a client red
-    services = ['bcfg2']
+    services = ['bcfg2', 'puppet']
     for service in services:
         if client.has_key(service) and not client[service]:
             client['status'] = False

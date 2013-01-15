@@ -1,6 +1,6 @@
-# bcfg2Cron.py -- Cron job to handle bcfg2 directories in Liquid Dragon
+# puppetCron.py -- Cron job to handle puppet directories in Liquid Dragon
 #
-# Copyright 2011 NC State University
+# Copyright 2013 NC State University
 # Written by Jack Neely <jjneely@ncsu.edu>
 #
 # SDG
@@ -30,32 +30,32 @@ import rlmtools.configDragon as configDragon
 import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles
 
-Bcfg2Path = "/afs/bp/system/config/linux-kickstart/bcfg2"
+PuppetPath = "/afs/bp/system/config/linux-kickstart/puppet"
 
-def watchBcfg2(config):
-    """Make a map of current WebKickstart directories to departments."""
+def watchPuppet(config):
+    """Make a map of current Puppet directories to departments."""
 
     log = logging.getLogger('xmlrpc')
-    log.info("Running watchBcfg2 job...")
+    log.info("Running watchPuppet job...")
     m = permServer.PermServer()
     scrubbedPaths = []
-    if not os.path.exists(Bcfg2Path):
-        log.warning("Web-Kickstart directory %s not found. Aborting." \
-                % Bcfg2Path)
+    if not os.path.exists(PuppetPath):
+        log.warning("Puppet directory %s not found. Aborting." \
+                % PuppetPath)
         return
 
-    for subdir in os.listdir(Bcfg2Path):
-        abspath = os.path.join(Bcfg2Path, subdir)
-        log.debug("watchBcfg2: Working on: %s" % abspath)
+    for subdir in os.listdir(PuppetPath):
+        abspath = os.path.join(PuppetPath, subdir)
+        log.debug("watchPuppet: Working on: %s" % abspath)
         if not os.path.isdir(abspath):
             continue
 
         scrubbedPaths.append(abspath)
         # If this doesn't match a dept it will be None - what we want
         dept_id = m.getDeptIDNoCreate(subdir)
-        m.insertBcfg2Dir(abspath, dept_id)
+        m.insertPuppetDir(abspath, dept_id)
 
-    m.cleanBcfg2Dirs(scrubbedPaths)
+    m.cleanPuppetDirs(scrubbedPaths)
 
 def main():
     parser = optparse.OptionParser()
@@ -67,7 +67,7 @@ def main():
 
     # Start up configuration/logging/databases
     configDragon.initConfig(options.configfile)
-    watchBcfg2(configDragon.config)
+    watchPuppet(configDragon.config)
 
 if __name__ == "__main__":
     main()

@@ -46,21 +46,12 @@ logger = logging.getLogger('xmlrpc')
 # Data layer objects
 _server = None
 _misc = None
+subMenu = None
 
 def _init_perms():
-    global _misc, _server
+    global _misc, _server, subMenu
     _misc = PermServer()
     _server = WebServer()
-
-app.before_first_request(_init_perms)
-
-@app.route("/perms")
-def perms_index():
-    wmessage = request.args.get("message", "")
-
-    # Readable by any authenticated user
-    g.auth.require()
-
     subMenu = [
                 ('Liquid Dragon ACLs',
                  '%s/perms/acl/' % url()),
@@ -71,8 +62,18 @@ def perms_index():
                 ('RHN Groups',
                  '%s/perms/rhnGroups' % url()),
                 ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
+                 '%s/perms/puppet' % url()),
               ]
+
+app.before_first_request(_init_perms)
+
+@app.route("/perms")
+def perms_index():
+    wmessage = request.args.get("message", "")
+
+    # Readable by any authenticated user
+    g.auth.require()
+
     acls = _server.memberOfACL(g.auth.userid)
 
     return render('perms.index',
@@ -93,17 +94,6 @@ def rhnGroups():
     if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
 
     rhnMap = []
     for g in _misc.getRHNGroups():
@@ -140,11 +130,6 @@ def rhnDetail():
     if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
-
-    subMenu = [
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-              ]
 
     rg_id = int(rg_id)
     if setDept is not None:
@@ -201,8 +186,8 @@ def rhnDetail():
                        tasks=tasks,
                  ))
 
-@app.route("/perms/bcfg2")
-def bcfg2(wmessage=""):
+@app.route("/perms/puppet")
+def puppet(wmessage=""):
     wmessage = request.args.get("message", wmessage)
 
     # Readable by any authenticated user
@@ -214,29 +199,18 @@ def bcfg2(wmessage=""):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
-    bcfg2Map = _misc.getAllBcfg2Dir()
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
+    puppetMap = _misc.getAllPuppetDir()
 
     try:
-        bcfg2Map = [ completeWKSInfo(i) for i in bcfg2Map ]
+        puppetMap = [ completeWKSInfo(i) for i in puppetMap ]
     except Exception, e:
         return message("An error occured querying AFS: %s" % str(e))
 
-    return render('perms.bcfg2',
+    return render('perms.puppet',
                   dict(message=wmessage,
-                       title="Bcfg2 Repositories",
+                       title="Puppet Repositories",
                        subMenu=subMenu,
-                       bcfg2Map=bcfg2Map,
+                       puppetMap=puppetMap,
                  ))
 
 @app.route("/perms/webkickstart")
@@ -253,17 +227,6 @@ def webkickstart(wmessage=""):
                 "you have just been eaten by a grue.")
 
     webksMap = _misc.getAllWKSDir()
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
 
     try:
         webksMap = [ completeWKSInfo(i) for i in webksMap ]
@@ -297,11 +260,6 @@ def changeWKSDept():
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
-    subMenu = [
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-              ]
-
     wkd_id = int(wkd_id)
     webksMap = _misc.getWKSDir(wkd_id)
     depts = _misc.getAllDepts()
@@ -331,14 +289,14 @@ def changeWKSDept():
                        depts=depts,
                  ))
 
-@app.route("/perms/changeBcfg2Dept", methods=["GET", "POST"])
-def changeBcfg2Dept():
+@app.route("/perms/changePuppetDept", methods=["GET", "POST"])
+def changePuppetDept():
     if request.method == "POST":
-        br_id = request.form["br_id"]
+        p_id = request.form["p_id"]
         setDept = request.form["setDept"]
         wmessage = request.form.get("message", "")
     else:
-        br_id = request.args["br_id"]
+        p_id = request.args["p_id"]
         setDept = None
         wmessage = request.args.get("message", "")
 
@@ -351,37 +309,32 @@ def changeBcfg2Dept():
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
-    subMenu = [
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
-
-    br_id = int(br_id)
-    bcfg2Map = _misc.getBcfg2Dir(br_id)
+    p_id = int(p_id)
+    puppetMap = _misc.getPuppetDir(p_id)
     depts = _misc.getAllDepts()
-    if bcfg2Map is None:
-        wmessage = """A Bcfg2 repository matching ID %s does
+    if puppetMap is None:
+        wmessage = """A Puppet repository matching ID %s does
                       not exist.  Use the Back button and try your
-                      query again.""" % br_id
+                      query again.""" % p_id
         return message(wmessage)
     if setDept is not None:
         dept_id = int(setDept)
         dept = _misc.getDeptName(dept_id)
         if dept is None:
             wmessage = """Department ID %s was not found.  This 
-                          Bcfg2 repository was not modified.""" \
+                          Puppet repository was not modified.""" \
                                   % dept_id
         else:
-            _misc.setBcfg2Dept(br_id, dept_id)
+            _misc.setPuppetDept(p_id, dept_id)
             wmessage = """Set department association to %s for
-            Bcfg2 repository %s.""" % (dept, bcfg2Map['path'])
-            return bcfg2(wmessage)
+            Puppet repository %s.""" % (dept, puppetMap['path'])
+            return puppet(wmessage)
 
-    return render('perms.bcfg2dept',
+    return render('perms.puppetdept',
                   dict(message=wmessage,
                        title="Web-Kickstart",
                        subMenu=subMenu,
-                       bcfg2Map=completeWKSInfo(bcfg2Map),
+                       puppetMap=completeWKSInfo(puppetMap),
                        depts=depts,
                  ))
 
@@ -403,11 +356,6 @@ def modLDACLs():
     if not isADMIN(getAuthZ("root")):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
-
-    subMenu = [
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-              ]
 
     wkd_id = int(wkd_id)
     webksMap = _misc.getWKSDir(wkd_id)
@@ -479,11 +427,6 @@ def modAFS():
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
-    subMenu = [
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-              ]
-
     wkd_id = int(wkd_id)
     webksMap = _misc.getWKSDir(wkd_id)
     if webksMap is None:
@@ -510,14 +453,14 @@ def modAFS():
                        webksMap=webksMap,
                  ))
 
-@app.route("/perms/modBcfg2AFS", methods=["GET", "POST"])   
-def modBcfg2AFS():
+@app.route("/perms/modPuppetAFS", methods=["GET", "POST"])   
+def modPuppetAFS():
     if request.method == "POST":
-        br_id = request.form["br_id"]
+        p_id = request.form["p_id"]
         setIt = request.form["setIt"]
         wmessage = request.form.get("message", "")
     else:
-        br_id = request.args["br_id"]
+        p_id = request.args["p_id"]
         setIt = None
         wmessage = request.args.get("message", "")
 
@@ -529,35 +472,30 @@ def modBcfg2AFS():
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
-    subMenu = [
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
-
-    br_id = int(br_id)
-    bcfg2Map = _misc.getBcfg2Dir(br_id)
-    if bcfg2Map is None:
-        wmessage = """A Bcfg2 repository matching ID %s does
+    p_id = int(p_id)
+    puppetMap = _misc.getPuppetDir(p_id)
+    if puppetMap is None:
+        wmessage = """A Puppet repository matching ID %s does
                       not exist.  Use the Back button and try your
-                      query again.""" % br_id
+                      query again.""" % p_id
         return message(wmessage)
 
-    bcfg2Map = completeWKSInfo(bcfg2Map)  # Yes, right method
-    if bcfg2Map['bad_dept']:
-        wmessage = """The Bcfg2 repository %s is not associated
+    puppetMap = completeWKSInfo(puppetMap)  # Yes, right method
+    if puppetMap['bad_dept']:
+        wmessage = """The Puppet repository %s is not associated
                       with a department.  Setting a department must be
-                      completed before setting ACLs.""" % bcfg2Map['path']
-        return bcfg2(wmessage)
+                      completed before setting ACLs.""" % puppetMap['path']
+        return puppet(wmessage)
 
-    bcfg2Map['todo'] = diffPermissions(bcfg2Map['deptACLs'], 
-                                       bcfg2Map['pts'],
-                                       reverse=True)
+    puppetMap['todo'] = diffPermissions(puppetMap['deptACLs'], 
+                                        puppetMap['pts'],
+                                        reverse=True)
 
-    return render('perms.modBcfg2AFS',
+    return render('perms.modPuppetAFS',
                   dict(message=wmessage,
-                       title="Bcfg2 Repository AFS Sync",
+                       title="Puppet Repository AFS Sync",
                        subMenu=subMenu,
-                       bcfg2Map=bcfg2Map,
+                       puppetMap=puppetMap,
                   ))
 
 @app.route("/perms/departments")
@@ -583,18 +521,6 @@ def perms_departments():
     isREADby("root")
 
     wmessage = ""
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Realm Linux Departments',
-                 '%s/perms/departments' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
 
     root_id = _misc.getDeptIDNoCreate("root")
     depts = _misc.getAllDepts()
@@ -617,19 +543,6 @@ def perms_departments_detail(dept_name):
     dept_id = _misc.getDeptIDNoCreate(dept_name)
     if dept_id is None:
         abort(400)
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Realm Linux Departments',
-                 '%s/perms/departments' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-                ('RHN Groups',
-                 '%s/perms/rhnGroups' % url()),
-                ('Puppet Repositories',
-                 '%s/perms/bcfg2' % url()),
-              ]
 
     isREADby(dept_id)
 
