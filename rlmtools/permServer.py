@@ -138,6 +138,17 @@ class PermServer(server.Server):
         
         return ret.dump()[0]
 
+    def getWKSDept(self, dept_id):
+        """Return all WKDs associated with the given department."""
+        
+        q = """select * from webkickstartdirs where dept_id = %s"""
+        self.cursor.execute(q, (dept_id))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        else:
+            return ret.dump()
+
     def setWKSDept(self, wkd_id, dept_id):
         """Set the associated department on a Web-Kickstart directory entry"""
 
@@ -244,6 +255,16 @@ class PermServer(server.Server):
         q = "delete from aclgroups where aclg_id = %s"
         self.cursor.execute(q, (aclg_id,))
         self.conn.commit()
+
+    def getRHNGroupsDept(self, dept_id):
+        """Return all RHN groups associated with the given department."""
+        q = """ select * from rhngroups where dept_id = %s"""
+        self.cursor.execute(q, (dept_id,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        else:
+            return ret.dump()
 
     def setRHNGroupDept(self, rg_id, dept_id):
         "Set the department <=> RHN Group mapping."

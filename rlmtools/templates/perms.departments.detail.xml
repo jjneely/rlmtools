@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Here you may create new departments provided you have ADMIN rights
+    to the parent department.  You may also find each department in the
+    hierarchy and view what other resources are associated with it.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Department: ${dept_name}</h2>
+
+  <table>
+    <tr class="neutral">
+      <th class="right">Clients:</th>
+      <td><a href="${baseURL}/dept?dept_id=${dept_id}">${clients}</a></td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Liquid Dragon ALCs:</th>
+      <td>
+        <py:for each="i in dacls">
+          <a href="${baseURL}/perms/acl/permissions?acl_id=${i['acl_id']}">
+            ${i["name"]}
+          </a><br/>
+        </py:for>
+      </td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Web-Kickstart Directories:</th>
+      <td>
+        <py:for each="i in wkds">
+          ${i["path"]}
+          <br/>
+        </py:for>
+      </td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">RHN Groups:</th>
+      <td>
+        <py:if test="rhngs is None">
+          <i>No RHN groups associated.</i>
+        </py:if>
+        <py:if test="rhngs is not None">
+          <py:for each="i in rhngs">
+            <a href="${baseURL}/perms/rhnDetail?rg_id=${i['rg_id']}">
+              ${i["rhnname"]}
+            </a>
+            <br/>
+          </py:for>
+        </py:if>
+      </td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Puppet Repositories:</th>
+      <td></td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

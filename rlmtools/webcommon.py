@@ -228,7 +228,8 @@ def error400(error):
     if hasattr(g, "error"):
         msg = g.error
     else:
-        msg = "You are not authorized to look at Liquid Dragon's treasure."
+        msg = "You send Liquid Dragon a bad or malformed request. " \
+              "Liquid Dragon snorts a fireball in your direction."
 
     return message("%s (Error code 400.)" % msg)
 

@@ -612,6 +612,44 @@ def perms_departments():
                        dtree=tree,
                  ))
 
+@app.route("/perms/departments/<dept_name>")
+def perms_departments_detail(dept_name):
+    dept_id = _misc.getDeptIDNoCreate(dept_name)
+    if dept_id is None:
+        abort(400)
+
+    subMenu = [
+                ('Liquid Dragon ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Realm Linux Departments',
+                 '%s/perms/departments' % url()),
+                ('Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Puppet Repositories',
+                 '%s/perms/bcfg2' % url()),
+              ]
+
+    isREADby(dept_id)
+
+    clients = _server.getClientList(dept_id)
+    acls = _misc.getDeptACLs(dept_id)
+    wkds = _misc.getWKSDept(dept_id)
+    rhngs = _misc.getRHNGroupsDept(dept_id)
+
+    return render('perms.departments.detail',
+                  dict(subMenu=subMenu,
+                       title="Department Detail",
+                       message="",
+                       dept_name=dept_name,
+                       dept_id=dept_id,
+                       clients=len(clients),
+                       dacls=acls,
+                       wkds=wkds,
+                       rhngs=rhngs,
+                 ))
+
 def diffAdmins(ldAdmins, rhnAdmins):
     """Return a dict of userid => code which is a list of tasks
        that should be done to make the list of rhnAdmins match
