@@ -51,7 +51,7 @@
       <th class="right">RHN Groups:</th>
       <td>
         <py:if test="rhngs is None">
-          <i>No RHN groups associated.</i>
+          <i>No RHN groups are associated with this department.</i>
         </py:if>
         <py:if test="rhngs is not None">
           <py:for each="i in rhngs">
@@ -65,7 +65,20 @@
     </tr>
     <tr class="neutral">
       <th class="right">Puppet Repositories:</th>
-      <td></td>
+      <td>
+        <py:if test="puppets is None">
+          <i>No Puppet repositories are associated with this department.</i>
+        </py:if>
+        <py:if test="puppets is not None">
+          <py:for each="i in puppets">
+            <!--<a href="${baseURL}/">-->
+              ${i["path"]}
+              <!--</a>-->
+            <br/>
+          </py:for>
+        </py:if>
+
+      </td>
     </tr>
   </table>
 

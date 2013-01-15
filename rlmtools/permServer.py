@@ -316,6 +316,16 @@ class PermServer(server.Server):
         self.cursor.execute(q, (userid,))
         self.conn.commit()
 
+    def getPuppetDept(self, dept_id):
+        """Return all Puppet repos associated with the given department."""
+        q = """select * from puppetrepos where dept_id = %s"""
+        self.cursor.execute(q, (dept_id,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        else:
+            return ret.dump()
+
     def getPuppetDir(self, p_id):
         q = """select * from puppetrepos where p_id = %s"""
         self.cursor.execute(q, (p_id,))

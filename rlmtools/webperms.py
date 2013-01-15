@@ -550,6 +550,7 @@ def perms_departments_detail(dept_name):
     acls = _misc.getDeptACLs(dept_id)
     wkds = _misc.getWKSDept(dept_id)
     rhngs = _misc.getRHNGroupsDept(dept_id)
+    puppets = _misc.getPuppetDept(dept_id)
 
     return render('perms.departments.detail',
                   dict(subMenu=subMenu,
@@ -561,6 +562,7 @@ def perms_departments_detail(dept_name):
                        dacls=acls,
                        wkds=wkds,
                        rhngs=rhngs,
+                       puppets=puppets,
                  ))
 
 def diffAdmins(ldAdmins, rhnAdmins):
