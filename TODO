@@ -1,13 +1,18 @@
 Road Map
 ============
 
+Client:
+
+    * test and fix up "ncsurename"
+
 Server:
 
-3.0.x:
+Working toward 3.0.x
 
     * Solve the bazillian MySQL connections problem
         * Solved by moving to Flask/nginx
         * Solved by porting away from Bcfg2
+        -- done or in progress
     * Port away from mod_python (unmaintained)
         nginx ??
         uWSGI ??
@@ -15,43 +20,40 @@ Server:
     * Celery real time and scheduled tasks?
         http://www.celeryproject.org/
 
-2.1.x:
-
-    Complete: * Add Puppet Support
-
-2.2.x:
-
-    * Change out all Bcfg2 mess with Puppet management
     * Puppet updates for the status reports
         * link in inventory data, run reports, metadata
-    * Future: REST/API access to puppet metadata
     * Implement the RL "modules" 
         * pre install setup from web 
         * cloud setup/support via web-ks tokens
     * Implement a way to change/assign dept
-    * create new dept
+    * Implement department deletes
     * puppet should update lastheard
     * bugzilla bugs
     * manual delete system profile
 
-    * Ditch cherrypy and move to flask -- done, for the most part
-        * cleanups remain
+Future:
+
+    * Refactor Data layer code into modules rather than classes
+    * REST/API access to puppet metadata
+    * Convert ezpycrypto 512bit RSA keys to x509 certs from Puppet
+    * Refactor web pages to have cleaner URLs
 
  Missing UI bits from 2011 re-work:
 
-    * Setting AFS permisssions (Bcfg2/WKS)
+    * Setting AFS permisssions (Puppet/WKS)
     
 
 Original 2011 plan:
 
     * Re-work the UI so that all Admin Panels become "Manage Attributes"
       or similar.  Be able to drill down to all dept and client status
-      pages from the Front Page.
+      pages from the Front Page.  -- done
     * Each status page should clearly link to the Manage Attributes
-      page for that dept/client
-    * MA pages should not be under the Administration tab
-    * Administration tab shows overview of Realm Linux access perms
-    * Admin tabs allow you to link together, create, delete, alter
+      page for that dept/client  -- done
+    * MA pages should not be under the Administration tab -- done
+    * Access Permissions tab shows overview of Realm Linux access perms
+      -- done
+    * Access Permissions tabs allow you to link together, create, delete, alter
       Realm Linux access permissions
 
         * Web-Kickstart
