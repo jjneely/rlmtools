@@ -220,18 +220,6 @@ class Server(object):
         else:
             return result
 
-#    def getDeptChildren(self, dept_id):
-#        """Return a sorted list of dicts keyed by 'name' and 'dept_id' 
-#           that represent the
-#           child departments of the given dept_id."""
-#
-#        q1 = "select name, dept_id from dept where parent = %s"
-#        self.cursor.execute(q1, (dept_id))
-#        if self.cursor.rowcount < 1:
-#            return None
-#        else:
-#            return resultSet(self.cursor).dump()
-
     def getHostDept(self, host_id):
         q = """select dept_id from realmlinux where host_id = %s"""
         self.cursor.execute(q, (host_id,))
