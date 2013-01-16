@@ -41,13 +41,26 @@ from rlmtools import app
 # Data layer objects
 _admin = None
 _server = None
+subMenu = None
 
 logger = logging.getLogger('xmlrpc')
 
 def _init_webperms():
-    global _admin, _server
+    global _admin, _server, subMenu
     _admin = PermServer()
     _server = WebServer()
+    subMenu = [
+                ('Liquid Dragon ACLs',
+                 '%s/perms/acl/' % url()),
+                ('Realm Linux Departments',
+                 '%s/perms/departments' % url()),
+                ('Web-Kickstart Directories',
+                 '%s/perms/webkickstart' % url()),
+                ('RHN Groups',
+                 '%s/perms/rhnGroups' % url()),
+                ('Puppet Repositories',
+                 '%s/perms/puppet' % url()),
+              ]
 
 app.before_first_request(_init_webperms)
 
@@ -57,13 +70,6 @@ def perms_acl_index():
     isREADby("root")
 
     ptsgroups = _admin.getPTSGroups()
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl/' % url()),
-                ('Web-Kickstart Directories',
-                 '%s/perms/webkickstart' % url()),
-              ]
 
     return render('acl.index', 
                   dict(ptsgroups=ptsgroups,
@@ -110,11 +116,6 @@ def permissions():
     isREADby("root")
 
     acl_id = request.args["acl_id"]
-
-    subMenu = [
-                ('Liquid Dragon ACLs',
-                 '%s/perms/acl' % url()),
-              ]
 
     acl = _admin.getACL(int(acl_id))
     depts = _admin.getPermsForACL(int(acl_id))
