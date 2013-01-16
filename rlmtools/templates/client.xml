@@ -44,7 +44,8 @@
     <tr class="neutral">
       <th class="right">Department:</th>
       <td>
-        <form method="post" action="${baseURL}/changeDept">
+        <form method="post" action="${baseURL}/changeDept"
+          style="margin-bottom: 0">
           <select name="newdept">
             <option py:for="d in deptlist" value="${d}" py:attrs="d == client['dept'] and {'selected':'true'} or {}">
               ${d}
