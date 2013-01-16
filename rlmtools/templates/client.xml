@@ -54,7 +54,6 @@
           <input type="hidden" name="host_id" value="${client['host_id']}"/>
           <input type="submit" value="Change Department"/>
         </form>
-        <!--<td py:content="client['dept']">The Epoch</td> -->
       </td>
     </tr>
     <tr class="neutral">
