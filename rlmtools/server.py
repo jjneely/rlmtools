@@ -228,6 +228,12 @@ class Server(object):
         else:
             return self.cursor.fetchone()[0]
 
+    def setHostDept(self, host_id, dept_id):
+        """Change the host's department to the given department."""
+        q = """update realmlinux set dept_id = %s where host_id = %s"""
+        self.cursor.execute(q, (dept_id, host_id))
+        self.conn.commit()
+
     def getHostName(self, host_id):
         q = """select hostname from realmlinux where host_id = %s"""
         self.cursor.execute(q, (host_id,))

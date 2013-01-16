@@ -6,6 +6,7 @@ Client:
     * test and fix up "ncsurename"
     * Deal with checksum errors in messages -- especially 
       da39a3ee5e6b4b0d3255bfef95601890afd80709 which is the zero length SHA512
+    * Make sure dept changes propagate correctly
 
 Server:
 
@@ -27,7 +28,6 @@ Working toward 3.0.x
     * Implement the RL "modules" 
         * pre install setup from web 
         * cloud setup/support via web-ks tokens
-    * Implement a way to change/assign dept
     * Implement department deletes
     * puppet should update lastheard
     * bugzilla bugs

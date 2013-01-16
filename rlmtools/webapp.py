@@ -254,9 +254,9 @@ def dept():
                      title="Department Listing"))
 
 @app.route("/client")
-def client():
+def client(host_id=None, wmessage=""):
     isREADby("root")
-    host_id = request.args["host_id"]
+    host_id = request.args.get("host_id", host_id)
 
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
@@ -320,7 +320,38 @@ def client():
                   dict(client=detail, 
                        status=detail['status'],
                        subMenu=backlinks,
-                       title="Host Status"))
+                       title="Host Status",
+                       deptlist=_server.getDeptNames(),
+                       message=wmessage,
+                 ))
+
+@app.route("/changeDept", methods=['POST'])
+def changeDept():
+    newdept = request.form["newdept"]
+    try:
+        host_id = int(request.form["host_id"])
+    except:
+        abort(400)
+    olddept_id = _server.getHostDept(host_id)
+    newdept_id = _server.getDeptIDNoCreate(newdept)
+    if newdept_id is None:
+        g.error = "Invalid department name '%'" % newdept
+        abort(400)
+    if olddept_id is None:
+        g.error = "Invalid department ID '%s'" % olddept_id
+        abort(400)
+
+    isADMINby(olddept_id)
+    isADMINby(newdept_id)
+
+    if newdept_id == olddept_id:
+        m = "New department is the same as the old department. " \
+            "No change made."
+        return client(host_id, m)
+
+    _server.setHostDept(host_id, newdept_id)
+    m = "Department membership changed."
+    return client(host_id, m)
 
 @app.route("/status")
 def status():

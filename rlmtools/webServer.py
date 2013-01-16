@@ -174,7 +174,7 @@ class WebServer(server.Server):
         #    dept, version, lastcheck, status, uuid
         # status is a list of dicts: service, timestamp, success, data
         q1 = """select r.hostname, r.installdate, r.recvdkey, r.support,
-                       d.name as dept, r.dept_id, r.version, r.uuid
+                       d.name as dept, r.dept_id, r.version, r.uuid, r.host_id
                 from realmlinux as r, dept as d
                 where d.dept_id = r.dept_id and r.host_id = %s"""
         q2 = """select `timestamp` as lastcheck from lastheard where

@@ -11,11 +11,19 @@
 </head>
 <body>
 
-  <p>All Realm Linux clients phone home to report status information in
+  <p>
+    All Realm Linux clients phone home to report status information in
     several ways.  This table lists out the status information we know
     about from the last 30 days.  If this client is red or listed as
     not supported the error messages may contain clues as to why this
-    client may be malfunctioning.</p>
+    client may be malfunctioning. You may also request this client be
+    removed from the RLMTools database, and change this client's 
+    department.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
 
   <h1>Client Status: <span py:replace="client['hostname']" /></h1>
 
@@ -35,7 +43,18 @@
     </tr>
     <tr class="neutral">
       <th class="right">Department:</th>
-      <td py:content="client['dept']">The Epoch</td>
+      <td>
+        <form method="post" action="${baseURL}/changeDept">
+          <select name="newdept">
+            <option py:for="d in deptlist" value="${d}" py:attrs="d == client['dept'] and {'selected':'true'} or {}">
+              ${d}
+            </option>
+          </select>
+          <input type="hidden" name="host_id" value="${client['host_id']}"/>
+          <input type="submit" value="Change Department"/>
+        </form>
+        <!--<td py:content="client['dept']">The Epoch</td> -->
+      </td>
     </tr>
     <tr class="neutral">
       <th class="right">UUID:</th>
