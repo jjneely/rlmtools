@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    You are about to delete a host from the RLMTools (Liquid Dragon)
+    database.  This host will lose the ability to communicate with
+    the Puppet and Bcfg2 configuration management infrastructures.  If
+    this host exists it will check back in with RLMTools as an
+    unsupported host.  Make sure the machine or VM that matches this
+    profile is destroyed first.  Click the "Confirm Delete" button
+    to confirm deletion of this host profile.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <p></p>
+
+  <table>
+    <tr class="neutral">
+      <th class="right">Hostname:</th>
+      <td py:content="client['hostname']">foo.ncsu.edu</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Realm Linux Version:</th>
+      <td py:content="client['version']">foo</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Department:</th>
+      <td>${client['dept']}</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">UUID:</th>
+      <td py:if="client['uuid'] == None">N/A</td>
+      <td py:if="client['uuid'] != None">${client['uuid']}</td>
+    </tr>
+    <tr py:attrs="{'class':client['support'] and 'good' or 'bad'}">
+      <th class="right">Support:</th>
+      <td py:content="client['support'] and 'Yes' or 'No'">foobared</td>
+    </tr>
+    <tr py:attrs="{'class':client['recvdkey'] and 'good' or 'bad'}">
+      <th class="right">Received RSA Key:</th>
+      <td py:content="client['recvdkey'] and 'Yes' or 'No'">foobared</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Install Date:</th>
+      <td py:content="client['installdate']">The Epoch</td>
+    </tr>
+    <tr py:attrs="{'class':client['lastcheck_good'] and 'good' or 'bad'}">
+      <th class="right">Last Heard From:</th>
+      <td py:content="client['lastcheck']">The Epoch</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">Actions:</th>
+      <td>
+        <form method="post" action="${baseURL}/deleteClient" style="margin-bottom: 0">
+          <input type="hidden" name="host_id" value="${client['host_id']}"/>
+          <input type="hidden" name="confirmed" value="True"/>
+          <input type="submit" value="Confirm Delete"/>
+        </form>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

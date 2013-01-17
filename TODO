@@ -31,7 +31,9 @@ Working toward 3.0.x
     * Implement department deletes
     * puppet should update lastheard
     * bugzilla bugs
-    * manual delete system profile
+
+    * deleteClient() needs to trigger a revocation/delete of the
+      puppet certificate, and RHN profile probably.
 
 Future:
 

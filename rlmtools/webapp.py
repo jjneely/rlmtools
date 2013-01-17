@@ -40,6 +40,7 @@ import webperms
 import webacl
 
 import webServer
+import miscServer
 
 # Flash Application object
 from rlmtools import app
@@ -352,6 +353,38 @@ def changeDept():
     _server.setHostDept(host_id, newdept_id)
     m = "Department membership changed."
     return client(host_id, m)
+
+@app.route("/deleteClient", methods=['POST'])
+def deleteClient():
+    days7 = datetime.timedelta(7)
+    today = datetime.datetime.today()
+    try:
+        host_id = int(request.form["host_id"])
+        confirmed = request.form.get("confirmed", "False") == "True"
+    except:
+        abort(400)
+
+    dept_id = _server.getHostDept(host_id)
+    if dept_id is None:
+        abort(400)
+
+    isADMINby(dept_id)
+
+    if confirmed:
+        _misc = miscServer.MiscServer()
+        _misc.deleteClient(host_id)
+        return redirect("%s/dept?dept_id=%s" % (url(), dept_id))
+    else:
+        detail = _server.getClientDetail(host_id)
+        detail['lastcheck_good'] = detail['lastcheck'] != None and \
+                                   detail['lastcheck'] > today - days7 and \
+                                   detail['lastcheck'] > detail['installdate']
+        m = "Are you sure you want to permanently remove this host profile?"
+        return render('deleteclient', dict(
+                      client=detail,
+                      message=m,
+                      title="Delete Host Profile",
+                     ))
 
 @app.route("/status")
 def status():

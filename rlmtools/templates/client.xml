@@ -78,6 +78,15 @@
       <th class="right">Last Heard From:</th>
       <td py:content="client['lastcheck']">The Epoch</td>
     </tr>
+    <tr class="neutral">
+      <th class="right">Actions:</th>
+      <td>
+        <form method="post" action="${baseURL}/deleteClient" style="margin-bottom: 0">
+          <input type="hidden" name="host_id" value="${client['host_id']}"/>
+          <input type="submit" value="Delete Host"/>
+        </form>
+      </td>
+    </tr>
   </table>
 
   <p></p>
