@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Here you may create new departments provided you have ADMIN rights
+    to the parent department.  You may also find each department in the
+    hierarchy and view what other resources are associated with it.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Create Department</h2>
+
+  <p>
+    To create a new department from Liquid Dragon you must have ADMIN
+    rights to the parent department.  For example, if you with to create
+    <tt>oit-foobar</tt> then you must have ADMIN access to <tt>oit</tt>.
+    Simlarly, if you wish to create the <tt>cos</tt> department it is a
+    child of the <tt>root</tt> department and you must have the correct
+    access permissions to that department.
+  </p>
+
+  <p>
+    Please type in the full and complete department name.
+  </p>
+
+  <form method="post" action="${baseURL}/perms/departments">
+    <input type="text" name="textbox" value="" size="20" />
+    <input type="submit" value="Submit" /><br/>
+  </form>
+
+  <h2>Department Hierarchy</h2>
+
+  <p>
+    The below tree shows all departments and their parent and child 
+    relationships.
+  </p>
+
+  <?python
+    level = 0
+  ?>
+
+  <table width="80%">
+    <tr class="neutral">
+      <th class="bottom" width="80%">Department</th>
+      <th class="bottom">Detail</th>
+    </tr>
+    <py:def function="showtree(depts)" class="neutral">
+      <py:for each="i in depts">
+        <tr class="neutral">
+          <td>
+            ${"&nbsp;" * 5 * level}<a href="${baseURL}/perms/departments/${i['name']}">${i["name"]}</a>
+          </td>
+          <td>
+            <button onClick="location.href='${baseURL}/perms/departments/${i['name']}?delete=True'">Delete</button>
+          </td>
+        </tr>
+        <py:if test="len(i['children']) > 0">
+          <?python level = level + 1 ?>
+          ${showtree(i['children'])}
+          <?python level = level - 1 ?>
+        </py:if>
+      </py:for>
+    </py:def>
+    ${showtree([dtree])}
+  </table>
+
+</body>
+
+</html>
+
