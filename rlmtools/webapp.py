@@ -254,10 +254,15 @@ def dept():
                      dept_id=dept_id,
                      title="Department Listing"))
 
+@app.route("/client/<hostname>")
 @app.route("/client")
-def client(host_id=None, wmessage=""):
+def client(hostname=None, host_id=None, wmessage=""):
     isREADby("root")
-    host_id = request.args.get("host_id", host_id)
+    if hostname is not None:
+        host_id = _server.getHostID(hostname)
+    else:
+        host_id = request.args.get("host_id", host_id)
+    if host_id is None: abort(400)
 
     days7 = datetime.timedelta(7)
     today = datetime.datetime.today()
@@ -348,11 +353,11 @@ def changeDept():
     if newdept_id == olddept_id:
         m = "New department is the same as the old department. " \
             "No change made."
-        return client(host_id, m)
+        return client(host_id=host_id, wmessage=m)
 
     _server.setHostDept(host_id, newdept_id)
     m = "Department membership changed."
-    return client(host_id, m)
+    return client(host_id=host_id, wmessage=m)
 
 @app.route("/deleteClient", methods=['POST'])
 def deleteClient():
