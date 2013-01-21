@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This page lists the inventory information as reported by the 
+    Puppet configuration management tool.  It has sensitive information
+    in it and therefore requires ADMIN privileges to view.  This 
+    information is not available for clients not yet moved to Puppet.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h1>Host Inventory: <span py:replace="hostname"/></h1>
+
+  <i py:if="data is None">Inventory data not found.</i>
+
+  <table py:if="data is not None">
+    <tr class="neutral">
+      <td>
+        <pre py:content="data">Liquid Dragon Roars in Anger!</pre>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

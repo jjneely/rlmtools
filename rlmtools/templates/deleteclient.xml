@@ -53,6 +53,10 @@
       <th class="right">Received RSA Key:</th>
       <td py:content="client['recvdkey'] and 'Yes' or 'No'">foobared</td>
     </tr>
+    <tr py:attrs="{'class':client['puppet'] and 'good' or 'bad'}">
+      <th class="right">Converted to Puppet:</th>
+      <td py:content="client['puppet'] and 'Yes' or 'No'">God only knows</td>
+    </tr>
     <tr class="neutral">
       <th class="right">Install Date:</th>
       <td py:content="client['installdate']">The Epoch</td>

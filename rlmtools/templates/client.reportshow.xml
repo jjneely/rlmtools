@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This page display a Puppet Run Report.  This describes what
+    the referenced Puppet Agent run performed on the client and any
+    errors that may have resulted.  This information is not available
+    if your client has not been ported to Puppet.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h1>Puppet Run Report for ${hostname} at ${timestamp}</h1>
+
+  <i py:if="data is None">Report data not found.</i>
+
+  <table py:if="data is not None">
+    <tr class="neutral">
+      <td>
+        <pre py:content="data">Liquid Dragon Roars in Anger!</pre>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

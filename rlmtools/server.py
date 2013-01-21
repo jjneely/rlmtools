@@ -262,6 +262,16 @@ class Server(object):
 
         return self.cursor.fetchone()[0]
 
+    def getUUID(self, host_id):
+        """Return the UUID of host specified by host_id"""
+        q = """select uuid from realmlinux where host_id = %s"""
+        self.cursor.execute(q, (host_id,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() < 1:
+            return None
+        else:
+            return ret['uuid']
+
     def getAllUUIDs(self):
         q = "select uuid from realmlinux where uuid is not NULL"
         self.cursor.execute(q)

@@ -1,12 +1,99 @@
+import re
+import os
 import os.path
 import logging
 import json
+import lzma
 
 from socket import gethostname
+from datetime import datetime
+from dateutil import tz
 
 import restclient
 
 log = logging.getLogger("xmlrpc")
+
+facts_path = "/afs/bp/adm/puppet/var/yaml/facts/"
+reports_path = "/afs/bp/adm/puppet/var/reports"
+
+def findPuppetInventory(uuid):
+    """Returns None or a YAML string of the latest Puppet facts for this
+       host matching the given UUID."""
+    p = facts_path
+    facts = None
+    uuid = uuid.lower()
+    for i in os.listdir(p):
+        if uuid in i.lower():
+            # UUID is a substring of the file name
+            facts = os.path.join(p, i)
+            break
+
+    if facts is None:
+        return None
+
+    fd = open(facts)
+    blob = fd.read()
+    fd.close()
+    if facts.endswith(".xz"):
+        return lzma.decompress(blob)
+    else:
+        return blob
+
+def findPuppetReports(uuid):
+    """Return None or a list of files, each being time stamped and each
+       being a LZMA compressed or plain text YAML file of a Puppet run
+       report."""
+    uuid = uuid.lower()
+    d = None
+    for i in os.listdir(reports_path):
+        if uuid in i.lower():
+            # UUID is a substring of this directory name
+            d = os.path.join(reports_path, i)
+            break
+
+    if d is None:
+        return None
+    ret = os.listdir(d)
+    return [ os.path.join(d, i) for i in ret ]
+
+def readPuppetReport(filename):
+    """Return a string from the YAML report file given."""
+    if not os.path.exists(filename):
+        return None
+
+    fd = open(filename)
+    blob = fd.read()
+    fd.close()
+
+    if filename.endswith(".xz"):
+        return lzma.decompress(blob)
+
+    return blob
+
+def getTimestamp(filename):
+    """Return a datetime object representing the given report's
+       timestamp.  Its regex'd out of the file name and will return
+       None if it fails."""
+
+    r = ".*([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})\.yaml(?:\.zx)?"
+    m = re.match(r, filename)
+    if m is not None:
+        d = datetime(
+                     year=int(m.group(1)),
+                     month=int(m.group(2)),
+                     day=int(m.group(3)),
+                     hour=int(m.group(4)),
+                     minute=int(m.group(5)),
+                     tzinfo=tz.tzutc(),
+                    )
+        return d
+    return None
+
+def localPuppetDate(d):
+    """Return a timestamp string in local time from the Puppet report
+       timestamp d."""
+
+    return d.astimezone(tz.tzlocal()).isoformat(" ")
 
 class Puppet(object):
 

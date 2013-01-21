@@ -70,6 +70,10 @@
       <th class="right">Received RSA Key:</th>
       <td py:content="client['recvdkey'] and 'Yes' or 'No'">foobared</td>
     </tr>
+    <tr py:attrs="{'class':client['puppet'] and 'good' or 'bad'}">
+      <th class="right">Converted to Puppet:</th>
+      <td py:content="client['puppet'] and 'Yes' or 'No'">God only knows</td>
+    </tr>
     <tr class="neutral">
       <th class="right">Install Date:</th>
       <td py:content="client['installdate']">The Epoch</td>
@@ -81,6 +85,11 @@
     <tr class="neutral">
       <th class="right">Actions:</th>
       <td>
+        <py:if test="client['puppet']">
+          <button onClick="location.href='${baseURL}/client/inventory/${client['hostname']}'">Puppet Inventory</button>
+          <br/>
+          <button onClick="location.href='${baseURL}/client/reports/${client['hostname']}'">Puppet Run Reports</button>
+        </py:if>
         <form method="post" action="${baseURL}/deleteClient" style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${client['host_id']}"/>
           <input type="submit" value="Delete Host"/>

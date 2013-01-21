@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    Shown below is a list of Puppet Run Reports.  These reports are
+    returned to the Puppet Masters after a Puppet Agent (your client) 
+    completes its run.  It contains information about what changed
+    on the system and any failures.  This client must be running
+    Puppet for any reports to be present.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h1>Puppet Reports: <span py:replace="hostname"/></h1>
+
+  <i py:if="data is None">No Puppet reports found.</i>
+
+  <table py:if="data is not None">
+    <tr class="neutral">
+      <th class="bottom">Puppet Report</th>
+      <th class="bottom">Timestamp</th>
+    </tr>
+    <tr class="neutral" py:for="i in data">
+      <td>
+        <a href="${baseURL}/client/reports/${hostname}/${i['id']}">
+          ${i['id']}
+        </a>
+      </td>
+      <td>
+        ${i['time']}
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

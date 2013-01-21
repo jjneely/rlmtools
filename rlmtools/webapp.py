@@ -38,7 +38,7 @@ import webks
 import webadmin
 import webperms
 import webacl
-
+import puppet
 import webServer
 import miscServer
 
@@ -272,6 +272,7 @@ def client(hostname=None, host_id=None, wmessage=""):
         g.error = "host_id '%s' not found" % host_id
         abort(400)
 
+    detail['puppet'] = True
     detail['warnUpdate'] = False
     detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                detail['lastcheck'] > today - days7 and \
@@ -390,6 +391,122 @@ def deleteClient():
                       message=m,
                       title="Delete Host Profile",
                      ))
+
+@app.route("/client/inventory/<hostname>")
+def client_inventory(hostname):
+    host_id = _server.getHostID(hostname)
+    if host_id is None: abort(400)
+
+    dept_id = _server.getHostDept(host_id)
+    isADMINby(dept_id)
+
+    uuid = _server.getUUID(host_id)
+    if uuid is None:
+        # This host should exist if we are here, help?
+        log.warning("Host ID %s does not have a UUID??" % host_id)
+        g.error = "Host ID %s does not have a UUID, DB inconsistancy." \
+                % host_id
+        abort(500)
+    inv = puppet.findPuppetInventory(uuid)
+
+    subMenu = [ ("Host Status: %s" % short(hostname),
+                 "%s/client/%s" % (url(), hostname) ),
+              ]
+
+    return render('client.inv', dict(
+                                   title="Inventory",
+                                   message="",
+                                   hostname=hostname,
+                                   data=inv,
+                                   subMenu=subMenu,
+                 ))
+
+@app.route("/client/reports/<hostname>")
+def client_reports(hostname):
+    host_id = _server.getHostID(hostname)
+    if host_id is None: abort(400)
+
+    dept_id = _server.getHostDept(host_id)
+    isADMINby(dept_id)
+
+    uuid = _server.getUUID(host_id)
+    if uuid is None:
+        # This host should exist if we are here, help?
+        log.warning("Host ID %s does not have a UUID??" % host_id)
+        g.error = "Host ID %s does not have a UUID, DB inconsistancy." \
+                % host_id
+        abort(500)
+    reports = puppet.findPuppetReports(uuid)
+    if reports is None:
+        display = None
+    else:
+        display = []
+        for i in reports:
+            ts = puppet.getTimestamp(i)
+            if ts is not None:
+                id = ts.strftime("%Y%m%d%H%M")
+                local = puppet.localPuppetDate(ts)
+                display.append({"id": id, "time": local})
+        # Reverse order sort
+        display.sort(cmp=lambda x,y: cmp(y['id'], x['id']))
+    
+    subMenu = [ ("Host Status: %s" % short(hostname),
+                 "%s/client/%s" % (url(), hostname) ),
+              ]
+
+    return render('client.reports', dict(
+                                         title="Puppet Run Reports",
+                                         message="",
+                                         hostname=hostname,
+                                         data=display,
+                                         subMenu=subMenu,
+                 ))
+
+@app.route("/client/reports/<hostname>/<preport>")
+def client_report_show(hostname, preport):
+    host_id = _server.getHostID(hostname)
+    if host_id is None: abort(400)
+
+    dept_id = _server.getHostDept(host_id)
+    isADMINby(dept_id)
+
+    uuid = _server.getUUID(host_id)
+    if uuid is None:
+        # This host should exist if we are here, help?
+        log.warning("Host ID %s does not have a UUID??" % host_id)
+        g.error = "Host ID %s does not have a UUID, DB inconsistancy." \
+                % host_id
+        abort(500)
+    reports = puppet.findPuppetReports(uuid)
+    filename = ""
+    
+    for i in reports:
+        if preport in i:
+            filename = i
+    
+    if filename == "":
+        data = None
+        timestamp = "unknown"
+    else:
+        data = puppet.readPuppetReport(filename)
+        ts = puppet.getTimestamp(filename)
+        timestamp = puppet.localPuppetDate(ts)
+
+
+    subMenu = [ ("Host Status: %s" % short(hostname),
+                 "%s/client/%s" % (url(), hostname) ),
+                ("Puppet Reports",
+                 "%s/client/reports/%s" % (url(), hostname) ),
+              ]
+
+    return render('client.reportshow', dict(
+                                         title="Puppet Run Report",
+                                         message="",
+                                         hostname=hostname,
+                                         data=data,
+                                         timestamp=timestamp,
+                                         subMenu=subMenu,
+                 ))
 
 @app.route("/status")
 def status():
