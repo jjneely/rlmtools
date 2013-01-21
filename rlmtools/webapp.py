@@ -272,7 +272,7 @@ def client(hostname=None, host_id=None, wmessage=""):
         g.error = "host_id '%s' not found" % host_id
         abort(400)
 
-    detail['puppet'] = True
+    detail['puppet'] = puppet.findPuppetInventory(detail['uuid']) is not None
     detail['warnUpdate'] = False
     detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                detail['lastcheck'] > today - days7 and \
@@ -382,6 +382,8 @@ def deleteClient():
         return redirect("%s/dept?dept_id=%s" % (url(), dept_id))
     else:
         detail = _server.getClientDetail(host_id)
+        detail['puppet'] = puppet.findPuppetInventory(detail['uuid']) \
+                is not None
         detail['lastcheck_good'] = detail['lastcheck'] != None and \
                                    detail['lastcheck'] > today - days7 and \
                                    detail['lastcheck'] > detail['installdate']
