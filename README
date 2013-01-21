@@ -19,6 +19,8 @@ Web-Kickstart, an NCSU tool to generate dynamic Red Hat Kickstarts.
 Also: python-cherrypy, python-genshi, python-ezpycrypto, MySQL-python
       rrdtool-python, mod_python
 
+New Requirements: pyliblzma, flask, flask-xmlrpc
+
 Basic Installation
 ------------------
 
