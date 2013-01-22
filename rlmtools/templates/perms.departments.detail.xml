@@ -30,21 +30,27 @@
     </tr>
     <tr class="neutral">
       <th class="right">Liquid Dragon ALCs:</th>
-      <td>
+      <td py:if="dacls is not None">
         <py:for each="i in dacls">
           <a href="${baseURL}/perms/acl/permissions?acl_id=${i['acl_id']}">
             ${i["name"]}
           </a><br/>
         </py:for>
       </td>
+      <td py:if="dacls is None">
+        <i>No Liquid Dragon ACLs associated.</i>
+      </td>
     </tr>
     <tr class="neutral">
       <th class="right">Web-Kickstart Directories:</th>
-      <td>
+      <td py:if="wkds is not None">
         <py:for each="i in wkds">
           ${i["path"]}
           <br/>
         </py:for>
+      </td>
+      <td py:if="wkds is None">
+        <i>No Web-Kickstart directories associated.</i>
       </td>
     </tr>
     <tr class="neutral">
