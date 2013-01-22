@@ -35,7 +35,7 @@
           <input type="hidden" name="modifyKey" value="${key}"/>
           <textarea name="textbox" py:content="replaceValue or ''"
             cols="25" rows="3"/>
-          <input type="submit" name="setAttribute" value="Submit"/>
+          <button type="submit" name="setAttribute" value="Submit">Submit</button>
         </form>
       </td>
     </tr>

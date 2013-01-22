@@ -38,7 +38,7 @@
 
   <form method="post" action="${baseURL}/perms/departments">
     <input type="text" name="textbox" value="" size="20" />
-    <input type="submit" value="Submit" /><br/>
+    <button type="submit">Submit</button><br/>
   </form>
 
   <h2>Department Hierarchy</h2>

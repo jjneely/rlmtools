@@ -71,7 +71,7 @@
         <form method="post" action="${baseURL}/deleteClient" style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${client['host_id']}"/>
           <input type="hidden" name="confirmed" value="True"/>
-          <input type="submit" value="Confirm Delete"/>
+          <button type="submit">Confirm Delete</button>
         </form>
       </td>
     </tr>

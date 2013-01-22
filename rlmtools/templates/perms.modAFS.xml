@@ -71,7 +71,7 @@
         <td>
           <input type="hidden" name="wkd_id" value="${i['wkd_id']}"/>
           <input type="hidden" name="setIt" value="True"/>
-          <input type="submit" value="Submit"/>
+          <button type="submit">Submit</submit>
         </td>
       </tr>
     </table>

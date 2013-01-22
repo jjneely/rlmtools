@@ -37,7 +37,7 @@
               <form method="post" action="${baseURL}/search">
               <p>Search:</p>
               <input type="text" name="searchBox" value="" size="15" />
-              <input type="submit" value="Search" />
+              <button type="submit">Search</button>
             </form>
           </th></tr>
         </table>

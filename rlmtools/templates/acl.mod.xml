@@ -95,7 +95,7 @@
       <tr class="neutral">
         <th class="right">Submit:</th>
         <td>
-          <input type="submit" value="Submit"/>
+          <button type="submit" value="Submit">Submit</button>
         </td>
       </tr>
     </table>

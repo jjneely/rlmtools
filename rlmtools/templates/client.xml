@@ -52,7 +52,7 @@
             </option>
           </select>
           <input type="hidden" name="host_id" value="${client['host_id']}"/>
-          <input type="submit" value="Change Department"/>
+          <button type="submit">Change Department</button>
         </form>
       </td>
     </tr>
@@ -92,7 +92,7 @@
         </py:if>
         <form method="post" action="${baseURL}/deleteClient" style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${client['host_id']}"/>
-          <input type="submit" value="Delete Host"/>
+          <button type="submit">Delete Host</button>
         </form>
       </td>
     </tr>

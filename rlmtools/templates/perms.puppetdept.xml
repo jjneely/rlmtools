@@ -67,7 +67,7 @@
         <th class="right">Available Actions:</th>
         <td>
           <input type="hidden" name="p_id" value="${i['p_id']}"/>
-          <input type="submit" value="Submit"/>
+          <button type="submit">Submit</button>
         </td>
       </tr>
     </table>

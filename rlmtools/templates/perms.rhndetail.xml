@@ -111,7 +111,7 @@
       <tr class="neutral">
         <th class="right">Actions:</th>
         <td>
-          <input type="submit" value="Submit"/>
+          <button type="submit">Submit</button>
         </td>
       </tr>
     </table>

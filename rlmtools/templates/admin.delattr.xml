@@ -43,7 +43,7 @@
               style="margin-bottom: 0">
           <input type="hidden" name="callback" value="${callback}"/>
           <input type="hidden" name="modifyKey" value="${key}"/>
-          <input type="submit" name="submit" value="Submit"/>
+          <button type="submit" name="submit" value="Submit">Submit</button>
         </form>
       </td>
     </tr>

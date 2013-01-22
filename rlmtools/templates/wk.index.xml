@@ -30,7 +30,7 @@ hopefully helpful message will appear.</p>
 
 <form action="${baseURL}/webKickstart/debugtool" method="post">
 <p>IP or host name: <input type="text" name="host"/>
-<input type="submit"/></p>
+  <button type="submit">Submit</button></p>
 </form>
 
 <h2>Collision Detection</h2>
@@ -41,7 +41,7 @@ to this tool and it will report config file collisions.</p>
 
 <form action="${baseURL}/webKickstart/collision" method="post">
 <p>IP or host name: <input type="text" name="host"/>
-<input type="submit"/></p>
+  <button type="submit">Submit</button></p>
 </form>
 
 <h2>Old Config Files</h2>
@@ -51,7 +51,7 @@ all the config files for hosts that no longer resolve in DNS.  Click the
 submit button.</p>
 
 <form action="${baseURL}/webKickstart/checkconfigs" method="post">
-  <input type="submit"/>
+  <button type="submit">Submit</button>
 </form>
 
 </body>

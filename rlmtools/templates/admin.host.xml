@@ -67,7 +67,7 @@ configuration file.
                 <p>Re-import Web-Kickstart Data:</p>
                 <input type="hidden" name="host_id" value="${host_id}"/>
                 <input type="hidden" name="importWebKS" value="True"/>
-                <input type="submit" value="Import"/>
+                <button type="submit" value="Import">Import</button>
               </form>
             </th>
           </tr>
@@ -86,9 +86,9 @@ configuration file.
               style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${host_id}"/>
           <input type="hidden" name="modifyKey" value="${attr}"/>
-          <input type="submit" name="reset" value="Reset"/>
-          <input type="submit" name="delete" value="Delete"/>
-          <input type="submit" name="modify" value="Modify"/>
+          <button type="submit" name="reset" value="Reset">Reset</button>
+          <button type="submit" name="delete" value="Delete">Delete</button>
+          <button type="submit" name="modify" value="Modify">Modify</button>
         </form>
       </th>
       <td>
@@ -121,7 +121,7 @@ configuration file.
               style="margin-bottom: 0">
           <input type="hidden" name="host_id" value="${host_id}"/>
           <input type="text" name="modifyKey" value="" size="15" />
-          <input type="submit" value="Add/Modify Attribute"/>
+          <button type="submit">Add/Modify Attribute</button>
         </form>
       </td>
     </tr>
