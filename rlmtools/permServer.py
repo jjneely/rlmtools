@@ -124,6 +124,16 @@ class PermServer(server.Server):
         if commit:
             self.conn.commit()
 
+    def getWKSID(self, path):
+        """Return the wkd_id of a web-kickstart directory that has the 
+           path equal to the given path."""
+        q = "select wkd_id from webkickstartdirs where path = %s"
+        self.cursor.execute(q, (path,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        return ret['wkd_id']
+
     def getAllWKSDir(self):
         q = """select * from webkickstartdirs"""
         self.cursor.execute(q)

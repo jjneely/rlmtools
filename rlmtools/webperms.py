@@ -36,6 +36,8 @@ from permServer import PermServer
 from webServer import WebServer
 from ldafs import *
 
+import webks
+
 from flask import request, g
 
 # Flask application object
@@ -206,6 +208,8 @@ def puppet(wmessage=""):
         i['dept'] = _misc.getDeptName(i['dept_id'])
         i['bad_dept'] = i['dept'] is None
 
+    puppetMap.sort(cmp=lambda x,y: cmp(x['shortname'], y['shortname']))
+
     return render('perms.puppet',
                   dict(message=wmessage,
                        title="Puppet Repositories",
@@ -237,26 +241,42 @@ def puppet_detail(pname):
 @app.route("/perms/webkickstart")
 def webkickstart(wmessage=""):
     wmessage = request.args.get("message", wmessage)
-
-    # Readable by any authenticated user
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMINby("root"):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
+    isREADby("root")
 
     webksMap = _misc.getAllWKSDir()
 
-    try:
-        webksMap = [ completeWKSInfo(i) for i in webksMap ]
-    except Exception, e:
-        return message("An error occured querying AFS: %s" % str(e))
+    for i in webksMap:
+        i['shortname'] = os.path.basename(i['path'])
+        i['dept'] = _misc.getDeptName(i['dept_id'])
+        i['bad_dept'] = i['dept'] is None
+
+    webksMap.sort(cmp=lambda x,y: cmp(x['shortname'], y['shortname']))
 
     return render('perms.webkickstart',
                   dict(message=wmessage,
                        title="Web-Kickstart",
+                       subMenu=subMenu,
+                       webksMap=webksMap,
+                 ))
+
+@app.route("/perms/webkickstart/<wname>")
+def webkickstart_detail(wname):
+    base = webks._getWebKs().cfg.hosts
+    path = os.path.join(base, wname)
+    wkd_id = _misc.getWKSID(path)
+    if wkd_id is None:
+        abort(400)
+
+    i = _misc.getWKSDir(wkd_id)
+    if i['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(i['dept_id'])
+
+    webksMap = completeWKSInfo(i)
+    return render('perms.webkickstart.detail',
+                  dict(message="",
+                       title="Web-Kickstart Detail",
                        subMenu=subMenu,
                        webksMap=webksMap,
                  ))
