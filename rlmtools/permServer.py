@@ -326,6 +326,16 @@ class PermServer(server.Server):
         else:
             return ret.dump()
 
+    def getPuppetID(self, path):
+        """Return the p_id of a puppet repository that has the path equal
+           to the given path."""
+        q = "select p_id from puppetrepos where path = %s"
+        self.cursor.execute(q, (path,))
+        ret = resultSet(self.cursor)
+        if ret.rowcount() == 0:
+            return None
+        return ret['p_id']
+
     def getPuppetDir(self, p_id):
         q = """select * from puppetrepos where p_id = %s"""
         self.cursor.execute(q, (p_id,))

@@ -195,20 +195,41 @@ def puppet(wmessage=""):
         return message("You do not appear to be authenticated.")
 
     # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
+    if not isADMINby("root"):
         return message("There is no light in this dragon cave and...oops..."
                 "you have just been eaten by a grue.")
 
     puppetMap = _misc.getAllPuppetDir()
 
-    try:
-        puppetMap = [ completeWKSInfo(i) for i in puppetMap ]
-    except Exception, e:
-        return message("An error occured querying AFS: %s" % str(e))
+    for i in puppetMap:
+        i['shortname'] = os.path.basename(i['path'])
+        i['dept'] = _misc.getDeptName(i['dept_id'])
+        i['bad_dept'] = i['dept'] is None
 
     return render('perms.puppet',
                   dict(message=wmessage,
                        title="Puppet Repositories",
+                       subMenu=subMenu,
+                       puppetMap=puppetMap,
+                 ))
+
+@app.route("/perms/puppet/<pname>")
+def puppet_detail(pname):
+    path = os.path.join(configDragon.config.puppet_dir, pname)
+    p_id = _misc.getPuppetID(path)
+    if p_id is None:
+        abort(400)
+
+    i = _misc.getPuppetDir(p_id)
+    if i['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(i['dept_id'])
+
+    puppetMap = completeWKSInfo(i)
+    return render('perms.puppet.detail',
+                  dict(message="",
+                       title="Puppet Repository Detail",
                        subMenu=subMenu,
                        puppetMap=puppetMap,
                  ))

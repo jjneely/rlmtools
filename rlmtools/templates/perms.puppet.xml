@@ -12,69 +12,49 @@
 <body>
 
   <p>
-    This maps Puppet Repositories to departments and other stuff.
+    This page lists all know Puppet Repositories and their departmental
+    association.  The View Detail action will allow you to further inspect 
+    and change the repository meta information.
   </p>
 
   <div py:if="message != ''" class="message">
     <p py:content="message"/>
   </div>
 
-  <p>Greetings, ${name}.  You are user "${userid}".</p>
-
   <h2>Puppet Repository Listing</h2>
 
   <p py:if="len(puppetMap) == 0">
-    You do not appear to have any Puppet Repositories associated
-    with your department.
+    <i>No Puppet Repositories were found.</i>
   </p>
 
-  <div py:for="i in puppetMap">
-    <table>
-      <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
-        <th class="right">Department:</th>
-        <td py:if="not i['bad_dept']">${i['dept']}</td>
-        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
-      </tr>
-      <tr class="neutral">
-        <th class="right">AFS Path:</th>
-        <td>${i['path']}</td>
-      </tr>
-      <tr class="neutral">
-        <th class="right">AFS Access Permissions:</th>
-        <td>
-          <ul class="plain">
-            <li py:for="j in i['pts']">${j[0]} ${j[1]}</li>
-          </ul>
-        </td>
-      </tr>
-      <tr class="neutral">
-        <th class="right">RLMTools Department ACLs:</th>
-        <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
-        <td py:if="not i['bad_dept']">
-          <ul class="plain">
-            <li py:for="j in i['deptACLs']">${j[1]} ${j[2]}</li>
-          </ul>
-        </td>
-      </tr>
-      <tr py:attrs="{'class': i['perm_misalignment'] and 'bad' or 'good'}">
-        <th class="right">Permissions Aligned:</th>
-        <td>${i['perm_misalignment'] and 'No' or 'Yes'}</td>
-      </tr>
-      <tr clas="neutral">
-        <th class="right">Available Actions:</th>
-        <td>
-          <button type="button" 
-            onclick="location.href='${baseURL}/perms/modPuppetAFS?p_id=${i['p_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
-          <button type="button"
-            onclick="location.href='${baseURL}/perms/changePuppetDept?p_id=${i['p_id']}'">Change Department Association</button>
-        </td>
-      </tr>
-    </table>
-
-    <p class="space" />
-  </div>
+  <table>
+    <tr class="neutral">
+      <th class="bottom">
+        Puppet Repository
+      </th>
+      <th class="bottom">
+        Actions
+      </th>
+      <th class="bottom">
+        Associated Department
+      </th>
+    </tr>
+    <tr py:for="i in puppetMap"
+      py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
+      <td>
+        <tt>${i['path']}</tt>
+      </td>
+      <td>
+        <button onClick="location.href='${baseURL}/perms/puppet/${i['shortname']}'">View Detail</button>
+      </td>
+      <td>
+        <span py:if="not i['bad_dept']">${i['dept']}</span>
+        <span py:if="i['bad_dept']">
+          <i>Department association unknown</i>
+        </span>
+      </td>
+    </tr>
+  </table>
 
 </body>
 

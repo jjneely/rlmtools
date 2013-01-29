@@ -30,7 +30,7 @@ import rlmtools.configDragon as configDragon
 import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles
 
-PuppetPath = "/afs/bp/system/config/linux-kickstart/puppet"
+PuppetPath = None
 
 def watchPuppet(config):
     """Make a map of current Puppet directories to departments."""
@@ -58,6 +58,7 @@ def watchPuppet(config):
     m.cleanPuppetDirs(scrubbedPaths)
 
 def main():
+    global PuppetPath
     parser = optparse.OptionParser()
     parser.add_option("-C", "--configfile", action="store",
                       default=defaultConfFiles,
@@ -67,6 +68,8 @@ def main():
 
     # Start up configuration/logging/databases
     configDragon.initConfig(options.configfile)
+    PuppetPath = configDragon.config.puppet_dir
+
     watchPuppet(configDragon.config)
 
 if __name__ == "__main__":

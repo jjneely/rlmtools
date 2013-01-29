@@ -38,6 +38,7 @@ init_logging = True
 requiredConfig = {
         'default_admin': ["First user with admin access permission.", False],
         'webks_dir': ["Directory where the Web-Kickstart configs live.", False],
+        'puppet_dir': ["Directory where the Puppet repositories live.", False],
         'privatekey': ["Filename for the private key.", False],
         'publickey': ["Filename for the public key.",   False],
         'key_directory': ["Directory clients public keys appear.", False],
