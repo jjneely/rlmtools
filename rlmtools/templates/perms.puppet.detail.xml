@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+<body>
+
+  <p>
+    This maps Puppet Repositories to departments and other stuff.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h2>Puppet Repository Detail</h2>
+
+  <table py:with="i = puppetMap">
+    <tr py:attrs="{'class': i['bad_dept'] and 'bad' or 'good'}">
+      <th class="right">Department:</th>
+      <td py:if="not i['bad_dept']">${i['dept']}</td>
+      <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">AFS Path:</th>
+      <td>${i['path']}</td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">AFS Access Permissions:</th>
+      <td>
+        <ul class="plain">
+          <li py:for="j in i['pts']">${j[0]} ${j[1]}</li>
+        </ul>
+      </td>
+    </tr>
+    <tr class="neutral">
+      <th class="right">RLMTools Department ACLs:</th>
+      <td py:if="i['bad_dept']"><i>Unknown Department Mapping</i></td>
+      <td py:if="not i['bad_dept']">
+        <ul class="plain">
+          <li py:for="j in i['deptACLs']">${j[1]} ${j[2]}</li>
+        </ul>
+      </td>
+    </tr>
+    <tr py:attrs="{'class': i['perm_misalignment'] and 'bad' or 'good'}">
+      <th class="right">Permissions Aligned:</th>
+      <td>${i['perm_misalignment'] and 'No' or 'Yes'}</td>
+    </tr>
+    <tr clas="neutral">
+      <th class="right">Available Actions:</th>
+      <td>
+        <button type="button" 
+          onclick="location.href='${baseURL}/perms/modPuppetAFS?p_id=${i['p_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
+        <button type="button"
+          onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
+        <button type="button"
+          onclick="location.href='${baseURL}/perms/changePuppetDept?p_id=${i['p_id']}'">Change Department Association</button>
+      </td>
+    </tr>
+  </table>
+
+  <p class="space" />
+
+</body>
+
+</html>
+
