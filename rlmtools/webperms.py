@@ -439,7 +439,7 @@ def modLDACLs():
                 if rmacl is not None:
                     _misc.removePerm(rmacl['aclg_id'])
                 else:
-                    log.warning("modLDACLs: Couldn't find ACL to delete: %s ^s" % (acl, 'bp'))
+                    log.warning("modLDACLs: Couldn't find ACL to delete: %s %s" % (acl, 'bp'))
         return webkickstart("""RLMTools ACLs for department %s have been set.""" % webksMap['dept'])
 
     return render('perms.modLDACLs',
