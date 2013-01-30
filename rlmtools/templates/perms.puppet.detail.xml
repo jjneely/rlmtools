@@ -55,8 +55,8 @@
     <tr clas="neutral">
       <th class="right">Available Actions:</th>
       <td>
-        <button type="button" 
-          onclick="location.href='${baseURL}/perms/modPuppetAFS?p_id=${i['p_id']}'">Change AFS Permissions to Match RLMTools</button><br/>
+        <!-- <button type="button" 
+          onclick="location.href='${baseURL}/perms/modPuppetAFS?p_id=${i['p_id']}'">Change AFS Permissions to Match RLMTools</button><br/> -->
         <button type="button"
           onclick="location.href='${baseURL}/perms/acl/'">Change RLMTools Department ACLs</button><br/>
         <button type="button"

@@ -88,14 +88,7 @@ def perms_index():
 @app.route("/perms/rhnGroups")
 def rhnGroups():
     wmessage = request.args.get("message", "")
-
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
+    isREADby("root")
 
     rhnMap = []
     for g in _misc.getRHNGroups():
@@ -125,14 +118,6 @@ def rhnDetail():
         setDept = None
         wmessage = request.args.get("message", "")
 
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
-
     rg_id = int(rg_id)
     if setDept is not None:
         setDept = int(setDept)
@@ -145,7 +130,13 @@ def rhnDetail():
 
     rhnMap = _misc.getRHNGroup(rg_id)
     if rhnMap is None:
-        return message("Unknown RHN Group ID %s" % rg_id)
+        g.error = "Unknown RHN Group ID %s" % rg_id
+        abort(400)
+
+    if rhnMap['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(rhnMap['dept_id'])
 
     rhnMap = completeRHNGroup(rhnMap)
     depts = _misc.getAllDepts()
@@ -191,15 +182,7 @@ def rhnDetail():
 @app.route("/perms/puppet")
 def puppet(wmessage=""):
     wmessage = request.args.get("message", wmessage)
-
-    # Readable by any authenticated user
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMINby("root"):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
+    isREADby("root")
 
     puppetMap = _misc.getAllPuppetDir()
 
@@ -308,7 +291,13 @@ def changeWKSDept():
         wmessage = """A Web-Kickstart directory matching ID %s does
                       not exist.  Use the Back button and try your
                       query again.""" % wkd_id
-        return message(wmessage)
+        g.error = wmessage
+        abort(400)
+    if webksMap['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(webksMap['dept_id'])
+
     if setDept is not None:
         dept_id = int(setDept)
         dept = _misc.getDeptName(dept_id)
@@ -317,6 +306,7 @@ def changeWKSDept():
                           Web-Kickstart directory was not modified.""" \
                                   % dept_id
         else:
+            isADMINby(dept)
             _misc.setWKSDept(wkd_id, dept_id)
             wmessage = """Set department association to %s for
             Web-Kickstart directory %s.""" % (dept, webksMap['path'])
@@ -341,15 +331,6 @@ def changePuppetDept():
         setDept = None
         wmessage = request.args.get("message", "")
 
-    # Readable by any authenticated user
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
-
     p_id = int(p_id)
     puppetMap = _misc.getPuppetDir(p_id)
     depts = _misc.getAllDepts()
@@ -357,7 +338,13 @@ def changePuppetDept():
         wmessage = """A Puppet repository matching ID %s does
                       not exist.  Use the Back button and try your
                       query again.""" % p_id
-        return message(wmessage)
+        g.error = wmessage
+        abort(400)
+    if puppetMap['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(puppetMap['dept_id'])
+
     if setDept is not None:
         dept_id = int(setDept)
         dept = _misc.getDeptName(dept_id)
@@ -366,6 +353,7 @@ def changePuppetDept():
                           Puppet repository was not modified.""" \
                                   % dept_id
         else:
+            isADMINby(dept)
             _misc.setPuppetDept(p_id, dept_id)
             wmessage = """Set department association to %s for
             Puppet repository %s.""" % (dept, puppetMap['path'])
@@ -390,21 +378,18 @@ def modLDACLs():
         setIt = None
         wmessage = request.args.get("message", "")
 
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
-
     wkd_id = int(wkd_id)
     webksMap = _misc.getWKSDir(wkd_id)
     if webksMap is None:
-        wmessage = """A Web-Kickstart directory matching ID %s does
+        g.error = """ A Web-Kickstart directory matching ID %s does
                       not exist.  Use the Back button and try your
                       query again.""" % wkd_id
-        return message(wmessage)
+        abort(400)
+
+    if webksMap['dept_id'] is None:
+        isADMINby("root")
+    else:
+        isADMINby(webksMap['dept_id'])
 
     webksMap = completeWKSInfo(webksMap)
     if webksMap['bad_dept']:
@@ -449,7 +434,7 @@ def modLDACLs():
                        webksMap=webksMap,
                  ))
 
-@app.route("/perms/modAFS", methods=["GET", "POST"])
+#@app.route("/perms/modAFS", methods=["GET", "POST"])
 def modAFS():
     if request.method == "POST":
         wkd_id = request.form["wkd_id"]
@@ -494,7 +479,7 @@ def modAFS():
                        webksMap=webksMap,
                  ))
 
-@app.route("/perms/modPuppetAFS", methods=["GET", "POST"])   
+#@app.route("/perms/modPuppetAFS", methods=["GET", "POST"])   
 def modPuppetAFS():
     if request.method == "POST":
         p_id = request.form["p_id"]
