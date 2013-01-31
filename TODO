@@ -23,8 +23,6 @@ Working toward 3.0.x
     * Celery real time and scheduled tasks?
         http://www.celeryproject.org/
 
-    * Puppet updates for the status reports
-        * link in inventory data, run reports, metadata
     * Implement the RL "modules" 
         * pre install setup from web 
         * cloud setup/support via web-ks tokens
@@ -42,10 +40,13 @@ Future:
     * Convert ezpycrypto 512bit RSA keys to x509 certs from Puppet
     * Refactor web pages to have cleaner URLs
 
+    * Make the Puppet reports/inventory prettier
+
  Missing UI bits from 2011 re-work:
 
     * Setting AFS permisssions (Puppet/WKS)
-    
+       -- commented out from web UI
+
 
 Original 2011 plan:
 
