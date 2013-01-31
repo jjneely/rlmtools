@@ -37,7 +37,7 @@
   </p>
 
   <form method="post" action="${baseURL}/perms/departments">
-    <input type="text" name="textbox" value="" size="20" />
+    <input type="text" name="newdept" value="" size="20" />
     <button type="submit">Submit</button><br/>
   </form>
 
@@ -64,7 +64,7 @@
             ${"&nbsp;" * 5 * level}<a href="${baseURL}/perms/departments/${i['name']}">${i["name"]}</a>
           </td>
           <td>
-            <button onClick="location.href='${baseURL}/perms/departments/${i['name']}?delete=True'">Delete</button>
+            <button onClick="location.href='${baseURL}/perms/departments/${i['name']}?delete=True'">Detail</button>
           </td>
         </tr>
         <py:if test="len(i['children']) > 0">

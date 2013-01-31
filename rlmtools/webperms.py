@@ -524,7 +524,7 @@ def modPuppetAFS():
                        puppetMap=puppetMap,
                   ))
 
-@app.route("/perms/departments")
+@app.route("/perms/departments", methods=["GET", "POST"])
 def perms_departments():
     def children_of(root_id, depts):
         # Find my children!
@@ -544,9 +544,38 @@ def perms_departments():
             i["children"] = recurse(i["dept_id"], depts)
         return children
 
-    isREADby("root")
+    if request.method == "POST":
+        newdept = request.form["newdept"]
+        newdept = newdept.strip().lower().replace(" ", "-").replace("_", "-")
+        if newdept == "root":
+            g.error = "You may not create the 'root' department."
+            abort(400)
+        if newdept == "":
+            abort(400)
+        if len(newdept.split("-")) == 1:
+            parent = "root"
+        else:
+            parent = '-'.join(newdept.split('-')[:-1])
 
-    wmessage = ""
+        isADMINby(parent)
+        if _server.getDeptIDNoCreate(newdept) is not None:
+            wmessage = "Department '%s' already exists." % newdept
+        else:
+            newdept_id = _server.getDeptID(newdept)
+            # XXX: The following fixes any parent/child relationships in the DB
+            stopped = False
+            while not stopped:
+                stopped = True
+                for i in _server.getAllDepts():
+                    print i
+                    if i['parent'] is None and i['name'] != "root":
+                        stopped = False
+                        _server.getDeptParentID(i['dept_id'])
+
+            wmessage = "Created department '%s'" % newdept
+    else:
+        isREADby("root")
+        wmessage = ""
 
     root_id = _misc.getDeptIDNoCreate("root")
     depts = _misc.getAllDepts()
@@ -555,7 +584,6 @@ def perms_departments():
             "dept_id":  root_id,
             "children": recurse(root_id, depts),
            }
-
 
     return render('perms.departments',
                   dict(message=wmessage,

@@ -123,6 +123,8 @@ def _authZ_require(dept, acl):
         display = _server.getDeptName(int(dept))
     else:
         display = dept
+    if display is None:
+        display = dept
 
     if acl == "ADMIN":
         f = isADMIN
