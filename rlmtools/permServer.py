@@ -81,6 +81,12 @@ class PermServer(server.Server):
         log.info("PTS watcher complete")
         self.conn.commit()
 
+    def removeDept(self, dept_id):
+        "Remove/delete the given department."
+        q = "delete from dept where dept_id = %s"
+        self.cursor.execute(q, (dept_id,))
+        self.conn.commit()
+
     def insertWebKSDir(self, path, dept_id):
         # Check if a row representing thiw webks dir exists.
         # If not we insert it with dept_id as a guess of which department
@@ -164,6 +170,15 @@ class PermServer(server.Server):
 
         q = """update webkickstartdirs set dept_id = %s where wkd_id = %s"""
         self.cursor.execute(q, (dept_id, wkd_id))
+        self.conn.commit()
+
+    def removeDeptACLs(self, dept_id):
+        """Remove all ACLs that are directly associated with the given
+           dept_id from the department.  This does not remove the ACLs
+           just their association with the department."""
+
+        q = """delete from aclgroups where dept_id = %s"""
+        self.cursor.execute(q, (dept_id,))
         self.conn.commit()
 
     def getDeptACLs(self, dept_id):

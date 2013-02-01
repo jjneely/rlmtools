@@ -31,6 +31,7 @@ import re
 
 import configDragon
 
+from rlattributes import RLAttributes
 from webcommon import *
 from permServer import PermServer
 from webServer import WebServer
@@ -525,7 +526,7 @@ def modPuppetAFS():
                   ))
 
 @app.route("/perms/departments", methods=["GET", "POST"])
-def perms_departments():
+def perms_departments(wmessage=""):
     def children_of(root_id, depts):
         # Find my children!
         r = []
@@ -544,7 +545,7 @@ def perms_departments():
             i["children"] = recurse(i["dept_id"], depts)
         return children
 
-    if request.method == "POST":
+    if request.method == "POST" and "newdept" in request.form:
         newdept = request.form["newdept"]
         newdept = newdept.strip().lower().replace(" ", "-").replace("_", "-")
         if newdept == "root":
@@ -575,7 +576,6 @@ def perms_departments():
             wmessage = "Created department '%s'" % newdept
     else:
         isREADby("root")
-        wmessage = ""
 
     root_id = _misc.getDeptIDNoCreate("root")
     depts = _misc.getAllDepts()
@@ -592,7 +592,7 @@ def perms_departments():
                        dtree=tree,
                  ))
 
-@app.route("/perms/departments/<dept_name>")
+@app.route("/perms/departments/<dept_name>", methods=['GET', 'POST'])
 def perms_departments_detail(dept_name):
     dept_id = _misc.getDeptIDNoCreate(dept_name)
     if dept_id is None:
@@ -605,11 +605,44 @@ def perms_departments_detail(dept_name):
     wkds = _misc.getWKSDept(dept_id)
     rhngs = _misc.getRHNGroupsDept(dept_id)
     puppets = _misc.getPuppetDept(dept_id)
+    wmsg = ""
+    children = [ r['dept_id'] for r in _server.getAllDepts() \
+                 if r['parent'] == dept_id ]
+    if children == []: children = None
+
+    if request.method == 'POST' and "delete" in request.form:
+        isADMINby(dept_id)
+        if len(clients) > 0:
+            wmsg = "Department must have no clients before it can be deleted."
+        elif wkds is not None:
+            wmsg = "Department must not be associated with Web-Kickstart " \
+                   "directories before it can be deleted."
+        elif rhngs is not None:
+            wmsg = "Department must not be associated with RHN Groups " \
+                   "before it can be deleted."
+        elif puppets is not None:
+            wmsg = "Department must not be associated with Puppet " \
+                   "Repositories before it can be deleted."
+        elif children is not None:
+            wmsg = "This department has child departments and cannot " \
+                   "be deleted."
+        else:
+            # Nuke 'em
+            # Remove any assigned ACLs
+            _misc.removeDeptACLs(dept_id)
+            # Next remove any attributes
+            RLAttributes().removeAllDeptAttrs(dept_id)
+            # Finally, the department itself
+            _misc.removeDept(dept_id)
+            dept_id = None
+            return perms_departments(
+                    "The department \"%s\" has been deleted " \
+                    "permanently." % dept_name)
 
     return render('perms.departments.detail',
                   dict(subMenu=subMenu,
                        title="Department Detail",
-                       message="",
+                       message=wmsg,
                        dept_name=dept_name,
                        dept_id=dept_id,
                        clients=len(clients),
@@ -617,6 +650,7 @@ def perms_departments_detail(dept_name):
                        wkds=wkds,
                        rhngs=rhngs,
                        puppets=puppets,
+                       children=children,
                  ))
 
 def diffAdmins(ldAdmins, rhnAdmins):

@@ -83,7 +83,15 @@
             <br/>
           </py:for>
         </py:if>
-
+      </td>
+    </tr>
+    <tr>
+      <th class="right">Actions:</th>
+      <td>
+        <form method="post" style="margin-bottom: 0"
+          action="${baseURL}/perms/departments/${dept_name}">
+          <button type="submit" name="delete">Delete Department</button>
+        </form>
       </td>
     </tr>
   </table>
