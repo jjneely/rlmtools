@@ -7,6 +7,7 @@ Client:
     * Deal with checksum errors in messages -- especially 
       da39a3ee5e6b4b0d3255bfef95601890afd80709 which is the zero length SHA512
     * Make sure dept changes propagate correctly
+    * sysinfo -- see Bug # 440
 
 Server:
 
@@ -16,17 +17,13 @@ Working toward 3.0.x
         * Solved by moving to Flask/nginx
         * Solved by porting away from Bcfg2
         -- done or in progress
-    * Port away from mod_python (unmaintained)
-        nginx ??
-        uWSGI ??
-        apache + mod_wsgi ??
+    * Instructions and setup for nginx/uWGSI or apache/mod_wsgi
     * Celery real time and scheduled tasks?
         http://www.celeryproject.org/
 
     * Implement the RL "modules" 
         * pre install setup from web 
         * cloud setup/support via web-ks tokens
-    * Implement department deletes
     * puppet should update lastheard
     * bugzilla bugs
 
