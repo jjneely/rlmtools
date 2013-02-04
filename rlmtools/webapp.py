@@ -26,7 +26,6 @@ import datetime
 import optparse
 
 from flask import g, request, send_from_directory, redirect
-from flaskext.genshi import Genshi, render_response
 
 import rrdconstants
 
