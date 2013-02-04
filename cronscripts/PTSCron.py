@@ -1,4 +1,4 @@
-import rlmtools.miscServer as miscServer
+import rlmtools.permServer as permServer
 import rlmtools.configDragon as configDragon
 import optparse
 
@@ -14,7 +14,7 @@ def main():
 
     # Start up configuration/logging/databases
     configDragon.initConfig(options.configfile)
-    m = miscServer.MiscServer()
+    m = permServer.PermServer()
     m.watchPTS()
 
 if __name__ == "__main__":

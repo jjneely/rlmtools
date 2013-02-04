@@ -1,7 +1,7 @@
 # ldafs.py -- Common AFS methods for the RLMTools Server
 
-import afs.acl
-import afs.fs
+import os
+import logging
 
 AFSBitMap = {
     0x7f: 'admin',
@@ -28,29 +28,39 @@ rLDBitMap = {
     'read' : 0x1,
     }
 
+log = logging.getLogger("xmlrpc")
+
 def fsla(path):
-    # fs la <path>
-    if not afs.fs.inafs(path):
+    pipe = os.popen("/usr/bin/fs la %s" % path)
+    blob = pipe.readlines()
+    ret = pipe.close()
+    if ret > 0:
+        # Bad return code, is 'path' an AFS path?
         return None
 
     ret = []
-    acls = afs.acl.ACL.retrieve(path)
-    # Ignore negative ACLs for now
-    for i in acls.pos.keys():
+    for row in blob[2:]:
+        # We toss asside the top two rows as they are headers
+        tokens = row.split()
+        print "Working on: %s" % str(tokens)
+        if len(tokens) != 2:
+            log.warning("Error parsing fs la line: %s" % row)
+            continue
+        i, r = tokens
         # We filter out some PTS groups we are not interested in managing.
         if i.startswith('admin:'): continue
         if i in ['system:administrators']: continue
         if i.startswith('linux:') and 'servers' in i: continue
-
-        # Next we map AFS permissions to something similar to LD's
-        # bitfield based permissions.  We have admin, write, read, look,
-        # and other
-        if acls.pos[i] in AFSBitMap:
-            perm = AFSBitMap[acls.pos[i]]
+        if 'a' in r:
+            ret.append((i, 'admin'))
+        elif 'w' in r:
+            ret.append((i, 'write'))
+        elif 'r' in r:
+            ret.append((i, 'read'))
+        elif 'l' in r:
+            ret.append((i, 'look'))
         else:
-            perm = 'other'
-
-        ret.append((i, perm))
+            ret.append((i, 'other'))
 
     return ret
 

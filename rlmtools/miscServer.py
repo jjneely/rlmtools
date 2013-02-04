@@ -25,9 +25,6 @@ import sys
 import logging
 import server
 
-import afs.pts
-from afs._util import AFSException
-
 from datetime import datetime, timedelta
 from resultSet import resultSet
 from rlattributes import RLAttributes
@@ -78,64 +75,4 @@ class MiscServer(server.Server):
 
         self.cursor.execute(q2, (date,))
         self.conn.commit()
-
-    def getSysAdmins(self, acl_id):
-        q = """select userid, sysadmin_id from sysadmins 
-               where acl_id = %s order by userid asc"""
-
-        self.cursor.execute(q, (acl_id,))
-        result = resultSet(self.cursor)
-        ret = []
-        for row in result:
-            ret.append((row['userid'], row['sysadmin_id']))
-        return ret
-
-    def watchPTS(self):
-        """Sync database with AFS PTS groups that we watch."""
-
-        q1 = "select acl_id, pts, cell from acls"
-        q2 = "delete from sysadmins where sysadmin_id = %s"
-        q3 = "insert into sysadmins (acl_id, userid) values(%s, %s)"
-        self.cursor.execute(q1)
-        result = resultSet(self.cursor).dump()
-
-        # ACQUIRE LOCK
-        log.info("Running PTS watcher, locking sysadmins table")
-        self.cursor.execute("lock tables sysadmins write")
-        for row in result:
-            #print "Working on ACL: %s" % str(row)
-            current = self.getSysAdmins(row['acl_id'])
-            #print "Current list: %s" % str(current)
-            #pts = self.getPTS(row['pts'], row['cell'])
-
-            try:
-                ptsdb = afs.pts.PTS(cell=row['cell'])
-                group = ptsdb.getEntry(row['pts'])
-                pts = [ e.name for e in group.members ]
-            except AFSException, e:
-                print "AFS API Blew up: %s" % str(e)
-            pts.sort()
-            #print "New list    : %s" % str(pts)
-
-            i = 0
-            while i < len(pts):
-                if len(current) <= i or current[i][0] > pts[i]:
-                    self.cursor.execute(q3, (row['acl_id'], pts[i]))
-                    # Keep our index numbers intact
-                    current.insert(i, (pts[i], None)) 
-                    i = i + 1
-                elif current[i][0] < pts[i]:
-                    self.cursor.execute(q2, (current[i][1],))
-                    del current[i]            # Keep our index numbers intact
-                elif current[i][0] == pts[i]:
-                    i = i + 1
-            while len(current) > len(pts):
-                self.cursor.execute(q2, (current[i][1],))
-                del current[i]                # Keep our index numbers intact
-
-        self.cursor.execute("unlock tables")
-        log.info("PTS watcher complete")
-        self.conn.commit()
-
-
 

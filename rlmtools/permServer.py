@@ -20,13 +20,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import re
 import os
 import sys
 import logging
 import server
-
-import afs.pts
-from afs._util import AFSException
 
 from resultSet import resultSet
 
@@ -48,18 +46,15 @@ class PermServer(server.Server):
         self.cursor.execute("lock tables sysadmins write")
         for row in result:
             #print "Working on ACL: %s" % str(row)
-            current = self.getSysAdmins(row['acl_id'])
+            current = self.getSysAdminsAndIDs(row['acl_id'])
             #print "Current list: %s" % str(current)
-            #pts = self.getPTS(row['pts'], row['cell'])
-
-            try:
-                ptsdb = afs.pts.PTS(cell=row['cell'])
-                group = ptsdb.getEntry(row['pts'])
-                pts = [ e.name for e in group.members ]
-            except AFSException, e:
-                print "AFS API Blew up: %s" % str(e)
-            pts.sort()
+            pts = self.getPTS(row['pts'], row['cell'])
             #print "New list    : %s" % str(pts)
+            if pts is None:
+                log.warning("getPTS() returned None -- an error occured")
+                sys.stderr.write(
+                        "getPTS() returned None -- an error occured\n")
+                return
 
             i = 0
             while i < len(pts):
@@ -80,6 +75,53 @@ class PermServer(server.Server):
         self.cursor.execute("unlock tables")
         log.info("PTS watcher complete")
         self.conn.commit()
+
+    def getPTS(self, pts, cell):
+        sentry = re.compile(r'^[a-z][a-z0-9_\-]{1,7}$')  # matches NCSU userids
+        cmd = "/usr/bin/pts mem %s -c %s -noauth" % (pts, cell)
+        ids = []
+        #print "Executing: %s" % cmd
+        fd = os.popen(cmd, 'r')
+        blob = fd.readlines()
+        ret = fd.close()
+        #print blob
+
+        if ret is not None:
+            # Some sort of OS Error
+            log.error("'%s' failed with return code %s" % (cmd, ret))
+            return None
+
+        if len(blob) == 0:
+            # No data?  Something Bad happened
+            return None
+        if len(blob) == 1:
+            # PTS group is empty
+            return []
+        for line in blob[1:]:   # First line is header, toss it
+            user = line.strip()
+            if user == "": 
+                continue
+            if sentry.match(user):
+                ids.append(user.strip().lower())
+            else:
+                sys.stderr.write("Got bad data from PTS command.  User = %s\n"\
+                                 % user)
+                log.error("Got bad data from PTS command.  User = %s" % user)
+                return None
+        
+        ids.sort()
+        return ids
+
+    def getSysAdminsAndIDs(self, acl_id):
+        q = """select userid, sysadmin_id from sysadmins 
+               where acl_id = %s order by userid asc"""
+
+        self.cursor.execute(q, (acl_id,))
+        result = resultSet(self.cursor)
+        ret = []
+        for row in result:
+            ret.append((row['userid'], row['sysadmin_id']))
+        return ret
 
     def removeDept(self, dept_id):
         "Remove/delete the given department."
