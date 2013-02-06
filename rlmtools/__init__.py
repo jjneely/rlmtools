@@ -20,6 +20,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+import optparse
+
+import configDragon
+import constants
+
 from flask import Flask
 
 # Global configuration for RLMTools
@@ -29,6 +34,31 @@ app = Flask(__name__)
 
 # Use my logger please
 app.config["LOGGER_NAME"] = "xmlrpc"
+
+def __init():
+    global config
+    parser = optparse.OptionParser()
+    parser.add_option("-C", "--configfile", action="store",
+                      default=constants.defaultConfFiles,
+                      dest="configfile",
+                      help="Configuration file")
+    parser.add_option("-a", "--auth", action="store", default=None,
+                      dest="auth", 
+                      help="The webapp will pretend you are this user.")
+    (options, args) = parser.parse_args()
+
+    # Start up configuration/logging/databases
+    configDragon.initConfig(options.configfile)
+
+    # Load up the webapp module
+    config = configDragon.config
+
+    # Handle testing harness authN
+    if options.auth is not None:
+        rlmtools.config.vars['auth'] = ["", False]
+        rlmtools.config.auth = options.auth
+
+app.before_first_request(__init)
 
 # Modules exposing views must be imported below
 import rlmtools.webapp
