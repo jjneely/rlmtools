@@ -21,6 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 import optparse
+import logging
 
 import configDragon
 import constants
@@ -31,9 +32,6 @@ from flask import Flask
 config = None
 
 app = Flask(__name__)
-
-# Use my logger please
-app.config["LOGGER_NAME"] = "xmlrpc"
 
 def __init():
     global config
@@ -57,6 +55,15 @@ def __init():
     if options.auth is not None:
         rlmtools.config.vars['auth'] = ["", False]
         rlmtools.config.auth = options.auth
+
+    # Logging: we currently use our own logging setup
+    # and if we tell Flask to use it, Flask wipes out its handlers
+    # as it re-creates its logger.  So we add our existing Handlers to
+    # the Flask logger
+    if not app.debug:
+        log = logging.getLogger("xmlrpc")
+        for h in log.handlers:
+            app.logger.addHandler(h)
 
 app.before_first_request(__init)
 
