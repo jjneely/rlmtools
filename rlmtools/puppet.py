@@ -22,7 +22,13 @@ def findPuppetInventory(uuid):
     p = facts_path
     facts = None
     uuid = uuid.lower()
-    for i in os.listdir(p):
+    try:
+        ls = os.listdir(p)
+    except OSError, e:
+        log.warning("In findPuppetInventory(): %s" % str(e))
+        return None
+
+    for i in ls:
         if uuid in i.lower():
             # UUID is a substring of the file name
             facts = os.path.join(p, i)
@@ -45,7 +51,13 @@ def findPuppetReports(uuid):
        report."""
     uuid = uuid.lower()
     d = None
-    for i in os.listdir(reports_path):
+    try:
+        ls = os.listdir(reports_path)
+    except OSError, e:
+        log.warning("In findPuppetReports(): %s" % str(e))
+        return None
+
+    for i in ls:
         if uuid in i.lower():
             # UUID is a substring of this directory name
             d = os.path.join(reports_path, i)
