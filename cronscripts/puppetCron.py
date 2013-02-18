@@ -23,9 +23,6 @@ import logging
 import optparse
 import os.path
 
-import afs.fs
-import afs.acl
-
 import rlmtools.configDragon as configDragon
 import rlmtools.permServer as permServer
 from rlmtools.constants import defaultConfFiles

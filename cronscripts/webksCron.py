@@ -23,9 +23,6 @@ import logging
 import optparse
 import os.path
 
-import afs.fs
-import afs.acl
-
 from webKickstart.configtools import Configuration as webKSConfig
 
 import rlmtools.configDragon as configDragon
