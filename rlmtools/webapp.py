@@ -118,7 +118,7 @@ def index():
         image = "%s-3d.png" % domain
         path = os.path.join(graphDir, image)
         if os.path.exists(path):
-            img = os.path.join(url(), '/static/graphs/', image)
+            img = '%s/static/graphs/' % url()
             href = '%s/showGraph?title=%s&domain=%s' % (url(), t, domain)
         else:
             img = ""
