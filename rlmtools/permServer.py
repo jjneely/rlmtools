@@ -51,10 +51,11 @@ class PermServer(server.Server):
             pts = self.getPTS(row['pts'], row['cell'])
             #print "New list    : %s" % str(pts)
             if pts is None:
-                log.warning("getPTS() returned None -- an error occured")
-                sys.stderr.write(
-                        "getPTS() returned None -- an error occured\n")
-                return
+                log.warning("getPTS(%s, %s) returned None" \
+                        % (row['pts'], row['cell']))
+                sys.stderr.write("getPTS(%s, %s) returned None\n" \
+                        % (row['pts'], row['cell']))
+                continue
 
             i = 0
             while i < len(pts):
