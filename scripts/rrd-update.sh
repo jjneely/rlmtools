@@ -1,7 +1,10 @@
 #!/bin/bash
 
-RLMTOOLS=`python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"`
+RLMTOOLS=/usr/share/rlmtools/server
 
-python $RLMTOOLS/rlmtools/graphsCron.py
-python $RLMTOOLS/rlmtools/PTSCron.py
+python $RLMTOOLS/graphsCron.py
+python $RLMTOOLS/PTSCron.py
+python $RLMTOOLS/puppetCron.py
+python $RLMTOOLS/rhnCron.py
+python $RLMTOOLS/webksCron.py
 

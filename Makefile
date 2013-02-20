@@ -64,7 +64,6 @@ install:
 	install -m 644 schema/*.sql $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/0-1.py $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/massloadwebks.py $(DESTDIR)/usr/share/rlmtools/server/
-	install -m 644 dbcron.py $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/dbcron.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/rrd-update.sh $(DESTDIR)/usr/share/rlmtools/server/
 	install -m 755 scripts/rrd-backup.sh $(DESTDIR)/usr/share/rlmtools/server/
@@ -73,6 +72,11 @@ install:
 	install -m 600 rlmtools.conf.example $(DESTDIR)/etc/rlmtools.conf
 	install -m 644 rlmlogs $(DESTDIR)/etc/logrotate.d/
 	
+	for FILE in `ls cronscripts/*.py` ; do \
+		install -m 644 $$FILE \
+			$(DESTDIR)/usr/share/rlmtools/server/ ; \
+	done
+		
 	for FILE in $(BCFG2) ; do \
 		install -m 644 bcfg2/$$FILE \
 		    $(DESTDIR)$(SITELIB)/Bcfg2/Server/Plugins/ ; \
