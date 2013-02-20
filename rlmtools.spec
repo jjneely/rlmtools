@@ -2,7 +2,7 @@
 
 Summary: Realm Linux Management Tools for Realm Linux clients
 Name: rlmtools
-Version: 2.1.3
+Version: 2.9.0
 Release: 1%{?dist:%(echo %{dist})}
 Source0: %{name}-%{version}.tar.bz2
 License: GPL
@@ -26,11 +26,11 @@ specific aspects of the client's behavior to a central location.
 %package server
 Summary:  RLMTools Server Web App and Database Backend
 Group: Applications/Internet
-Requires: mod_python, python-genshi, python-cherrypy2, rrdtool-python
+Requires: python-genshi, python-flask, rrdtool-python
 Requires: python-ezpycrypto, MySQL-python, python-httplib2
+Requires: python-dateutil, python-flask-xmlrpc, pyliblzma
 Requires: webkickstart
 Requires: python >= 2.6
-Requires(post): httpd
 Obsoletes: ncsu-rlmtools-server
 
 %description server
@@ -58,19 +58,6 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
-%post server
-
-# Log files
-if [ ! -e /var/log/rlmtools-cherrypy.log ] ; then
-    touch /var/log/rlmtools-cherrypy.log
-    chown apache:apache /var/log/rlmtools-cherrypy.log
-fi
-
-if [ ! -e /var/log/rlmtools.log ] ; then
-    touch /var/log/rlmtools.log
-    chown apache:apache /var/log/rlmtools.log
-fi
-
 %files
 %defattr(-,root,root)
 %dir %{_datadir}/rlmtools
@@ -95,6 +82,9 @@ fi
 %{python_sitelib}/Bcfg2/Server/Plugins/*
 
 %changelog
+* Wed Feb 20 2013 Jack Neely <jjneely@ncsu.edu> 2.9.0-1
+- Update spec file for the pre 3.x series
+
 * Thu Nov 15 2012 Jack Neely <jjneely@ncsu.edu> 2.1.3-1
 - Bump to 2.1.3
 
