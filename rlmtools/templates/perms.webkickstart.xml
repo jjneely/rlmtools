@@ -24,10 +24,10 @@
   <h2>Web-Kickstart Directories</h2>
 
   <p py:if="len(webksMap) == 0">
-    <i>No Puppet Repositories were found.</i>
+    <i>No Web-Kickstart directories were found.</i>
   </p>
 
-  <table>
+  <table py:if="len(webksMap) > 0">
     <tr class="neutral">
       <th class="bottom">
         Web-Kickstart Directory
