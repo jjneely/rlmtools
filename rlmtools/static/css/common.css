@@ -1,7 +1,7 @@
 body {
     font-family: 'Open Sans', sans-serif;
 }
-input, pre, textarea, select {
+input, pre, textarea, select, tt {
     font-family: 'Ubuntu Mono', sans-serif;
     font-size: 100%;
 }
