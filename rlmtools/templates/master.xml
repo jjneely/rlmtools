@@ -7,6 +7,7 @@
 <head py:match="head" py:attrs="select('@*')">
   <title>Realm Linux Management Tools</title>
 
+  <link href='http://fonts.googleapis.com/css?family=Ubuntu+Mono|Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'/>
   <link rel="stylesheet" type="text/css" 
     href="${baseURL}/static/css/navbar.css" /> 
   <link rel="stylesheet" type="text/css" 

@@ -1,3 +1,10 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+input, pre, textarea, select {
+    font-family: 'Ubuntu Mono', sans-serif;
+    font-size: 100%;
+}
 h1 {
    /*clear: both;*/
 }
@@ -23,7 +30,6 @@ a img {
    border: 0;
 }
 div.content {
-   font-family: Arial,Helvetica,Sans-Serif;
    padding: 1em;
 }
 div.message {
@@ -204,7 +210,6 @@ tr a:hover {
    text-decoration: underline;
 }
 ul.plain {
-    font-family: Arial,Helvetica,Sans-Serif;
     padding: 0px;
     margin: 0px
 }
@@ -214,7 +219,6 @@ ul.plain li {
 
 
 ul.makemenu {
-    font-family: Arial,Helvetica,Sans-Serif;
     float: right;
     width: 12em;
     background-color: #000000;
@@ -252,7 +256,6 @@ ul.makemenu a:hover {
     text-decoration: underline;
 }
 ul.submenu {
-    font-family: Arial,Helvetica,Sans-Serif;
     font-size: 85%;
     /*width: 12em;*/
     background-color: #000000;
