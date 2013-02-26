@@ -45,7 +45,10 @@
 
     <tr class="neutral">
       <th class="right">Message:</th>
-      <td>
+      <td py:if="status['data'] is None">
+        <i>No data available.</i>
+      </td>
+      <td py:if="status['data'] is not None">
         <pre py:content="status['data']">The Epoch</pre>
       </td>
     </tr>

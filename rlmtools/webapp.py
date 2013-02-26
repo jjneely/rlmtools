@@ -523,7 +523,7 @@ def status():
                 ]
 
     if status['data'] == None or status['data'] == "":
-        status['data'] = "No data available."
+        status['data'] = None
         status['data_class'] = "neutral"
     elif status['success']:
         status['data_class'] = "good"
