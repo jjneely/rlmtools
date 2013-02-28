@@ -1,4 +1,4 @@
 #!/bin/bash
 
-python /usr/share/rlmtools/server/dbcron.py
+python /usr/share/rlmtools/server/dbCron.py
 
