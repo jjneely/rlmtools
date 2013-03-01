@@ -91,13 +91,7 @@ def rhnGroups():
     wmessage = request.args.get("message", "")
     isREADby("root")
 
-    rhnMap = []
-    for g in _misc.getRHNGroups():
-        if g['dept_id'] is None:
-            if isADMINby('root'):
-               rhnMap.append(g)
-        elif isADMINby(g['dept_id']):
-            rhnMap.append(g)
+    rhnMap = _misc.getRHNGroups()
 
     rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
@@ -120,7 +114,16 @@ def rhnDetail():
         wmessage = request.args.get("message", "")
 
     rg_id = int(rg_id)
+    rhnMap = _misc.getRHNGroup(rg_id)
+    if rhnMap is None:
+        g.error = "Unknown RHN Group ID %s" % rg_id
+        abort(400)
+
     if setDept is not None:
+        if rhnMap['dept_id'] is None:
+            isADMINby("root")
+        else:
+            isADMINby(rhnMap['dept_id'])
         setDept = int(setDept)
         deptName = _misc.getDeptName(setDept)
         if deptName is None:
@@ -128,16 +131,8 @@ def rhnDetail():
         else:
             _misc.setRHNGroupDept(rg_id, setDept)
             wmessage = "Department association set to %s" % deptName
-
-    rhnMap = _misc.getRHNGroup(rg_id)
-    if rhnMap is None:
-        g.error = "Unknown RHN Group ID %s" % rg_id
-        abort(400)
-
-    if rhnMap['dept_id'] is None:
-        isADMINby("root")
     else:
-        isADMINby(rhnMap['dept_id'])
+        isREADby("root")
 
     rhnMap = completeRHNGroup(rhnMap)
     depts = _misc.getAllDepts()
@@ -203,17 +198,13 @@ def puppet(wmessage=""):
 
 @app.route("/perms/puppet/<pname>")
 def puppet_detail(pname):
+    isREADby("root")
     path = os.path.join(configDragon.config.puppet_dir, pname)
     p_id = _misc.getPuppetID(path)
     if p_id is None:
         abort(400)
 
     i = _misc.getPuppetDir(p_id)
-    if i['dept_id'] is None:
-        isADMINby("root")
-    else:
-        isADMINby(i['dept_id'])
-
     puppetMap = completeWKSInfo(i)
     return render('perms.puppet.detail',
                   dict(message="",
@@ -245,6 +236,7 @@ def webkickstart(wmessage=""):
 
 @app.route("/perms/webkickstart/<wname>")
 def webkickstart_detail(wname):
+    isREADby("root")
     base = webks._getWebKs().cfg.hosts
     path = os.path.join(base, wname)
     wkd_id = _misc.getWKSID(path)
@@ -252,10 +244,6 @@ def webkickstart_detail(wname):
         abort(400)
 
     i = _misc.getWKSDir(wkd_id)
-    if i['dept_id'] is None:
-        isADMINby("root")
-    else:
-        isADMINby(i['dept_id'])
 
     webksMap = completeWKSInfo(i)
     return render('perms.webkickstart.detail',
@@ -275,15 +263,6 @@ def changeWKSDept():
         wkd_id = request.args["wkd_id"]
         setDept = None
         wmessage = request.args.get("message", "")
-
-    # Readable by any authenticated user
-    if not isAuthenticated():
-        return message("You do not appear to be authenticated.")
-
-    # XXX: Code not done, yet
-    if not isADMIN(getAuthZ("root")):
-        return message("There is no light in this dragon cave and...oops..."
-                "you have just been eaten by a grue.")
 
     wkd_id = int(wkd_id)
     webksMap = _misc.getWKSDir(wkd_id)
