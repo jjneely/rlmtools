@@ -136,7 +136,7 @@ def _authZ_require(dept, acl):
         raise StandardError("Invalid ACL given in authorization require")
 
     if not f(getAuthZ(dept)):
-        msg = "You do not seem to have %s access on the %s level of the "  \
+        msg = "You do not have %s access on the \"%s\" level of the "  \
               "department hierarchy.  Those permissions are required for " \
               "this page." % (acl, display)
 

@@ -22,7 +22,7 @@
     <p py:content="message"/>
   </div>
 
-  <p>Greetings, ${name}.  You are user "${userid}".</p>
+  <p>Greetings, ${name}.  You are user "<tt>${userid}</tt>".</p>
 
   <h2>RHN Group Detail</h2>
 
