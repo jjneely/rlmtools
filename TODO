@@ -30,6 +30,9 @@ Working toward 3.0.x
     * deleteClient() needs to trigger a revocation/delete of the
       puppet certificate, and RHN profile probably.
 
+    * Not all RHN Groups are associated with an RHN department
+      We should be able to remove the department association here
+
 Future:
 
     * Refactor Data layer code into modules rather than classes
