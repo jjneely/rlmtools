@@ -707,6 +707,9 @@ def search():
     elif type(clients) == type(-1) and clients == -2:
         error = "Smoke appears and the tempurature rises.  You have "\
                 "angered Liguid Dragon with an empty search string."
+    elif type(clients) == type(-1) and clients == -3:
+        error = "You manage to duck as a fireball races over your head. " \
+                "Liquid Dragon is enranged by your search string."
     else:
         error = ""
 

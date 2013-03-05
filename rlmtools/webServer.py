@@ -324,7 +324,12 @@ class WebServer(server.Server):
                 status.timestamp = current.maxdate and
                 status.host_id = current.host_id"""
 
-        r = self.conn.escape_string(r.strip())
+        try:
+            r = self.conn.escape_string(r.strip())
+        except Exception, e:
+            log.info("escape_string(%s) blew up with: %s: " \
+                    % (r.strip(), str(e)))
+            return -3
 
         if r == "":
             return -2  # Empty search
