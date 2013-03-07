@@ -22,9 +22,12 @@ import re
 import struct
 import base64
 import time
+import logging
 import Crypto.PublicKey.RSA as RSA
 import Crypto.Util.number as number
 #import Crypto.Util.asn1 as asn1 
+
+log = logging.getLogger("xmlrpc")
 
 # Encrypted with NCSU's WRAP key
 KNOWN_GOOD = 'S6zbm08iaJx97Q7POLKGMXvOPTTGQwu+O9wSJ/zVzMTfy8+9CcXBKc2Wsz7ag7Ru1VvQsz8HULep1xxQY7SkZid6eEH5Y1r5WkYWaQQGLgR9X1aPu3i/9BkAm7WeH8+c'
@@ -94,11 +97,22 @@ class WRAPCookie(object):
     def parse(self):
 
         # Step 1: Decode string
-        blob = base64.decodestring(self.cookie)
+        try:
+            blob = base64.decodestring(self.cookie)
+        except Exception, e:
+            # Failed to decode
+            log.info("Failed to decode BASE64 WRAP cookie")
+            return False
+
         blob = number.bytes_to_long(blob)
 
         # Step 2: Decrypt
-        clear = self.rsa.decrypt(blob)
+        try:
+            clear = self.rsa.decrypt(blob)
+        except Exception, e:
+            log.info("Failed to decrypt WRAP cookie")
+            return False
+
         clear = number.long_to_bytes(clear)
         
         # Step 3: Verify and remove padding
@@ -115,6 +129,7 @@ class WRAPCookie(object):
                 return True
             except Exception, e:
                 # We failed to unpack the cookie binary data
+                log.info("Failed to unpack binary data from WRAP cookie")
                 return False
 
     def isExpired(self):
