@@ -36,3 +36,6 @@ create table rhngroups (
     rhnname     VARCHAR(1024) not null
 );
 
+alter table rhngroups add column licenses integer default NULL;
+create index rhng_id_idx on rhngroups(rhng_id);
+

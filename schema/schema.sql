@@ -196,7 +196,10 @@ create table rhngroups (
     rg_id       INTEGER PRIMARY KEY auto_increment,
     dept_id     INTEGER,
     rhng_id     INTEGER not null,
-    rhnname     VARCHAR(1024) not null
+    rhnname     VARCHAR(1024) not null,
+    licenses    INTEGER default null,
+
+    index(rhng_id)
 );
 
 create table rhnprotectedusers (

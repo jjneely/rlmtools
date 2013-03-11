@@ -25,7 +25,7 @@ import optparse
 import os.path
 import sys
 import pwd
-import getpass
+import re
 
 from webKickstart.configtools import Configuration as webKSConfig
 
@@ -35,6 +35,7 @@ from rlmtools.constants import defaultConfFiles
 from rlmtools.hesiod import Hesiod
 
 hes = Hesiod()
+log = logging.getLogger('xmlrpc')
 
 def isDisabled(user):
     """Return True if the given user does not exist in LDAP or is disabled."""
@@ -83,7 +84,6 @@ def watchRHNUsers(m, server, session):
        Also disable expired NCSU accounts as we grok that information 
        here as well."""
 
-    log = logging.getLogger('xmlrpc')
     data = server.user.listUsers(session)
     users = [ i['login'] for i in data if i['enabled'] ]
     rhnProtectedUsers = m.getRHNProtectedUsers()
@@ -146,11 +146,66 @@ def watchRHN(config):
     diffAndInsert(m, rhnGroups, knownGroups)
     watchRHNUsers(m, server, session)
 
+    # Gather license usage
+    clients, groups = inventory(server, session)
+    for g in groups:
+        m.updateLicenseCount(g, groups[g]['count'])
+
     try:
         server.auth.logout(session)
     except Exception, e:
         # If we blow up during logout just ignore it
         pass
+
+def inventory(rhn, session):
+    clients = {}
+    groups = {}
+    systems = rhn.system.list_user_systems(session)
+
+    for system in systems:
+        #sys.stderr.write("Working on: %s\n" % system["name"])
+        client = {}
+        client["id"] = int(system["id"])
+        client["name"] = system["name"]
+        client["last_checkin"] = system["last_checkin"]
+        subscribedTo = []
+
+        # Sub Channels available for subscription, does not include
+        # already subscribed sub channels.
+        channels =  rhn.system.list_child_channels(session, 
+                                                          system["id"])
+        chanLabels = [ i['label'] for i in channels ]
+        client["channels"] = chanLabels
+
+        if len([ i for i in chanLabels if re.search("^realmlinux", i) ]) > 0:
+            client["RL"] = True
+        else:
+            client["RL"] = False
+
+        grps = rhn.system.list_groups(session, system["id"])
+   
+        client["subscribed"] = []
+        for grp in grps:
+            gid = int(grp["sgid"])
+            if int(grp["subscribed"]) > 0:
+                if gid not in groups:
+                    groups[gid] = {"name" : grp["system_group_name"],
+                                   "count": 0, 
+                                   "rl"   : 0, }
+                groups[gid]["count"] = groups[gid]["count"] + 1
+                if client["RL"]:
+                    groups[gid]["rl"] = groups[gid]["rl"] + 1
+
+                client["subscribed"].append(gid)
+
+        if len(client["subscribed"]) > 1:
+            print "WARNING: Host %s (%s) subscribed to multiple groups: %s" \
+                    % (client['name'], client['id'], 
+                       str(client['subscribed']))
+
+        clients[client["id"]] = client
+
+    return clients, groups
 
 def main():
     parser = optparse.OptionParser()

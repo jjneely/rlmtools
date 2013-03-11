@@ -384,6 +384,14 @@ class PermServer(server.Server):
         self.cursor.execute(q, (userid,))
         self.conn.commit()
 
+    def updateLicenseCount(self, rhng_id, count):
+        """Update the license usage count for the RHN group defined by
+           rhng_id."""
+
+        q = "update rhngroups set licenses = %s where rhng_id = %s"
+        self.cursor.execute(q, (count, rhng_id))
+        self.conn.commit()
+
     def getPuppetDept(self, dept_id):
         """Return all Puppet repos associated with the given department."""
         q = """select * from puppetrepos where dept_id = %s"""
