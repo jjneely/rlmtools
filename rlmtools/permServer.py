@@ -343,7 +343,7 @@ class PermServer(server.Server):
     def getRHNGroups(self):
         "Return a list of dicts of all RHN groups known to LD."""
 
-        q = """select rhnname, rhng_id, dept_id, rg_id from rhngroups"""
+        q = """select * from rhngroups"""
         self.cursor.execute(q)
         return resultSet(self.cursor).dump()
 

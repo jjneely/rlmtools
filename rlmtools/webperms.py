@@ -92,6 +92,14 @@ def rhnGroups():
     isREADby("root")
 
     rhnMap = _misc.getRHNGroups()
+    total = 0
+    for i in rhnMap:
+        if i['licenses'] is not None:
+            total += i['licenses']
+        else:
+            i['licenses'] = 0
+    for i in rhnMap:
+        i['percent'] = "%.1f" % (100.0 * i['licenses'] / total)
 
     rhnMap.sort(cmp=lambda x,y:cmp(x['rhnname'], y['rhnname']))
 
@@ -99,6 +107,7 @@ def rhnGroups():
                   dict(message=wmessage,
                        title='RHN Group to Department Map',
                        rhnMap=[ completeRHNGroup(i) for i in rhnMap ],
+                       total=total,
                        subMenu=subMenu,
                  ))
 
