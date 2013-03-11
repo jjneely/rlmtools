@@ -4,4 +4,5 @@
 
 # 0,30 * * * * apache bash /usr/share/rlmtools/server/rrd-update.sh
 # 43   2 * * * apache bash /usr/share/rlmtools/server/dbcron.sh
+# 17 7,19 * * * apache python /usr/share/rlmtools/server/rhnCron.py
 
