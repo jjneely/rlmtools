@@ -32,9 +32,9 @@
     <tr class="neutral">
       <th>RHN Group Name</th>
       <th>Actions</th>
-      <th>Associated Department</th>
+      <th>Department</th>
       <th>RHEL Licenses</th>
-      <th>Usage Percentage</th>
+      <th>License Usage</th>
     </tr>
     <tr py:for="i in rhnMap" py:attrs="{'class':i['class']}">
       <td>${i['rhnname']}</td>

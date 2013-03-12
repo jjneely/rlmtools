@@ -36,6 +36,11 @@
       <td py:if="i['dept'] is not None">${i['dept']}</td>
       <td py:if="i['dept'] is None"><i>Not Set</i></td>
     </tr>
+    <tr class="neutral">
+      <th class="right">RHEL Licenses Used:</th>
+      <td py:if="i['licenses'] is not None">${i['licenses']}</td>
+      <td py:if="i['licenses'] is None"><i>None</i></td>
+    </tr>
     <tr py:if="i['dept'] is not None" py:attrs="{'class':i['synced']}">
       <th class="right">Users Sync'd:</th>
       <td py:if="len(tasks) == 0">True</td>
