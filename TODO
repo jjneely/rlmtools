@@ -4,10 +4,9 @@ Road Map
 Client:
 
     * test and fix up "ncsurename"
-    * Deal with checksum errors in messages -- especially 
-      da39a3ee5e6b4b0d3255bfef95601890afd80709 which is the zero length SHA512
     * Make sure dept changes propagate correctly
     * sysinfo -- see Bug # 440
+    * sysinfo -- include iptables
 
 Server:
 
