@@ -105,7 +105,8 @@
 
   <table>
     <tr class="neutral">
-      <th class="bottom" colspan="2">Department Status and Attributes</th>
+      <th class="bottom">Department</th>
+      <th class="bottom">Actions</th>
       <th class="bottom">Supported RL Clients</th>
       <th class="bottom">Unsupported RL Clients</th>
     </tr>
@@ -115,8 +116,8 @@
           py:content="dept['name']" />
       </td>
       <td>
-         <a href="${baseURL}/admin/dept?dept_id=${dept['dept_id']}">
-           Manage Attributes</a>
+        <button type="button" 
+          onclick="location.href='${baseURL}/admin/dept?dept_id=${dept['dept_id']}'">Manage Attributes</button>
       </td>
       <td py:content="dept['supported']" />
       <td py:content="dept['unsupported']" />
