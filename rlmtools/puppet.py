@@ -147,7 +147,7 @@ class Puppet(object):
         return blob.strip()
 
     def getCertStatus(self, fqdn, uuid):
-        client = "%s-%s" % (fqdn, uuid)
+        client = "%s-%s" % (fqdn.lower(), uuid)
         r, c = self.http.get("/root/certificate_status/%s" % client,
                 headers = {'Accept':'pson'})
 
