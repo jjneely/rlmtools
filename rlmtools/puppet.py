@@ -19,6 +19,11 @@ reports_path = "/afs/bp/adm/puppet/var/reports"
 def findPuppetInventory(uuid):
     """Returns None or a YAML string of the latest Puppet facts for this
        host matching the given UUID."""
+    if uuid is None:
+        # We check clients that have not completely registered where uuid 
+        # is None.
+        return None
+
     p = facts_path
     facts = None
     uuid = uuid.lower()
@@ -49,6 +54,7 @@ def findPuppetReports(uuid):
     """Return None or a list of files, each being time stamped and each
        being a LZMA compressed or plain text YAML file of a Puppet run
        report."""
+    if uuid is None: return None
     uuid = uuid.lower()
     d = None
     try:
