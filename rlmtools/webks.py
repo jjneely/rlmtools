@@ -23,8 +23,7 @@ import sys
 import os
 import os.path
 
-from webKickstart import webKickstart
-from webKickstart import configtools
+from webKickstart.webks import webKickstart
 
 import configDragon
 from webcommon import *
