@@ -74,6 +74,10 @@ def _before_each_fqdn():
     except socket.herror, e:
         if e[0] == 0:
             # No error...IP does not resolve
+            log.warning("Request from %s which does not resolve but has no error" % ip)
+            addr = [ip]
+        if e[0] == 1:
+            # Unknown host
             log.warning("Request from %s which does not resolve" % ip)
             addr = [ip]
         else:
