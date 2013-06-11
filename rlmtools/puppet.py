@@ -185,7 +185,7 @@ class Puppet(object):
             return True
 
         r, c = self.http.put("/root/certificate_status/%s-%s" \
-                % (fqdn, uuid), 
+                % (fqdn.lower(), uuid), 
                 headers = {'Accept': 'pson',
                            'Content-Type': 'text/pson'},
                 body = json.dumps({"desired_state":"signed"}))
