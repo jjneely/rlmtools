@@ -168,6 +168,13 @@ create table sysadmins (
     index(acl_id)
 );
 
+create table profilekeys (
+    pro_id      INTEGER PRIMARY KEY auto_increment,
+    keyword     VARCHAR(255),
+
+    index(keyword)
+);
+
 create table webkickstartkeys (
     wkk_id      INTEGER PRIMARY KEY auto_increment,
     keyword     VARCHAR(255),
@@ -245,6 +252,12 @@ insert into dstype (name) values ('usagesync');
 insert into htype (name) values ('install_support');
 insert into htype (name) values ('install_nosupport');
 insert into htype (name) values ('blessing');
+
+-- What Keys make up the default departmental profile
+insert into profilekeys (keyword) values ("owner");
+insert into profilekeys (keyword) values ("root");
+insert into profilekeys (keyword) values ("user");
+insert into profilekeys (keyword) values ("enable.activationkey");
 
 -- Use python rlmtools/configDragon.py to manage the advanced configuration
 -- stored inside the database.
