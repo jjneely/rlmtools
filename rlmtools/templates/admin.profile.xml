@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='utf-8'?>
+<?python
+
+    sortedKeys = attributes.keys()
+    sortedKeys.sort()
+
+?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+
+<body>
+
+  <p>
+    Below is the department profile for ${deptname}.  This profile contains
+    configuration items normally found as keywords in a Web-Kickstart
+    "config file."  These items rarely change within a department so they
+    have been incorperated into the Realm Linux Management Tools to aid
+    in deploying Realm Linux machines from the web interface.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h1>Department Profile: ${deptname}</h1>
+
+  <table style="clear: left" class="noborder">
+    <tr>
+      <td width="60%">
+        <p>
+          All fields below must have appropiate values to install Realm Linux
+          machines from the web interface.  You may alter those below or you
+          may import these values from an existing Web-Kickstart "config
+          file." The Web-Kickstart config must declare its department to be
+          "${deptname}." You may not import another department's
+          configuration.
+        </p>
+        <table>
+          <tr py:if="not profilecomplete" class="bad">
+            <td> 
+              This profile is incomplete.
+            </td>
+          </tr>
+          <tr py:if="profilecomplete" class="good">
+            <td>
+              This profile is complete and usable.
+            </td>
+          </tr>
+        </table>
+      </td>
+
+      <td>
+        <p>
+        </p>
+        <table>
+          <tr class="neutral">
+            <th>
+              <form method="post" 
+                action="${baseURL}/admin/profiles/${deptname}">
+                <p>Import Web-Kickstart Data:</p>
+                Hostname: <input type="text" name="hostname" value=""/>
+                <button type="submit" value="Import">Import</button>
+              </form>
+            </th>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <h2>RHN Activation Key</h2>
+
+  <p>
+    An RHN Activation Key registers your department's Realm Linux machines
+    with the Red Hat Network which provides updates and security errata to
+    Red Hat Enterprise Linux machines.  Using the appropiate activation key
+    ensures that machines will be registered under the RHN Groups that your
+    department has access to.  The RHN Activation Key is found to the right
+    of the "enable activationkey" keyword in your Web-Kickstart config.
+  </p>
+  <form method="post" action="${baseURL}/admin/profiles/${deptname}">
+    <table>
+      <tr class="neutral">
+        <th class="right">
+          RHN Activation Key:
+        </th>
+        <td>
+          <input type="text" name="activationkey" 
+            value="${attributes.get('enable.activationkey', '')}"
+            placeholder="Value not present."/>
+        </td>
+        <td>
+          <button type="submit">Submit</button>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <h2>Automated Root Passwords</h2>
+
+  <p>
+    This defines which root password will be used with this department's
+    Realm Linux machines and also enables automated updates of that password
+    in the future.  Two values are needed, the name of the root password
+    (which may be your department's name) and an encryption key that allows
+    the Realm Linux machine to decrypt the root passwords.  In your Web-
+    Kickstart config these are the two values given to the "root" keyword.
+  </p>
+  <form method="post" action="${baseURL}/admin/profiles/${deptname}">
+    <?python
+        try:
+            t = attributes['root'].split()
+            n = t[0]
+            k = t[1]
+        except:
+            n = ""
+            k = ""
+    ?>
+    <table>
+      <tr class="neutral">
+        <th class="right">
+          Root Password Name: 
+        </th>
+        <td>
+          <input type="text" name="root" value="${n}"
+            placeholder="Value not present."/>
+        </td>
+        <td rowspan="2">
+          <button type="submit">Submit</button>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">
+          Encryption Key:
+        </th>
+        <td>
+          <input type="text" name="key" value="${k}"
+            placeholder="Value not present."/>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <h2>Automated List of System Administrators</h2>
+
+  <p>
+    This defines which list of system administrators will given access to this
+    department's Realm Linux machines and also enables automated updates of
+    that list.  This list includes all users that are allowed to login and
+    become root.  Two values are needed, the name of the list  (which may be
+    your department's name) and an encryption key that allows the Realm Linux
+    machine to decrypt the list.  In your Web-Kickstart config these are the
+    two values given to the "users" keyword.
+  </p>
+  <form method="post" action="${baseURL}/admin/profiles/${deptname}">
+    <?python
+        try:
+            t = attributes['users'].split()
+            n = t[0]
+            k = t[1]
+        except:
+            n = ""
+            k = ""
+    ?>
+    <table>
+      <tr class="neutral">
+        <th class="right">
+          System Administrators List Name: 
+        </th>
+        <td>
+          <input type="text" name="users" value="${n}"
+            placeholder="Value not present."/>
+        </td>
+        <td rowspan="2">
+          <button type="submit">Submit</button>
+        </td>
+      </tr>
+      <tr class="neutral">
+        <th class="right">
+          Encryption Key:
+        </th>
+        <td>
+          <input type="text" name="key" value="${k}"
+            placeholder="Value not present."/>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <h2>Owner</h2>
+
+  <p>
+    Normally found as the "owner" keyword in your Web-Kickstart config,
+    this specifies an email address where the system administrators for this
+    machine may be contacted.  A mailing list of responsible system
+    administrators is suggested.  This list will receive email from Realm
+    Linux machines if there is a problem.
+  </p>
+  <form method="post" action="${baseURL}/admin/profiles/${deptname}">
+    <table>
+      <tr class="neutral">
+        <th class="right">
+          Email:
+        </th>
+        <td>
+          <input type="text" name="owner" 
+            value="${attributes.get('owner', '')}"
+            placeholder="Value not present."/>
+        </td>
+        <td>
+          <button type="submit">Submit</button>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+</body>
+
+</html>
+

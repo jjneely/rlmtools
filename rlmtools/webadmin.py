@@ -33,7 +33,7 @@ from adminServer import AdminServer
 from webServer import WebServer
 from rlattributes import RLAttributes
 
-from flask import request, abort
+from flask import request, abort, g
 
 # Flask application object
 from rlmtools import app
@@ -139,8 +139,18 @@ def admin_dept(dept_id=None):
 
     meta, attributes = _rla.deptAttrs(dept_id)
 
+    # Is the departmental profile complete?
+    missing = []
+    for i in _admin.getProfileKeys():
+        if i not in attributes.keys():
+            missing.append(i)
+
+    missing.sort()
+
     subMenu = [ ('Deptartment Status: %s' % deptname,
-                 '%s/dept?dept_id=%s' % (url(), dept_id))
+                 '%s/dept?dept_id=%s' % (url(), dept_id)),
+                ('Department Profile: %s' % deptname,
+                 '%s/admin/profiles/%s' % (url(), deptname))
               ]
 
     return render('admin.dept', 
@@ -152,6 +162,7 @@ def admin_dept(dept_id=None):
                        message=wmessage,
                        attributes=attributes,
                        meta=meta,
+                       profilemissing=missing,
                  ))
 
 @app.route("/admin/deleteHostAttr", methods=["POST"])
@@ -377,4 +388,88 @@ def modifyDept():
                        replaceValue=replaceValue,
                  ))
 
+@app.route("/admin/profiles/<deptname>", methods=["POST", "GET"])
+def deptProfile(deptname):
+    dept_id = _admin.getDeptIDNoCreate(deptname)
+    ptr = _rla.getDeptAttrPtr(dept_id)
+    msg = ""
 
+    if dept_id is None:
+        g.error = "Malformed or non-existant department name."
+        abort(400)
+
+    isADMIN(dept_id)
+
+    if request.method == "POST":
+        if "hostname" in request.form:
+            from webKickstart.libwebks import LibWebKickstart
+            host = request.form["hostname"].strip()
+            print host
+            webks = LibWebKickstart()
+            # Find and parse the web-kickstart config
+            data = webks.getEverything(str(host))
+            if data is None:
+                g.error = "An error occurred loading Web-Kickstart data for the given host."
+                abort(400)
+            # Permissions check
+            if "dept" not in data:
+                g.error = "Web-Kickstart config does not define a department."
+                abort(400)
+            if data["dept"][0][0] != deptname:
+                g.error = "Web-Kickstart config does not exist in the %s department." % deptname
+                abort(403)
+            # Import the needed keyword data
+            for i in ['enable.activationkey', 'root', 'users', 'owner']:
+                if i in data:
+                    line = data[i][0]
+                    _rla.setAttribute(ptr, i, " ".join(line))
+            msg = "Profile data imported from Web-Kickstart host %s" % host
+        if "activationkey" in request.form:
+            t = request.form["activationkey"].strip()
+            if t != "":
+                _rla.setAttribute(ptr, "enable.activationkey", t)
+                msg = "RHN Activation Key set."
+            else:
+                g.error = "Malformed input."
+                abort(400)
+        if "root" in request.form:
+            n = request.form["root"].strip()
+            k = request.form["key"].strip()
+            if n == "" or k == "":
+                g.error = "Malformed input."
+                abort(400)
+            _rla.setAttribute(ptr, "root", "%s %s" % (n, k))
+            msg = "Root password name and key set"
+        if "users" in request.form:
+            n = request.form["users"].strip()
+            k = request.form["key"].strip()
+            if n == "" or k == "":
+                g.error = "Malformed input."
+                abort(400)
+            _rla.setAttribute(ptr, "users", "%s %s" % (n, k))
+            msg = "System administrators list name and key set."
+        if "owner" in request.form:
+            t = request.form["owner"].strip()
+            if t != "":
+                _rla.setAttribute(ptr, "owner", t)
+            else:
+                g.error = "Malformed input."
+                abort(400)
+            msg = "Owner email address set."
+
+    subMenu = [ ('Deptartment Status: %s' % deptname,
+                 '%s/dept?dept_id=%s' % (url(), dept_id)),
+                ('Manage Department Attributes: %s' % deptname,
+                 '%s/admin/dept?dept_id=%s' % (url(), dept_id))
+              ]
+
+    meta, attributes = _rla.deptAttrs(dept_id)
+
+    return render('admin.profile',
+            dict(subMenu=subMenu,
+                 deptname=deptname,
+                 dept_id=dept_id,
+                 attributes=attributes,
+                 message=msg,
+                 profilecomplete=isProfileComplete(attributes),
+                ))

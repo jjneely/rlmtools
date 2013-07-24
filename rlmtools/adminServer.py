@@ -189,3 +189,11 @@ class AdminServer(server.Server):
         result = resultSet(self.cursor)
 
         return [ ( row['keyword'], row['map'] ) for row in result ]
+
+    def getProfileKeys(self):
+        q = "select keyword from profilekeys"
+        self.cursor.execute(q)
+        result = resultSet(self.cursor)
+
+        return [ row['keyword'] for row in result ]
+

@@ -215,6 +215,20 @@ def _parseDept(void):
     # If we are here this must be a name, use the DB to convert
     return _server.getDeptIDNoCreate(void)
 
+def isProfileComplete(attributes):
+    """Return True iff a departmental profile is present and
+       filled in.  We scan the given dictionary of attributes rather
+       than polling the database for it again."""
+
+    profile = ['enable.activationkey', 'root', 'users', 'owner']
+    for i in profile:
+        if i in attributes and attributes[i].strip() != "":
+            continue
+        else:
+            return False
+
+    return True
+
 @app.errorhandler(401)
 def error401(error):
     return message("You are not authenticated. Please login from the " \

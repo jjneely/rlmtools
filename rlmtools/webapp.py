@@ -225,9 +225,12 @@ def _checkClient(client):
 def dept():
     isREADby("root")
     dept_id = request.args["dept_id"]
+    department=_server.getDeptName(int(dept_id))
 
     subMenu = [ ('Manage Department Attributes',
                  '%s/admin/dept?dept_id=%s' % (url(), dept_id)),
+                ('Department Profile: %s' % department,
+                 '%s/admin/profiles/%s' % (url(), department))
               ]
 
     clients = _server.getClientList(int(dept_id))
@@ -248,7 +251,7 @@ def dept():
 
     return render('dept', dict(support=support, 
                      nosupport=nosupport, 
-                     department=_server.getDeptName(int(dept_id)),
+                     department=department,
                      subMenu=subMenu,
                      dept_id=dept_id,
                      title="Department Listing"))

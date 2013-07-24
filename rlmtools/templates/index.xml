@@ -118,6 +118,8 @@
       <td>
         <button type="button" 
           onclick="location.href='${baseURL}/admin/dept?dept_id=${dept['dept_id']}'">Manage Attributes</button>
+        <button type="button" 
+          onclick="location.href='${baseURL}/admin/profiles/${dept['name']}'">View/Edit Profile</button>
       </td>
       <td py:content="dept['supported']" />
       <td py:content="dept['unsupported']" />
