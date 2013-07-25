@@ -406,7 +406,6 @@ def modifyDept():
 @app.route("/admin/profiles/<deptname>", methods=["POST", "GET"])
 def deptProfile(deptname):
     dept_id = _admin.getDeptIDNoCreate(deptname)
-    ptr = _rla.getDeptAttrPtr(dept_id)
     msg = ""
 
     if dept_id is None:
@@ -414,6 +413,7 @@ def deptProfile(deptname):
         abort(400)
 
     isADMIN(dept_id)
+    ptr = _rla.getDeptAttrPtr(dept_id)
 
     if request.method == "POST":
         if "hostname" in request.form:
