@@ -32,9 +32,20 @@
     <p py:content="message"/>
   </div>
 
-  <h2>Current Department Attributes</h2>
+  <h2 style="clear: both;">Current Department Attributes</h2>
 
   <table py:if="len(attributes) > 0">
+    <tr class="neutral">
+      <th class="bottom">
+        Attribute Name
+      </th>
+      <th class="bottom">
+        Actions
+      </th>
+      <th class="bottom">
+        Value
+      </th>
+    </tr>
     <tr py:for="attr in sortedKeys" class="neutral">
       <th class="right" py:content="attr"/>
       <th class="right">
@@ -51,7 +62,7 @@
         <i py:if="attributes[attr] is None">(Not Set)</i>
         <i py:if="attributes[attr] == ''">(Set)</i>
         <i py:if="attr in meta['meta.inhairited']">(Inherited)</i>
-        <span py:if="attributes[attr] is not None"
+        <tt py:if="attributes[attr] is not None"
               py:content="str(attributes[attr])" />
       </td>
     </tr>
