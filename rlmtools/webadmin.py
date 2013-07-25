@@ -93,6 +93,9 @@ def host(host_id=None):
             if match is None: continue
             attributes[a] = "%s ...%s [Secret Obscured]" % \
                     (match.group(1), match.group(2)[:6])
+    for a in ['enable.activationkey', 'bcfg2.password']:
+        if a in attributes and isinstance(attributes[a], str):
+            attributes[a] = "...%s [Secret Obscured]" % attributes[a][-5:]
 
     if 'meta.imported' not in meta:
         if wmessage == "":
@@ -138,6 +141,18 @@ def admin_dept(dept_id=None):
     wmessage = ''
 
     meta, attributes = _rla.deptAttrs(dept_id)
+
+    # Don't display encrypt secrets fully
+    regex = re.compile(r"([-a-zA-Z0-9]+) ([a-zA-Z0-9]+)")
+    for a in ['root', 'users']:
+        if a in attributes and isinstance(attributes[a], str):
+            match = regex.match(attributes[a])
+            if match is None: continue
+            attributes[a] = "%s ...%s [Secret Obscured]" % \
+                    (match.group(1), match.group(2)[:6])
+    for a in ['enable.activationkey', 'bcfg2.password']:
+        if a in attributes and isinstance(attributes[a], str):
+            attributes[a] = "...%s [Secret Obscured]" % attributes[a][-5:]
 
     # Is the departmental profile complete?
     missing = []
