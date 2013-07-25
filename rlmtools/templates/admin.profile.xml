@@ -1,8 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
 <?python
 
-    sortedKeys = attributes.keys()
-    sortedKeys.sort()
+    def hideKey(k):
+        if k == "":
+            return "Value not present."
+        else:
+            return "Value hidden and ending in ...%s." % k[-5:]
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -93,9 +96,8 @@
           RHN Activation Key:
         </th>
         <td>
-          <input type="text" name="activationkey" 
-            value="${attributes.get('enable.activationkey', '')}"
-            placeholder="Value not present."/>
+          <input type="text" name="activationkey" size="35" value=""
+            placeholder="${hideKey(attributes.get('enable.activationkey', ''))}"/>
         </td>
         <td>
           <button type="submit">Submit</button>
@@ -130,7 +132,7 @@
           Root Password Name: 
         </th>
         <td>
-          <input type="text" name="root" value="${n}"
+          <input type="text" name="root" value="${n}" size="35"
             placeholder="Value not present."/>
         </td>
         <td rowspan="2">
@@ -142,8 +144,8 @@
           Encryption Key:
         </th>
         <td>
-          <input type="text" name="key" value="${k}"
-            placeholder="Value not present."/>
+          <input type="text" name="key" value="" size="35"
+            placeholder="${hideKey(k)}"/>
         </td>
       </tr>
     </table>
@@ -176,7 +178,7 @@
           System Administrators List Name: 
         </th>
         <td>
-          <input type="text" name="users" value="${n}"
+          <input type="text" name="users" value="${n}" size="35"
             placeholder="Value not present."/>
         </td>
         <td rowspan="2">
@@ -188,8 +190,8 @@
           Encryption Key:
         </th>
         <td>
-          <input type="text" name="key" value="${k}"
-            placeholder="Value not present."/>
+          <input type="text" name="key" value="" size="35"
+            placeholder="${hideKey(k)}"/>
         </td>
       </tr>
     </table>
@@ -211,7 +213,7 @@
           Email:
         </th>
         <td>
-          <input type="text" name="owner" 
+          <input type="text" name="owner" size="35"
             value="${attributes.get('owner', '')}"
             placeholder="Value not present."/>
         </td>
