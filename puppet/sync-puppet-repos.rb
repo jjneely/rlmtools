@@ -41,6 +41,10 @@ Dir.foreach(SOURCE_BASEDIR) do |dir|
     #puts "  #{source} does not contain a Git repository"
     next
   end
+  if dir =~ /global-modules/
+    # Skip the global modules directory for now
+    next
+  end
 
   #puts "Working on #{source} ..."
 
