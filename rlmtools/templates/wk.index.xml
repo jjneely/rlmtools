@@ -6,53 +6,117 @@
 
 <xi:include href="master.xml" />
 
+<script src="${baseURL}/static/jQuery.js"></script>
+<script>
+  $(document).ready(function() {
+     $('#debugmode').click(function() {
+          goUrl = '${baseURL}/webKickstart/kickstart/' + 
+          $('#host').val().toLowerCase();
+          if ( $('#host').val() != "" ) {
+            window.location = goUrl;
+          }
+          return false;  // Prevent the default button behaviour
+     });
+
+     $('#collision').click(function() {
+          goUrl = '${baseURL}/webKickstart/collision/' + 
+          $('#host').val().toLowerCase();
+          if ( $('#host').val() != "" ) {
+            window.location = goUrl;
+          }
+          return false;  // Prevent the default button behaviour
+     });
+
+     $('#createnew').click(function() {
+          goUrl = '${baseURL}/webKickstart/build/' + 
+          $('#host').val().toLowerCase();
+          if ( $('#host').val() != "" ) {
+            window.location = goUrl;
+          }
+          return false;  // Prevent the default button behaviour
+     });
+
+     $('#oldconfig').click(function() {
+          goUrl = '${baseURL}/webKickstart/checkconfigs';
+          window.location = goUrl;
+          return false;  // Prevent the default button behaviour
+     });
+  });
+</script>
+
 <head></head>
 <body>
 
 <p>Welcome to the Web-Kickstart Tools page.  This page gives you access
-to some additional tools to help you debug you config files and manage
-your config files in AFS space.  If you do not have access to these tools
+to some additional tools to help you debug you config files, manage
+your config files in AFS space, and create new Web-Kickstart configs from 
+this web interface.  If you do not have access to these tools
 or otherwise feel your access permissions are in error, please send us
 a note to <a href="mailto:linux@help.ncsu.edu">linux@help.ncsu.edu</a>.</p>
 
-<p>Also, if you need assistance with any of these tools or have ideas
-for future enhancments of Web-Kickstart, please open a Remedy ticket by
-the above email address.</p>
-
 <p>Welcome <span py:replace="name" />.</p>
 
-<h2>Config File Debugging Or Kickstart Preview</h2>
+<table>
+  <tr class="neutral">
+    <th class="right">
+      <input type="text" size="32" id="host" name="host"
+        placeholder="Fully Qualified Domain Name"/>
+    </th>
+    <td>
+      <b>Host Name:</b> Enter the host name you wish to query or modify.  The
+      host name must be a fully qualified domain name.
+    </td>
+  </tr>
 
-<p>To debug your config file for a host enter the IP or FQDN of the host
-in the box below.  This will show you the kickstart that will be sent
-to that host when it is Web-Kickstarted.  If there is an error a
-hopefully helpful message will appear.</p>
+  <tr class="neutral">
+    <th class="right">
+      <button type="submit" id="debugmode">Generate Kickstart</button>
+    </th>
+    <td> 
+      <b>View Generated Kickstart:</b>
+      To debug your Web-Kickstart config files or to view the fully generated
+      Red Hat Kickstart click the above button after entering the host name of
+      the machine in question.  Any issues or parsing problems with your
+      Web-Kickstart config file will generate a helpful error message.
+    </td>
+  </tr>
 
-<form action="${baseURL}/webKickstart/debugtool" method="post">
-<p>IP or host name: <input type="text" name="host"/>
-  <button type="submit">Submit</button></p>
-</form>
+  <tr class="neutral">
+    <th class="right">
+      <button type="submit" id="createnew">Create/Modify Install</button>
+    </th>
+    <td>
+      <b>Create or Modify a New Web-Kickstart Config:</b>
+      This tool will create or modify a Web-Kickstart config for the
+      given hostname through the web interface.  No more searching for
+      that file in AFS!
+    </td>
+  </tr>
 
-<h2>Collision Detection</h2>
+  <tr class="neutral">
+    <th class="right">
+      <button type="submit" id="collision">Collision Detect</button>
+    </th>
+    <td>
+      <b>Collision Detection:</b>
+      What happens when there are two or more config files for the same host?
+      Well, its not good.  This tool will find any Web-Kickstart config file
+      collisions with the given host name.
+    </td>
+  </tr>
 
-<p>What happens when there are two or more config files for the same
-host?  Well, its not good.  Enter in the the IP or FQDN of a host name
-to this tool and it will report config file collisions.</p>
-
-<form action="${baseURL}/webKickstart/collision" method="post">
-<p>IP or host name: <input type="text" name="host"/>
-  <button type="submit">Submit</button></p>
-</form>
-
-<h2>Old Config Files</h2>
-
-<p>To help folks be able to clean out old config files this tool will list
-all the config files for hosts that no longer resolve in DNS.  Click the 
-submit button.</p>
-
-<form action="${baseURL}/webKickstart/checkconfigs" method="post">
-  <button type="submit">Submit</button>
-</form>
+  <tr class="neutral">
+    <th class="right">
+      <button type="submit" id="oldconfig">Old Configs</button>
+    </th>
+    <td>
+      <b>Find Old Config Files:</b>
+      To help folks be able to clean out old config files this tool will list
+      all the config files for hosts that no longer resolve in DNS.  This
+      tool does not require a host name be filled in above.
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>

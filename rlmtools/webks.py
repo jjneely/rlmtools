@@ -24,11 +24,12 @@ import os
 import os.path
 
 from webKickstart.webks import webKickstart
+from webKickstart.libwebks import LibWebKickstart
 
 import configDragon
 from webcommon import *
 
-from flask import request
+from flask import request, g, abort
 
 # Flask Application object
 from rlmtools import app
@@ -37,45 +38,50 @@ def _getWebKs():
     # Helper function to return a WebKickstart object
     return webKickstart('url', {}, configDragon.config.webks_dir)
 
-@app.route("/webKickstart")
+@app.route("/webKickstart/")
+@app.route("/webKickstart/build/")
+@app.route("/webKickstart/kickstart/")
+@app.route("/webKickstart/collision/")
 def wk_index():
     isREADby("root")
     return render('wk.index', dict(title="Web-Kickstart Tools"))
 
-@app.route("/webKickstart/rawKickstart")
-def rawKickstart():
+@app.route("/webKickstart/kickstart/<host>")
+def debugtool(host):
+    # XXX: Should we support Web-Kickstart's tokens?  libwebks needs
+    # updating if we do.
     isREADby("root")
-    host = request.args["host"]
+    raw = 'raw' in request.args
 
-    host = host.strip()
-    w = _getWebKs()
-    w.setDebug(True)           # Previent running of things that shouldn't
-                               # for preview mode
-    tuple = w.getKS(host)
-
-    return tuple[1], 200, {"Content-Type": "text/plain"}
-
-@app.route("/webKickstart/debugtool", methods=["POST"])
-def debugtool():
-    isREADby("root")
-    host = request.form["host"]
-
-    host = host.strip()
+    host = str(host)
     if host == "":
-        return self.render('wk.debugtool', dict(host="None",
+        return render('wk.debugtool', dict(host="None",
               kickstart="# You failed to provide a host to check."))
 
     w = _getWebKs()
     w.setDebug(True)           # Previent running of things that shouldn't
                                # for preview mode
+
+    # Parse 1: Find the dept string
+    libwk = LibWebKickstart(configDragon.config.webks_dir)
+    keys = libwk.getEverything(host)
+    if keys is not None and "dept" in keys:
+        isADMINby(keys["dept"][0][0])
+    elif keys is not None:
+        g.error = "Web-Kickstart config file does not state a department."
+        abort(400)
+
+    # Parse 2:  Generate the whole she-bang
     tuple = w.getKS(host)
 
-    return render('wk.debugtool', dict(host=host, kickstart=tuple[1]))
+    if raw:
+        return tuple[1], 200, {"Content-Type": "text/plain"}
+    else:
+        return render('wk.debugtool', dict(host=host, kickstart=tuple[1]))
 
-@app.route("/webKickstart/collision", methods=["POST"])
-def collision():
+@app.route("/webKickstart/collision/<host>")
+def collision(host):
     isREADby("root")
-    host = request.form["host"]
 
     host = host.strip()
     if host == "":
@@ -86,7 +92,7 @@ def collision():
     tuple = w.collisionDetection(host)
     return render('wk.collision', dict(host=host, output=tuple[1]))
 
-@app.route("/webKickstart/checkconfigs", methods=["POST"])
+@app.route("/webKickstart/checkconfigs")
 def checkconfigs():
     isREADby("root")
     
