@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      lang="en">
+
+<xi:include href="master.xml" />
+
+<head>
+  <title>Realm Linux Management Tools</title>
+</head>
+
+<body>
+
+  <p>
+    This tool allows you to create or modify a Web-Kickstart config
+    from the web interface.  Once the values are filled in a config
+    file will be generated and placed into the department's Web-Kickstart
+    directory where you may use it to install a host immediantly.  The
+    configuration is fairly simple and builds with the Puppet configuration
+    management tool.  Further modification like scripts, extra packages,
+    and configuration, should be done with Puppet.
+  </p>
+
+  <div py:if="message != ''" class="message">
+    <p py:content="message"/>
+  </div>
+
+  <h1>Installation Parameters for Realm Linux Host: ${host}</h1>
+
+  <p>
+    Answer the following questions and click the Submit button at the
+    bottom of the form to create a Web-Kickstart configuration for this
+    host.
+  </p>
+
+  <table>
+    <tr class="neutral">
+      <th class="right">
+        <select>
+          <option py:for="d in depts">${d}</option>
+        </select>
+      </th>
+      <td>
+        <b>Select Department:</b>  Select the department that will be used
+        with this host.
+      </td>
+    </tr>
+
+    <tr class="neutral">
+      <th class="right">
+        <select>
+          <option value="server6.x86_64">
+            Realm Linux 6, Server, 64 bit
+          </option>
+          <option value="server6">
+            Realm Linux 6, Server, 32 bit
+          </option>
+          <option value="client6.x86_64">
+            Realm Linux 6, Workstation, 64 bit
+          </option>
+          <option value="client6">
+            Realm Linux 6, Workstation, 32 bit
+          </option>
+          <option value="server5.x86_64">
+            Realm Linux 5, Server, 64 bit
+          </option>
+          <option value="server5">
+            Realm Linux 5, Server, 32 bit
+          </option>
+          <option value="client5.x86_64">
+            Realm Linux 5, Workstation, 64 bit
+          </option>
+          <option value="client5">
+            Realm Linux 5, Workstation, 32 bit
+          </option>
+        </select>
+      </th>
+      <td>
+        <b>Realm Linux Version and Architecture:</b> Select the
+        version and architecture to use for the host.
+      </td>
+    </tr>
+
+    <tr class="neutral">
+      <th class="right">
+        <select>
+          <option value="server">
+            Realm Linux Server
+          </option>
+          <option value="workstation">
+            Realm Linux Workstation
+          </option>
+        </select>
+      </th>
+      <td>
+        <b>Base Package Set:</b>  Choose the package set to install.  The
+        Server package set is a minimal install targeted at server class
+        machines.  The Workstation package set installs a fully function
+        graphical desktop and productivity applications.
+      </td>
+    </tr>
+
+    <tr class="neutral">
+      <th class="right">
+        <select>
+          <option value="skipx">
+            Disable Graphical Login
+          </option>
+          <option value="startx">
+            Enable Graphical Login
+          </option>
+        </select>
+      </th>
+      <td>
+        <b>Start X Windows on Boot:</b>  Should this machine start the
+        graphical login screen automatically?  Disabling this will cause
+        the machine to boot into text mode which is useful for servers.
+      </td>
+    </tr>
+
+    <tr class="neutral">
+      <th class="right">
+        &nbsp;
+      </th>
+      <td>
+        <b>Partitioning Layout:</b>  Below is the default partitioning
+        layout for this Realm Linux version.  You may alter it or leave
+        it as it is.
+      </td>
+    </tr>
+    <tr class="neutral">
+      <td colspan="2">
+        <textarea cols="80" rows="12" wrap="off" id="parts" 
+          style="margin-left: auto; margin-right: auto; display: block;">
+# Default Paritioning layout for RHEL 6.  This fits a 30GiB disk image
+# or larger and can be altered after installation.
+
+part /boot --size 512
+part pv.00 --fstype=LVM --size 19968 --grow
+volgroup Volume00 pv.00
+logvol swap     --recommended --fstype swap --vgname=Volume00 --name=swap
+logvol /          --size 8704 --fstype ext4 --vgname=Volume00 --name=root
+logvol /tmp       --size 2048 --fstype ext4 --vgname=Volume00 --name=tmp
+logvol /var       --size 7168 --fstype ext4 --vgname=Volume00 --name=var
+        </textarea>
+      </td>
+    </tr>
+
+    <tr class="neutral">
+      <th class="right">
+        <button type="submit">Submit</button>
+      </th>
+      <td>
+        <b>Submit:</b> Submit your Web-Kickstart config for this host.
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
+

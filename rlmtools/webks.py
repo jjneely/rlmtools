@@ -101,3 +101,12 @@ def checkconfigs():
 
     return render('wk.checkconfigs', dict(output=tuple[1]))
 
+@app.route("/webKickstart/build/<host>")
+def build(host):
+
+    return render("wk.build", dict(
+        message="",
+        host=host,
+        depts=['unity', 'foo'],
+        ))
+
