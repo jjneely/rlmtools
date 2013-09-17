@@ -6,6 +6,13 @@
 
 <xi:include href="master.xml" />
 
+<script src="${baseURL}/static/jQuery.js"></script>
+<script>
+  $(document).ready(function() {
+
+  }
+</script>  
+  
 <head>
   <title>Realm Linux Management Tools</title>
 </head>
@@ -50,29 +57,8 @@
     <tr class="neutral">
       <th class="right">
         <select>
-          <option value="server6.x86_64">
-            Realm Linux 6, Server, 64 bit
-          </option>
-          <option value="server6">
-            Realm Linux 6, Server, 32 bit
-          </option>
-          <option value="client6.x86_64">
-            Realm Linux 6, Workstation, 64 bit
-          </option>
-          <option value="client6">
-            Realm Linux 6, Workstation, 32 bit
-          </option>
-          <option value="server5.x86_64">
-            Realm Linux 5, Server, 64 bit
-          </option>
-          <option value="server5">
-            Realm Linux 5, Server, 32 bit
-          </option>
-          <option value="client5.x86_64">
-            Realm Linux 5, Workstation, 64 bit
-          </option>
-          <option value="client5">
-            Realm Linux 5, Workstation, 32 bit
+          <option py:for="i in dists" value="${i['version']}">
+            ${i['desc']}
           </option>
         </select>
       </th>

@@ -103,10 +103,12 @@ def checkconfigs():
 
 @app.route("/webKickstart/build/<host>")
 def build(host):
+    from dists import dists
 
     return render("wk.build", dict(
         message="",
         host=host,
         depts=['unity', 'foo'],
+        dists=dists,
         ))
 
