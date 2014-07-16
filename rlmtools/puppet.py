@@ -176,6 +176,9 @@ class Puppet(object):
             return False
 
         # Strip out (SHA256) and such part of the fingerprint.
+        # Note: a better way to do this might be to check the fingerprint
+        # for what format it's in, and make use of:
+        #  meta['fingerprints'][formattype]
         fingerprint = re.sub("^\(\w+\) ", "", fingerprint)
         if meta['fingerprint'] != fingerprint:
             log.warning("Puppet API: Cert fingerprint missmatch for %s : %s vs %s" \
