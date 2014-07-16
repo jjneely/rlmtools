@@ -175,9 +175,11 @@ class Puppet(object):
                     % uuid)
             return False
 
+        # Strip out (SHA256) and such part of the fingerprint.
+        fingerprint = re.sub("^\(\w+\) ", "", fingerprint)
         if meta['fingerprint'] != fingerprint:
-            log.warning("Puppet API: Cert fingerprint missmatch for %s" \
-                    % uuid)
+            log.warning("Puppet API: Cert fingerprint missmatch for %s : %s vs %s" \
+                    % (uuid, meta['fingerprint'], fingerprint))
             return False
 
         if meta['state'].lower() == "signed":
