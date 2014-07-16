@@ -169,7 +169,7 @@ def go_puppet(server, options):
 
     # Step 1: Get the needed data
     subs = {}
-    subs['fqdn'] = socket.gethostname()
+    subs['fqdn'] = socket.gethostname().lower()
     subs['uuid'] = options.uuid
     depts = dept_search_list(options.dept)
 
